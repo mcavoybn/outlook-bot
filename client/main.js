@@ -2,7 +2,9 @@ addEventListener('load', main);
 function main() {
     const Vue = require('vue');
     const VueRouter = require('vue-router');
+    const SuiVue = require('semantic-ui-vue');
     Vue.use(VueRouter);
+    Vue.use(SuiVue.default);
 
     const Root = require('./root.vue');
     const routes = [
@@ -11,7 +13,8 @@ function main() {
         { path: '/auth/code', name: 'loginCode', component: require('./auth/loginCode.vue') },
         { path: '/onboard/tag', name: 'onboardTag', component: require('./onboard/onboardTag.vue') },
         { path: '/onboard/code/:tag', name: 'onboardCode', component: require('./onboard/onboardCode.vue') },
-        { path: '/messages', name: 'messages', component: require('./messages/messages.vue') },
+        { path: '/triggers', name: 'triggers', component: require('./triggers/triggers.vue') },
+        { path: '/trigger/:id', name: 'trigger', component: require('./trigger/trigger.vue') },
         { path: '/settings', name: 'settings', component: require('./settings/settings.vue') },
         { path: '*', redirect: '/welcome' },
     ];

@@ -5,12 +5,12 @@
     <div class="ui main text container" style="margin-top: 80px;">
         <div class="ui two column centered grid">
             <div class="middle aligned row">
-                <div class="five wide column">
+                <div class="three wide column">
                     <img class="ui small floated right image" src="/static/images/forsta-logo.svg"/>
                 </div>
-                <div class="eleven wide column">
+                <div class="thirteen wide column">
                     <h1 class="ui header">Forsta Compliance Monitor
-                        <div class="sub header">Secure data retention. Under your control.</div>
+                        <div class="sub header">Secure message monitoring. Under your control.</div>
                     </h1>
                 </div>
             </div>
@@ -47,7 +47,7 @@ module.exports = {
         global: shared.state
     }),
     mounted: function() {
-        const authDash = { name: 'loginTag', query: { forwardTo: '/messages' }};
+        const authDash = { name: 'loginTag', query: { forwardTo: '/triggers' }};
         if (this.global.onboardStatus === 'complete') {
             this.$router.push(authDash);
             return;
