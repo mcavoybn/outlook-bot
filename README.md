@@ -1,20 +1,20 @@
-Forsta Message Vault
+Forsta Compliance Monitor
 ========
 This is a bot that performs secure autonomous monitoring of 
-an entire organization's messaging traffic, storing all messages 
-and useful metadata to support basic forensic searching and retrieval 
-via a web-based UI. 
+an entire organization's messaging traffic, watching for messages
+that should be flagged and forwarded to an interested official
+in the organization.
 
-This is a descendant of the [Forsta Messaging Bot](https://github.com/ForstaLabs/messaging-bot) 
+This is a descendant of the [Forsta Message Vault](https://github.com/ForstaLabs/compliance-monitor) 
 codebase, which you can use for secure message receipt, processing, storage, and/or transmission 
 on the Forsta messaging platform.
 
-Please see the [CHANGELOG](https://github.com/ForstaLabs/message-vault/blob/master/CHANGELOG.md)
+Please see the [CHANGELOG](https://github.com/ForstaLabs/compliance-monitor/blob/master/CHANGELOG.md)
 for the current set of features!
 
-[![NPM](https://img.shields.io/npm/v/forsta-message-vault.svg)](https://www.npmjs.com/package/forsta-message-vault)
-[![Change Log](https://img.shields.io/badge/change-log-blue.svg)](https://github.com/ForstaLabs/message-vault/blob/master/CHANGELOG.md)
-[![License](https://img.shields.io/npm/l/forsta-message-vault.svg)](https://github.com/ForstaLabs/message-vault)
+[![NPM](https://img.shields.io/npm/v/forsta-compliance-monitor.svg)](https://www.npmjs.com/package/forsta-compliance-monitor)
+[![Change Log](https://img.shields.io/badge/change-log-blue.svg)](https://github.com/ForstaLabs/compliance-monitor/blob/master/CHANGELOG.md)
+[![License](https://img.shields.io/npm/l/forsta-compliance-monitor.svg)](https://github.com/ForstaLabs/compliance-monitor)
 
 
 The Why &mdash; Decentralized Data Security
@@ -53,10 +53,10 @@ running in a context controlled by the user**.
 
 Quick Start
 --------
-These deployment buttons can be used to validate that this message vault
+These deployment buttons can be used to validate that this compliance monitor
 will meet your organizations needs with as little setup pain as possible.  
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/ForstaLabs/message-vault)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/ForstaLabs/compliance-monitor)
 [![Deploy to Docker Cloud](https://files.cloud.docker.com/images/deploy-to-dockercloud.svg)](https://cloud.docker.com/stack/deploy/)
 
 
@@ -78,17 +78,17 @@ To run a stack using docker-compose that includes postgres for storage, just get
     docker-compose up
 
 ### NPM
-    npm install -g forsta-message-vault
-    message-vault
+    npm install -g forsta-compliance-monitor
+    compliance-monitor
 
 
 Developer Install
 --------
-If you want to extend the Forsta Message Vault or just get closer to the code, 
+If you want to extend the Forsta Compliance Monitor or just get closer to the code, 
 you can install and run directly from the source code:
 
-    git clone https://github.com/ForstaLabs/message-vault.git
-    cd message-vault
+    git clone https://github.com/ForstaLabs/compliance-monitor.git
+    cd compliance-monitor
     make
     npm start
 

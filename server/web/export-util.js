@@ -65,7 +65,7 @@ function htmlDoc({ query, exportDate, rows, tzoffset }) {
             <div class="ui inverted menu">
                 <div class="ui container">
                     <span class="header item">
-                        Forsta Message Vault Export
+                        Forsta Compliance Monitor Export
                     </span>
                     <a class="header item float right" onclick="$('.ui.tiny.modal').modal('show');">
                         <i class="large circle info icon"></i> Details

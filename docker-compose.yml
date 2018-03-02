@@ -1,5 +1,5 @@
-message-vault:
-  image: forstalabs/message-vault
+compliance-monitor:
+  image: forstalabs/compliance-monitor
   ports:
     - "4096:4096"
   environment:

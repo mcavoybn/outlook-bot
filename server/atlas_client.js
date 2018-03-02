@@ -4,14 +4,14 @@ class BotAtlasClient extends relay.AtlasClient {
 
     static get onboardingCreatedUser() {
         return {
-            first_name: "Message",
-            last_name: "Vault",
+            first_name: "Compliance",
+            last_name: "Monitor",
             is_monitor: true
         };
     }
 
     static get userAuthTokenDescription() {
-        return 'message vault bot';
+        return 'compliance monitor bot';
     }
 
     static async onboard(onboardClient) {

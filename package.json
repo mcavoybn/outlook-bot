@@ -1,11 +1,11 @@
 {
-  "name": "forsta-message-vault",
+  "name": "forsta-compliance-monitor",
   "version": "0.4.0",
-  "description": "Forsta Message Vault",
+  "description": "Forsta Compliance Monitor",
   "engines": {
     "node": "8"
   },
-  "repository": "ForstaLabs/message-vault",
+  "repository": "ForstaLabs/compliance-monitor",
   "keywords": [
     "forsta",
     "e-discovery",
@@ -13,15 +13,15 @@
   ],
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/ForstaLabs/message-vault/issues"
+    "url": "https://github.com/ForstaLabs/compliance-monitor/issues"
   },
-  "homepage": "https://github.com/ForstaLabs/message-vault#readme",
+  "homepage": "https://github.com/ForstaLabs/compliance-monitor#readme",
   "scripts": {
     "postinstall": "SKIP_PACKAGES=1 make",
     "start": "node server"
   },
   "bin": {
-    "message-vault": "./server/index.js"
+    "compliance-monitor": "./server/index.js"
   },
   "dependencies": {
     "adm-zip": "^0.4.7",

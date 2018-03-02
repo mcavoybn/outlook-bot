@@ -9,7 +9,7 @@
                     <img class="ui small floated right image" src="/static/images/forsta-logo.svg"/>
                 </div>
                 <div class="eleven wide column">
-                    <h1 class="ui header">Forsta Message Vault
+                    <h1 class="ui header">Forsta Compliance Monitor
                         <div class="sub header">Secure data retention. Under your control.</div>
                     </h1>
                 </div>

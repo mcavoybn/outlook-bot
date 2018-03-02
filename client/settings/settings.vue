@@ -11,7 +11,7 @@ div.listgap {
             <div class="ui basic segment huge">
                 <h1 class="ui header">
                     <i class="large circular setting icon"></i>
-                    Message Vault Settings
+                    Compliance Monitor Settings
                 </h1>
             </div>
             <div class="ui centered grid">
