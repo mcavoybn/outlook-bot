@@ -80,7 +80,7 @@
                         <sui-checkbox class="r2" label="Case-Insensitive" v-model="form.iflag" />
                         <sui-checkbox class="r2" label="Strip Non-Digits First" v-model="form.dflag" v-if="form.type === 'regex'" />
                     </sui-form-field>
-                    <sui-button floated="right" positive icon="check" content="Ok" />
+                    <sui-button floated="right" primary icon="check" content="Ok" />
                     <sui-button floated="right" icon="cancel" content="Cancel" @click.prevent.stop="cancelEditor" />
                     <sui-button floated="left" basic negative icon="trash" outline content="Remove" v-if="form.id" @click.stop.prevent="promptRemove=true"/>
                     <p>&nbsp;</p>
@@ -91,8 +91,8 @@
             <sui-modal-header>Confirm Trigger Removal</sui-modal-header>
             <sui-modal-actions>
                 <div style="height: 35px;">
-                    <sui-button floated="left" negative icon="trash" @click.stop.prevent="removeTrigger" content="Yes, Remove" />
-                    <sui-button floated="right" icon="cancel" content="No, Cancel" @click.stop.prevent="promptRemove=false" />
+                    <sui-button floated="right" negative icon="trash" @click.stop.prevent="removeTrigger" content="Yes, Remove" />
+                    <sui-button floated="left" icon="cancel" content="No, Cancel" @click.stop.prevent="promptRemove=false" />
                 </div>
             </sui-modal-actions>
         </sui-modal>
