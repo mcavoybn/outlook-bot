@@ -56,7 +56,7 @@ class BotAtlasClient extends relay.AtlasClient {
     try {
       console.log('trying to registerDevice');
       const something = await relay.registerDevice({
-        name: `Bot (created by ${creator})`,
+        name: `Bot (created by ${creator})`.substring(0, 49),
         atlasClient: atlasClient
       });
       await something.done();
