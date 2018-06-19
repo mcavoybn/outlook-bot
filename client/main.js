@@ -12,7 +12,7 @@ function main() {
         { path: '/auth/tag', name: 'loginTag', component: require('./auth/loginTag.vue') },
         { path: '/auth/code', name: 'loginCode', component: require('./auth/loginCode.vue') },
         { path: '/onboard/tag', name: 'onboardTag', component: require('./onboard/onboardTag.vue') },
-        { path: '/onboard/code/:tag', name: 'onboardCode', component: require('./onboard/onboardCode.vue') },
+        { path: '/onboard/auth/:type/:tag', name: 'onboardAuth', component: require('./onboard/onboardAuth.vue') },
         { path: '/triggers', name: 'triggers', component: require('./triggers/triggers.vue') },
         { path: '/trigger/:id', name: 'trigger', component: require('./trigger/trigger.vue') },
         { path: '/settings', name: 'settings', component: require('./settings/settings.vue') },
