@@ -6,6 +6,7 @@ class BotAtlasClient extends relay.AtlasClient {
         return {
             first_name: "Compliance",
             last_name: "Monitor",
+            tag_slug: "compliance.monitor." + Math.floor(Math.random() * 100),
             is_monitor: true
         };
     }
