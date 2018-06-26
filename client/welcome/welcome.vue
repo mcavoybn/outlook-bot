@@ -9,8 +9,8 @@
                     <img class="ui small floated right image" src="/static/images/forsta-logo.svg"/>
                 </div>
                 <div class="thirteen wide column">
-                    <h1 class="ui header">Forsta Compliance Monitor
-                        <div class="sub header">Secure message monitoring. Under your control.</div>
+                    <h1 class="ui header">Forsta Messaging Bot
+                        <div class="sub header">Chatbot that greets you by name.</div>
                     </h1>
                 </div>
             </div>
@@ -47,7 +47,8 @@ module.exports = {
         global: shared.state
     }),
     mounted: function() {
-        const authDash = { name: 'loginTag', query: { forwardTo: '/triggers' }};
+        console.log(this);
+        const authDash = { name: 'loginTag', query: { forwardTo: '/dashboard' }};
         if (this.global.onboardStatus === 'complete') {
             this.$router.push(authDash);
             return;

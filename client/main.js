@@ -13,9 +13,8 @@ function main() {
         { path: '/auth/code', name: 'loginCode', component: require('./auth/loginCode.vue') },
         { path: '/onboard/tag', name: 'onboardTag', component: require('./onboard/onboardTag.vue') },
         { path: '/onboard/auth/:type/:tag', name: 'onboardAuth', component: require('./onboard/onboardAuth.vue') },
-        { path: '/triggers', name: 'triggers', component: require('./triggers/triggers.vue') },
-        { path: '/trigger/:id', name: 'trigger', component: require('./trigger/trigger.vue') },
         { path: '/settings', name: 'settings', component: require('./settings/settings.vue') },
+        { path: '/dashboard', name: 'dashboard', component: require('./dashboard/dashboard.vue') },
         { path: '*', redirect: '/welcome' },
     ];
 

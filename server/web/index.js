@@ -2,7 +2,6 @@ const api = require('./api');
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const monitorApi = require('./monitor-api');
 const path = require('path');
 const process = require('process');
 const herokuSslRedirect = require('heroku-ssl-redirect');
@@ -28,7 +27,6 @@ class WebServer {
         }
         this.app.use(morgan('dev')); // logging
         this.app.use(bodyParser.json());
-        this.app.use('/api/monitor/', (new monitorApi.VaultAPIv1({server: this})).router);
         this.app.use('/api/onboard/', (new api.OnboardAPIV1({server: this})).router);
         this.app.use('/api/auth/', (new api.AuthenticationAPIV1({server: this})).router);
         this.app.use('/static/', express.static(path.join(root, 'static'), {strict: true}));

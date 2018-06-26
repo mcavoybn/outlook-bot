@@ -1,11 +1,11 @@
 {
-  "name": "forsta-compliance-monitor",
+  "name": "forsta-messaging-bot",
   "version": "0.4.0",
-  "description": "Forsta Compliance Monitor",
+  "description": "Forsta Messaging Bot",
   "engines": {
     "node": "8"
   },
-  "repository": "ForstaLabs/compliance-monitor",
+  "repository": "ForstaLabs/messaging-bot",
   "keywords": [
     "forsta",
     "e-discovery",
@@ -13,15 +13,15 @@
   ],
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/ForstaLabs/compliance-monitor/issues"
+    "url": "https://github.com/ForstaLabs/messaging-bot/issues"
   },
-  "homepage": "https://github.com/ForstaLabs/compliance-monitor#readme",
+  "homepage": "https://github.com/ForstaLabs/messaging-bot#readme",
   "scripts": {
     "postinstall": "SKIP_PACKAGES=1 make",
     "start": "node server"
   },
   "bin": {
-    "compliance-monitor": "./server/index.js"
+    "messaging-bot": "./server/index.js"
   },
   "dependencies": {
     "adm-zip": "^0.4.7",

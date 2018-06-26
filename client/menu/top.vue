@@ -3,7 +3,7 @@
         <div class="ui container">
             <router-link :to="{name: 'welcome'}" class="header item">
                 <img class="logo" src="/static/images/forsta-logo-invert.svg"/>
-                &nbsp;&nbsp;Forsta Compliance Monitor
+                &nbsp;&nbsp;Forsta Messaging Bot
             </router-link>
             <div v-if="global.apiToken" class="header item float right" style="padding:0;">
                 <div class="ui simple dropdown item">
@@ -12,7 +12,7 @@
                     <div class="menu left">
                     <div class="item" @click="logout">sign out</div>
                     <div class="item" @click="settings">settings</div>
-                    <div class="item" @click="triggers">triggers</div>
+                    <div class="item" @click="dashboard">dashboard</div>
                     </div>
                 </div>
             </div>
@@ -36,7 +36,7 @@ module.exports = {
             this.$router.push({ name: 'settings' });
         },
         triggers: function () {
-            this.$router.push({ name: 'triggers' });
+            this.$router.push({ name: 'dashboard' });
         }
     }
 }

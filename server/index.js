@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 const ForstaBot = require('./forsta_bot');
 const WebServer = require('./web');
 const process = require('process');
@@ -17,14 +15,7 @@ process.on('unhandledRejection', ev => {
 
 
 async function run() {
-    if (process.env.RELAY_STORAGE_BACKING !== 'postgres') {
-        const msg = 'Compliance Monitor reqires a postgres backing store -- have you set RELAY_STORAGE_BACKING in your environment?';
-        console.error(msg);
-        throw Error(msg);
-    }
-
-    relay.storage.setLabel('compliance-monitor');
-    await relay.storage.initialize();
+    relay.storage.setLabel('bot-1');
     const bot = new ForstaBot();
     await bot.start();
     const webServer = new WebServer(bot);
