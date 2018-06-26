@@ -4,10 +4,10 @@ class BotAtlasClient extends relay.AtlasClient {
 
     static get onboardingCreatedUser() {
         return {
-            first_name: "Compliance",
-            last_name: "Monitor",
-            tag_slug: "compliance.monitor." + Math.floor(Math.random() * 100),
-            is_monitor: true
+            first_name: "Live",
+            last_name: "Chat",
+            tag_slug: "live.chat." + Math.floor(Math.random() * 100),
+            is_monitor: false
         };
     }
 
