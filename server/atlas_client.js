@@ -51,7 +51,7 @@ class BotAtlasClient extends relay.AtlasClient {
         await relay.storage.putState("botUserAuthToken", result.token);
 
         const atlasClient = await this.factory();
-
+        
         try {
             console.log('trying to registerDevice');
             const something = await relay.registerDevice({
