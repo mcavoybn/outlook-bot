@@ -3,12 +3,7 @@ const relay = require("librelay");
 class BotAtlasClient extends relay.AtlasClient {
 
     static get onboardingCreatedUser() {
-        return {
-            first_name: "Live",
-            last_name: "Chat",
-            tag_slug: "live.chat." + Math.floor(Math.random() * 100),
-            is_monitor: false
-        };
+        return null;
     }
 
     static get userAuthTokenDescription() {
