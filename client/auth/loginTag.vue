@@ -7,7 +7,7 @@
             <div class="ui basic segment huge">
                 <h1 class="ui header">
                     <i class="circular icon user"></i>
-                    Compliance Monitor Login
+                    Messaging Bot Login
                 </h1>
             </div>
             <div class="ui centered grid">
