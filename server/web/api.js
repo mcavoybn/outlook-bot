@@ -149,6 +149,18 @@ class OnboardAPIV1 extends APIHandler {
                 console.log('about to password auth with', tag, value);
                 onboarderClient = await BotAtlasClient.authenticateViaPassword(tag, value);
                 console.log('returned with', onboarderClient);
+            } else if (type === 'totp') {
+                const otp = req.body.otp;
+                if (!otp) {
+                    res.status(412).json({
+                        error: 'missing_arg',
+                        message: 'Missing payload param: otp'
+                    });
+                    return;
+                }
+                console.log('about to password+totp auth with', tag, value, otp);
+                onboarderClient = await BotAtlasClient.authenticateViaPasswordOtp(tag, value, otp);
+                console.log('returned with', onboarderClient);
             } else {
                 res.status(412).json({
                     error: 'value_error',

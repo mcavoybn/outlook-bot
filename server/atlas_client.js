@@ -46,14 +46,15 @@ class BotAtlasClient extends relay.AtlasClient {
         await relay.storage.putState("botUserAuthToken", result.token);
 
         const atlasClient = await this.factory();
-        
+
         try {
             console.log('trying to registerDevice');
             const something = await relay.registerDevice({
                 name: `Bot (created by ${creator})`.substring(0, 49),
                 atlasClient: atlasClient
             });
-            await something.done();
+            const result = await Promise.race([Promise.all(['done', something.done]), Promise.all(['timeout', relay.util.sleep(15)])]);
+            if (result[0] === 'timeout') throw 'registerDevice timed out';
             console.log("registerDevice success");
         } catch (e) {
             console.log("registerDevice didn't work out, trying registerAccount instead");

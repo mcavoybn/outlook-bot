@@ -9,10 +9,6 @@ const words = require("./authwords");
 
 const AUTH_FAIL_THRESHOLD = 10;
 
-async function sleep(ms) { 
-    return await new Promise(resolve => setTimeout(resolve, ms)); 
-}
-
 class ForstaBot {
 
     async start() {
@@ -196,7 +192,7 @@ class ForstaBot {
         }
         if (auth.code != code) {
             this.incrementAuthFailCount();
-            await sleep(500); // throttle guessers
+            await relay.util.sleep(.5); // throttle guessers
             throw { statusCode: 403, info: { code: ['incorrect codewords, please try again'] } }; 
         }
 
