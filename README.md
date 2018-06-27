@@ -1,28 +1,30 @@
-Forsta Compliance Monitor
+Forsta Messaging Bot
 ========
-This is a bot that performs secure autonomous monitoring of 
-an entire organization's messaging traffic, watching for messages
-that should be flagged and forwarded to an interested official
-in the organization.
+Secure autonomous message receipt, processing, storage, and/or transmission on the Forsta messaging platform.
 
-This is a descendant of the [Forsta Message Vault](https://github.com/ForstaLabs/compliance-monitor) 
-codebase, which you can use for secure message receipt, processing, storage, and/or transmission 
-on the Forsta messaging platform.
+[![NPM](https://img.shields.io/npm/v/forsta-messaging-bot.svg)](https://www.npmjs.com/package/forsta-messaging-bot)
+[![Change Log](https://img.shields.io/badge/change-log-blue.svg)](https://github.com/ForstaLabs/vault/blob/master/CHANGELOG.md)
+[![License](https://img.shields.io/npm/l/forsta-messaging-bot.svg)](https://github.com/ForstaLabs/messaging-bot)
 
-Please see the [CHANGELOG](https://github.com/ForstaLabs/compliance-monitor/blob/master/CHANGELOG.md)
-for the current set of features!
 
-[![NPM](https://img.shields.io/npm/v/forsta-compliance-monitor.svg)](https://www.npmjs.com/package/forsta-compliance-monitor)
-[![Change Log](https://img.shields.io/badge/change-log-blue.svg)](https://github.com/ForstaLabs/compliance-monitor/blob/master/CHANGELOG.md)
-[![License](https://img.shields.io/npm/l/forsta-compliance-monitor.svg)](https://github.com/ForstaLabs/compliance-monitor)
+About
+-------
+This repository is a (skeleton) Node.js-based Forsta end-to-end-encrypted messaging client.
+It allows for autonomous receipt, processing, storage, and/or transmission of messaging 
+data to perform some useful task. Please fork it or one of our several projects based 
+off of it!
 
+A Forsta messaging bot can be set up to receive messages sent to a particular user, 
+**or** (if you are an organization administrator) it can be set up as a special 
+organization "monitor" which will receive copies of *all* messaging traffic to, from, 
+or among users in your organization.
 
 The Why &mdash; Decentralized Data Security
 --------
 
-What is important to Forsta is that **your messaging data** is only accessible to 
-messaging clients that **you are in control** of, whether the client is an app 
-running on the phone in your pocket, or a bot that is running on a server in your
+What is important to Forsta is that **your messaging data** is only accessible to messaging 
+clients that **you are in control** of, whether the client is an app running on 
+the phone in your pocket, or a bot that is running on a server in your
 datacenter or the compute cloud of your choice. 
 
 Some organizations need to be able perform forensic e-discovery on past 
@@ -53,10 +55,10 @@ running in a context controlled by the user**.
 
 Quick Start
 --------
-These deployment buttons can be used to validate that this compliance monitor
+These deployment buttons can be used to validate that this messaging bot
 will meet your organizations needs with as little setup pain as possible.  
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/ForstaLabs/compliance-monitor)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/ForstaLabs/messaging-bot)
 [![Deploy to Docker Cloud](https://files.cloud.docker.com/images/deploy-to-dockercloud.svg)](https://cloud.docker.com/stack/deploy/)
 
 
@@ -73,32 +75,27 @@ You can choose from our official docker image or NPM package depending on your
 preference.
 
 ### Docker
-To run a stack using docker-compose that includes postgres for storage, just get the [`docker-compose.yml`](./docker-compose.yml) file from the top level of this repository and
+    docker run -p4096:4096 forstalabs/messaging-bot
+
+Or to run a stack using docker-compose that includes redis for storage...
 
     docker-compose up
 
 ### NPM
-    npm install -g forsta-compliance-monitor
-    compliance-monitor
+    npm install -g forsta-messaging-bot
+    messaging-bot
 
 
 Developer Install
 --------
-If you want to extend the Forsta Compliance Monitor or just get closer to the code, 
-you can install and run directly from the source code:
+If you want to build upon the Forsta Messaging Bot or just get closer to the code, 
+you can install and run directly from the source code.
 
-    git clone https://github.com/ForstaLabs/compliance-monitor.git
-    cd compliance-monitor
-    make
+    git clone https://github.com/ForstaLabs/messaging-bot.git
+    cd messaging-bot
+    npm install
     npm start
 
-You will also need to have an instance of Postgres available. Before running
-the server, be sure to set the following environment variables:
-
-    RELAY_STORAGE_BACKING=postgres
-    DATABASE_URL=postgres://postgres@localhost/postgres
-
-(That database URL is for the default docker postgres you'll get if you do a `make docker-db-run`.)
 
 Usage
 --------
@@ -115,7 +112,7 @@ numeric port, e.g. `8000`.
 
 Storage is managed through Forsta
 [librelay](https://github.com/ForstaLabs/librelay-node) which currently
-supports local filesystem, Redis, and Postgresql.  For more information about setting
+supports local filesystem and Redis.  For more information about setting
 up custom storage see: https://github.com/ForstaLabs/librelay-node#storage.
 
 
