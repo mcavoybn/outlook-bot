@@ -71,3 +71,7 @@ run: $(BUILD)
 
 forcerun:
 	npm start
+
+watchrun:
+	$(NPATH)/grunt watch &
+	node server

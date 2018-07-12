@@ -3,16 +3,16 @@
         <div class="ui container">
             <router-link :to="{name: 'welcome'}" class="header item">
                 <img class="logo" src="/static/images/forsta-logo-invert.svg"/>
-                &nbsp;&nbsp;Forsta Messaging Bot
+                &nbsp;&nbsp;Forsta Live Chat
             </router-link>
             <div v-if="global.apiToken" class="header item float right" style="padding:0;">
                 <div class="ui simple dropdown item">
                     <i class="large user icon"></i>
                     <i class="dropdown icon"></i>
                     <div class="menu left">
-                    <div class="item" @click="logout">sign out</div>
-                    <div class="item" @click="settings">settings</div>
-                    <div class="item" @click="dashboard">dashboard</div>
+                    <div class="item" @click="logout">Sign Out</div>
+                    <div class="item" @click="settings">Settings</div>
+                    <div class="item" @click="dashboard">Dashboard</div>
                     </div>
                 </div>
             </div>
@@ -35,7 +35,7 @@ module.exports = {
         settings: function () {
             this.$router.push({ name: 'settings' });
         },
-        triggers: function () {
+        dashboard: function () {
             this.$router.push({ name: 'dashboard' });
         }
     }

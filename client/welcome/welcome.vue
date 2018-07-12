@@ -9,8 +9,8 @@
                     <img class="ui small floated right image" src="/static/images/forsta-logo.svg"/>
                 </div>
                 <div class="thirteen wide column">
-                    <h1 class="ui header">Forsta Messaging Bot
-                        <div class="sub header">Chatbot that greets you by name.</div>
+                    <h1 class="ui header">Forsta Live Chat Bot
+                        <div class="sub header"></div>
                     </h1>
                 </div>
             </div>
