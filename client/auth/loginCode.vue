@@ -16,7 +16,13 @@
                         <div class="field">
                             <label>Login Code Words</label>
                             <div class="ui left icon input">
-                                <input v-focus.lazy="true" type="text" name="code" placeholder="enter words" autocomplete="off" v-model='code'>
+                                <input 
+                                    type="text"
+                                    name="code"
+                                    placeholder="enter words"
+                                    autocomplete="off"
+                                    v-focus.lazy="true"
+                                    v-model='code'>
                                 <i class="lock icon"></i>
                             </div>
                         </div>
@@ -51,6 +57,7 @@ function setup() {
             this.$router.push({ name: 'welcome' });
         }
     });
+
 
     $('form.ui.form.enter-code').form({
         fields: {

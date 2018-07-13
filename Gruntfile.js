@@ -27,6 +27,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-env');
   grunt.loadNpmTasks('grunt-contrib-uglify-es');
+  grunt.loadNpmTasks('grunt-newer');
+  
   try {
     grunt.loadNpmTasks('grunt-contrib-watch');
   } catch(e) {
@@ -141,5 +143,5 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask('default', ['env:prod', 'browserify', 'concat', 'sass', 'copy', 'uglify']);
-  grunt.registerTask('development', ['env:dev', 'browserify', 'concat', 'sass', 'copy']);
+  grunt.registerTask('development', ['newer:env:dev', 'newer:browserify', 'newer:concat', 'newer:sass', 'newer:copy']);
 };

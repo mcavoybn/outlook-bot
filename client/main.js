@@ -15,7 +15,9 @@ function main() {
         { path: '/onboard/auth/:type/:tag', name: 'onboardAuth', component: require('./onboard/onboardAuth.vue') },
         { path: '/settings', name: 'settings', component: require('./settings/settings.vue') },
         { path: '/dashboard', name: 'dashboard', component: require('./dashboard/dashboard.vue') },
-        { path: '*', redirect: '/welcome' },
+        { path: '/messageViewer', name: 'messageViewer', component: require('./dashboard/messageViewer.vue') },
+        { path: '/oooEdit', name: 'oooEdit', component: require('./dashboard/oooEdit.vue') },
+        { path: '*', redirect: '/welcome' }
     ];
 
     const router = new VueRouter({

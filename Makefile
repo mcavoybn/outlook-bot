@@ -73,5 +73,6 @@ forcerun:
 	npm start
 
 watchrun:
-	$(NPATH)/grunt watch &
 	node server
+	$(NPATH)/grunt watch
+	

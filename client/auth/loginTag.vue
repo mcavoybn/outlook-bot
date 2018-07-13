@@ -16,7 +16,13 @@
                         <div class="field">
                             <label>Authorized User</label>
                             <div class="ui left icon input">
-                                <input v-focus.lazy="true" type="text" v-model='tag' name="tag" placeholder="user:org" autocomplete="off">
+                                <input 
+                                    name="tag" 
+                                    placeholder="user:org" 
+                                    autocomplete="off" 
+                                    type="text" 
+                                    v-focus.lazy="true"  
+                                    v-model='tag' >
                                 <i class="at icon"></i>
                             </div>
                         </div>
