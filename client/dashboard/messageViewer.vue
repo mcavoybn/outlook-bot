@@ -89,6 +89,7 @@ div [class*="pull right"] {
 </template>
 
 <script>
+'use strict'
 module.exports = {
     methods: {
         display: function(el){

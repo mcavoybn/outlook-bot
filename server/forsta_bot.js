@@ -53,9 +53,18 @@ class ForstaBot {
         console.error('Message Error', e, e.stack);
     }
 
-    fqTag(user) { return `@${user.tag.slug}:${user.org.slug}`; }
-    fqName(user) { return [user.first_name, user.middle_name, user.last_name].map(s => (s || '').trim()).filter(s => !!s).join(' '); }
-    fqLabel(user) { return `${this.fqTag(user)} (${this.fqName(user)})`; }
+    fqTag(user) { 
+        return `@${user.tag.slug}:${user.org.slug}`; 
+    }
+
+    fqName(user) {
+        const fqInfo = [user.first_name, user.middle_name, user.last_name]; 
+        return fqInfo.map(s => (s || '').trim()).filter(s => !!s).join(' '); 
+    }
+
+    fqLabel(user) { 
+        return `${this.fqTag(user)} (${this.fqName(user)})`; 
+    }
 
     async onMessage(ev) {
         const message = ev.data.message;
@@ -84,7 +93,7 @@ class ForstaBot {
             text: reply
         });
     }
-
+    
     forgetStaleNotificationThreads() {
         let tooOld = new Date();
         tooOld.setDate(tooOld.getDate() - 7);
