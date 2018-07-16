@@ -130,23 +130,7 @@ module.exports = {
         ]
     }),
     mounted: function() {
-        console.log(this.global.onboardStatus, this.$router.path);
-
-        if (this.global.onboardStatus !== 'complete') {
-            this.$router.push({ name: 'welcome' });
-            return;
-        }
-        util.fetch.call(this, '/api/onboard/status/v1')
-        .then(result => { 
-            this.global.onboardStatus = result.theJson.status;
-            if (this.global.onboardStatus !== 'complete') {
-                this.$router.push({ name: 'welcome' });
-            }
-        });
-        if (!this.global.apiToken) {
-            this.$router.push({ name: 'loginTag', query: { forwardTo: this.$router.path }});
-            return;
-        }
+        //$root.checkPrerequisites();
     }
 }
 </script>

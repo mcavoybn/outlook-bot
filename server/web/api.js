@@ -271,9 +271,90 @@ class AuthenticationAPIV1 extends APIHandler {
     }
 }
 
+class QuestionsAPIV1 extends APIHandler {
+
+    constructor(options) {
+        super(options);
+        this.router.get('/*', this.asyncRoute(this.onGet, false));
+        this.router.post('/*', this.asyncRoute(this.onPost, false));
+    }
+
+    async onGet(req, res){
+        let userTag = req.get('userTag');
+        let ourId = await relay.storage.getState('addr');
+        let questions = await relay.storage.get(ourId, userTag + '/questions');
+        if(!questions){
+            res.status(200).json([
+                {
+                    prompt: "Question Prompt",
+                    type: "Multiple Choice",
+                    editing: false,
+                    displayed: true,
+                    responses: [
+                        {
+                            text: "Yes",
+                            action: "Next Question",
+                            forwardDist: "",
+                            forwardQuestion: ""
+                        },
+                        {
+                            text: "No",
+                            action: "Next Question",
+                            forwardDist: "",
+                            forwardQuestion: 4
+                        }
+                    ]
+                }
+            ]);
+        }else{
+            res.status(200).json(questions);
+        }
+    }
+
+    async onPost(req, res) {
+        let userTag = req.get('loginTag');
+        let questions = req.body.questions;
+        let ourId = await relay.storage.getState('addr');
+        relay.storage.set(ourId, userTag + '/questions', questions)
+        .then( res.status(200) )
+        .catch( res.status(500) );
+    }
+
+}
+
+class BusinessHoursAPIV1 extends APIHandler {
+
+    constructor(options) {
+        super(options);
+        this.router.get('/*', this.asyncRoute(this.onGet, false));
+        this.router.post('/*', this.asyncRoute(this.onPost, false));
+    }
+
+    async onGet(req, res){
+        let userTag = req.get('loginTag');
+        let ourId = await relay.storage.getState('addr');
+        let businessHours = await relay.storage.get(ourId, userTag + '/business-hours');
+        res.json(businessHours);
+        console.log('server response:');
+        console.log(res);
+    }
+
+    async onPost(req, res) {
+        let userTag = req.get('loginTag');
+        let ourId = await relay.storage.getState('addr');
+        let businessHours = req.body;
+        console.log('req.body : ');
+        console.log(req.body);
+        relay.storage.set(ourId, userTag + '/business-hours', businessHours);
+    }
+
+}
+
 
 module.exports = {
     APIHandler,
     OnboardAPIV1,
     AuthenticationAPIV1,
+    QuestionsAPIV1,
+    BusinessHoursAPIV1
 };

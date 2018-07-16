@@ -37,6 +37,6 @@ module.exports = {
     mounted: function() {
         util.fetch.call(this, '/api/auth/status/v1')
         .then(result => { this.global.passwordSet = result.ok; });
-    },
+    }
 }
 </script>

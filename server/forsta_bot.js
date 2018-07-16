@@ -13,6 +13,8 @@ class ForstaBot {
 
     async start() {
         const ourId = await relay.storage.getState('addr');
+        console.log('ourId : ');
+        console.log(ourId);
         if (!ourId) {
             console.warn("bot is not yet registered");
             return;

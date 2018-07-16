@@ -212,8 +212,8 @@ div [class*="pull right"] {
  
         <sui-button
             class="ui big green button"
-            @click="save(questions)">
-            Save Changes
+            @click="save()">
+            Save Changess
         </sui-button>
  
     </div>
@@ -222,7 +222,51 @@ div [class*="pull right"] {
 <script>
 'use strict'
 module.exports = {
+    mounted: function() {
+        this.authenticateUser();
+        this.loadStorageData();
+    },
     methods: {
+        authenticateUser: function() {
+            if (this.global.onboardStatus !== 'complete') {
+                this.$router.push({ name: 'welcome' });
+                return;
+            }
+            util.fetch.call(this, '/api/onboard/status/v1')
+            .then(result => { 
+                this.global.onboardStatus = result.theJson.status;
+                if (this.global.onboardStatus !== 'complete') {
+                    this.$router.push({ name: 'welcome' });
+                }
+            });
+            if (!this.global.apiToken) {
+                this.$router.push({ name: 'loginTag', query: { forwardTo: this.$router.path }});
+                return;
+            }
+        },
+        deleteResponse: function(question, response) {
+            question.responses.splice(question.responses.indexOf(response),1)
+        },
+        deleteQuestion: function(question) {
+            //show modal prompt for question delete hee !
+            this.questions.splice(this.questions.indexOf(question), 1);
+        },
+        display: function(question) {
+            if(question.editing){
+                question.editing = false;
+            }
+            question.displayed = !question.displayed
+        },
+        loadStorageData: function(){
+            util.fetch.call(this, '/api/questions/', 
+            { 
+                method:'get', 
+                headers: { userTag:this.global.userTag }
+            })
+            .then(result => {
+                this.questions = result.theJson;
+            });
+        },
         newQuestion: function (questions) {
             questions.push({
                 prompt: "Question Prompt",
@@ -256,153 +300,23 @@ module.exports = {
         edit: function (el) {
             el.editing = !el.editing;
         },
-        save: function(questions) {
-           
-        },
-        display: function(question) {
-            if(question.editing){
-                question.editing = false;
-            }
-            question.displayed = !question.displayed
-        },
-        deleteResponse: function(question, response) {
-            question.responses.splice(question.responses.indexOf(response),1)
-        },
-        deleteQuestion: function(question) {
-            //show modal prompt for question delete hee !
-            this.questions.splice(this.questions.indexOf(question), 1);
+        save: function() {
+            util.fetch('/api/questions/', {
+                method:'post',
+                headers:{
+                    loginTag: this.loginTag
+                },
+                body: {
+                    questions: this.questions
+                }
+            });
         }
     },
-    data: () => ({
-        global: shared.state,
-        questions: [
-            {
-                prompt: "Hello, I am the live chat bot. Bleep bloop. What can I help you with?",
-                type:"Multiple Choice",
-                editing: false,
-                displayed: true,
-                responses: [
-                    {
-                        text: "I need technical support!",
-                        action:"Forward to Distribution",
-                        forwardDist: "@support",
-                        forwardQuestion: ""
-                    },
-                    {
-                        text: "Put me in touch with sales.",
-                        action:"Forward to Distribution",
-                        forwardDist: "@sales",
-                        forwardQuestion: ""
-                    },
-                    {
-                        text: "Other",
-                        action:"Forward to Question",
-                        forwardDist: "",
-                        forwardQuestion: 2
-                    }
-                ]
-            },
-            {
-                prompt: "Looks like you need help with something other than support or sales...",
-                type:"Multiple Choice",
-                editing: false,
-                displayed: true,
-                responses: [
-                    {
-                        text: "Why the hell is forsta named what it is?",
-                        action:"Forward to Question",
-                        forwardDist: "",
-                        forwardQuestion: 3
-                    },
-                    {
-                        text: "Is there one true god?",
-                        action:"Next Question",
-                        forwardDist: "",
-                        forwardQuestion: ""
-                    }
-                ]
-            },
-            {
-                prompt: "That depends, are you a cop?",
-                type:"Multiple Choice",
-                editing:false,
-                displayed: true,
-                responses: [
-                    {
-                        text: "Of course I'm not a cop you have known me for years",
-                        action:"Forward to Question",
-                        forwardDist: "",
-                        forwardQuestion: 4
-                    },
-                    {
-                        text: "I am actually a cop",
-                        action:"Forward to Question",
-                        forwardDist: "",
-                        forwardQuestion: 5
-                    }
-                ]
-            }
-        ],
-        actionOptions: [
-            {
-                text:"Next Question",
-                value:"Next Question",
-            },
-            {
-                text:"Forward to Question",
-                value:"Forward to Question"
-            },
-            {
-                text:"Message User",
-                value:"Message User",
-            },
-            {
-                text:"Forward to Distribution",
-                value:"Forward to Distribution",
-            }
-        ],
-        questionTypes: [
-            {
-                text:"Free Response",
-                value:"Free Response",
-            },
-            {
-                text:"Multiple Choice",
-                value:"Multiple Choice",
-            }
-        ],
-        distributions: [
-            {
-                text:"@sales",
-                value:"@sales"
-            },
-            {
-                text:"@support",
-                value:"@support"
-            }
-        ]
-    }),
-    mounted: function() {
-        console.log(this.global.onboardStatus, this.$router.path);
- 
-        if (this.global.onboardStatus !== 'complete') {
-            this.$router.push({ name: 'welcome' });
-            return;
+    data: function() {
+        return {
+            global: shared.state,
+            questions: []
         }
-        util.fetch.call(this, '/api/onboard/status/v1')
-        .then(result => {
-            this.global.onboardStatus = result.theJson.status;
-            if (this.global.onboardStatus !== 'complete') {
-                this.$router.push({ name: 'welcome' });
-            }
-        });
-        if (!this.global.apiToken) {
-            this.$router.push({ name: 'loginTag', query: { forwardTo: this.$router.path }});
-            return;
-        }
- 
-        // const ourId = await relay.storage.getState('addr');
-        // console.log(ourId);
     }
 }
 </script>
