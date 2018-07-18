@@ -3,7 +3,7 @@
 const BotAtlasClient = require('./atlas_client');
 const cache = require('./cache');
 const relay = require('librelay');
-const uuid4 = require("uuid/v4");
+const uuid4 = require('uuid/v4');
 const moment = require("moment");
 const words = require("./authwords");
 
@@ -32,6 +32,67 @@ class ForstaBot {
 
         await this.msgReceiver.connect();
     }
+
+    async onMessage(ev) {
+        let msg = this.parseEv(ev);
+        if(!msg){
+            console.error("Received unsupported message!");
+        }
+        const dist = await this.resolveTags(msg.distribution.expression);
+        const threadId = msg.threadId;
+        const msgTxt = msg.data.body[0].value;
+        //const msgId = msg.messageId;
+
+        if(msgTxt == "init"){
+            this.questions = await relay.storage.get('live-chat-bot', 'questions');
+            this.sendMessage(dist, threadId, "Initializing question set!");
+        }
+
+        if(!this.questions){
+            this.sendMessage(dist, threadId, "Question set not initialized, use 'init' to initialize");
+        }else if(this.questions.length == 0){
+            this.sendMessage(dist, threadId, "Question set empty, use 'init' to restart");
+        }else{
+            this.sendMessage(dist, threadId, this.questions[0].prompt);
+            this.questions[0].responses.forEach(response =>{
+                this.sendMessage(dist, threadId, `<a href="#">${response.text}</a>`);
+            });
+            this.questions.shift();
+        }
+    }
+
+    parseEv(ev){
+        const message = ev.data.message;
+        const msgEnvelope = JSON.parse(message.body);
+        let msg;
+        for (const x of msgEnvelope) {
+            if (x.version === 1) {
+                msg = x;
+                break;
+            }
+        }
+        return msg;
+    }
+
+    sendMessage(dist, threadId, text){
+        this.msgSender.send({
+            distribution: dist,
+            threadId: threadId,
+            html: `${ text }`,
+            text: text
+        });
+    }
+
+    sendHypertextResponse(dist, threadId, msgId, html){
+        this.msgSender.send({
+            distribution: dist,
+            threadId: threadId,
+            messageRef: msgId,
+            html: html,
+            text: ''
+        });
+    }
+        
 
     stop() {
         if (this.msgReceiver) {
@@ -66,34 +127,6 @@ class ForstaBot {
 
     fqLabel(user) { 
         return `${this.fqTag(user)} (${this.fqName(user)})`; 
-    }
-
-    async onMessage(ev) {
-        const message = ev.data.message;
-        const msgEnvelope = JSON.parse(message.body);
-        let msg;
-        for (const x of msgEnvelope) {
-            if (x.version === 1) {
-                msg = x;
-                break;
-            }
-        }
-        if (!msg) {
-            console.error("Received unsupported message:", msgEnvelope);
-            return;
-        }
-
-        const dist = await this.resolveTags(msg.distribution.expression);
-        const senderUser = (await this.getUsers([msg.sender.userId]))[0];
-
-        const reply = `Hello, ${senderUser.first_name}!`;
-
-        this.msgSender.send({
-            distribution: dist,
-            threadId: msg.threadId,
-            html: `${ reply }`,
-            text: reply
-        });
     }
     
     forgetStaleNotificationThreads() {

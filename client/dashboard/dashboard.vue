@@ -76,9 +76,8 @@ div [class*="pull right"] {
  
             <sui-table-body v-if="question.displayed">
                 <sui-table-row>
-                    <sui-table-cell
-                        colspan="4">
-                        <!-- question prompt -->
+                    <!-- question prompt -->
+                    <sui-table-cell  colspan="4">
                         <sui-icon
                             name="comment outline"
                             size="medium"/>
@@ -92,8 +91,8 @@ div [class*="pull right"] {
                             v-model="question.prompt"
                             :value="question.prompt"
                             v-else/>
-                        <!-- /question prompt -->
                     </sui-table-cell>
+                    <!-- /question prompt -->
                 </sui-table-row>
  
                 <sui-table-row
@@ -101,9 +100,7 @@ div [class*="pull right"] {
                     v-if="question.type!='Free Response'">
  
                     <!-- responses edit -->
-                    <sui-table-cell
-                        colspan="2"
-                        collapsing>
+                    <sui-table-cell colspan="2" collapsing>
                         <sui-icon
                             class="hover-red"
                             name="trash alternate outline"
@@ -133,7 +130,9 @@ div [class*="pull right"] {
                             vertical-align="middle" />
                         <sui-dropdown      
                             selection
-                            :options="actionOptions"
+                            
+                            placeholder="Response Action"
+                            :options="questionActions"
                             v-model="response.action"
                             v-if="question.editing"
                             />
@@ -146,7 +145,8 @@ div [class*="pull right"] {
                     <sui-table-cell>
                         <span v-if="response.action=='Forward to Question'">
                             <sui-dropdown      
-                                selection
+                                selection  search
+                                placeholder="Question"
                                 :options="questions"
                                 v-model="response.forwardQuestion"
                                 v-if="question.editing" />
@@ -157,13 +157,26 @@ div [class*="pull right"] {
                         </span>
                         <span v-if="response.action=='Forward to Distribution'">
                             <sui-dropdown      
-                                selection
+                                selection  search
+                                placeholder="Distribution"
                                 :options="distributions"
                                 v-model="response.forwardDist"
                                 v-if="question.editing" />
                             <span
                                 class="response-cell"
                                 v-text="response.forwardDist"
+                                v-else />
+                        </span>
+                        <span v-if="response.action=='Forward to User'">
+                            <sui-dropdown      
+                                selection  search
+                                placeholder="User"
+                                :options="user"
+                                v-model="response.forwardUser"
+                                v-if="question.editing" />
+                            <span
+                                class="response-cell"
+                                v-text="response.forwardUser"
                                 v-else />
                         </span>
                     </sui-table-cell>
@@ -175,9 +188,7 @@ div [class*="pull right"] {
                     v-if="question.type=='Free Response'">
                     <sui-table-cell>
                         <span>
-                            The user will simply type their response to this question
-                            and it will be stored in the message vault component.
-                            Then the user will be prompted with the next question.
+                            This question will be saved and the user will be prompted with the next question.
                         </span>
                     </sui-table-cell>  
                 </sui-table-row>
@@ -193,8 +204,8 @@ div [class*="pull right"] {
                             </sui-button>
                         <sui-dropdown
                             class="pull right"
-                            placeholder="Question Type"
                             selection
+                            placeholder="Question Type"
                             :options="questionTypes"
                             v-model="question.type"
                         />
@@ -209,13 +220,6 @@ div [class*="pull right"] {
             @click="newQuestion(questions)">
             Add Question
         </sui-button>
- 
-        <sui-button
-            class="ui big green button"
-            @click="save()">
-            Save Changess
-        </sui-button>
- 
     </div>
 </template>
  
@@ -224,7 +228,7 @@ div [class*="pull right"] {
 module.exports = {
     mounted: function() {
         this.authenticateUser();
-        this.loadStorageData();
+        this.loadData();
     },
     methods: {
         authenticateUser: function() {
@@ -248,7 +252,6 @@ module.exports = {
             question.responses.splice(question.responses.indexOf(response),1)
         },
         deleteQuestion: function(question) {
-            //show modal prompt for question delete hee !
             this.questions.splice(this.questions.indexOf(question), 1);
         },
         display: function(question) {
@@ -257,34 +260,33 @@ module.exports = {
             }
             question.displayed = !question.displayed
         },
-        loadStorageData: function(){
-            util.fetch.call(this, '/api/questions/', 
-            { 
-                method:'get', 
-                headers: { userTag:this.global.userTag }
-            })
+        loadData: function(){
+            util.fetch.call(this, '/api/questions/', {method: 'get'})
             .then(result => {
                 this.questions = result.theJson;
             });
+            //TODO: load available dists and users
         },
         newQuestion: function (questions) {
             questions.push({
                 prompt: "Question Prompt",
                 type: "Multiple Choice",
-                editing: true,
+                editing: false,
                 displayed: true,
                 responses: [
                     {
                         text: "Yes",
-                        action: "Next Question",
-                        forwardDist: "",
-                        forwardQuestion: ""
+                        action: null,
+                        forwardDist: null,
+                        forwardQuestion: null,
+                        forwardUser: null
                     },
                     {
                         text: "No",
-                        action: "Next Question",
-                        forwardDist: "",
-                        forwardQuestion: 4
+                        action: null,
+                        forwardDist: null,
+                        forwardQuestion: null,
+                        forwardUser: null
                     }
                 ]
             })
@@ -292,30 +294,52 @@ module.exports = {
         newResponse: function (question){
             question.responses.push({
                 text: "New Response",
-                action: "Next Question",
-                forwardDist: "",
-                forwardQuestion: 4
+                action: null,
+                forwardDist: null,
+                forwardQuestion: null,
+                forwardUser: null
             })
         },
         edit: function (el) {
             el.editing = !el.editing;
         },
-        save: function() {
+        saveData: function() {
             util.fetch('/api/questions/', {
                 method:'post',
-                headers:{
-                    loginTag: this.loginTag
-                },
-                body: {
-                    questions: this.questions
-                }
+                body: {questions: this.questions}
             });
         }
     },
     data: function() {
         return {
             global: shared.state,
-            questions: []
+            questions: [],
+            dists: [],
+            users: [],
+            questionActions: [
+                {
+                    text: "Forward to Question",
+                    value: "Forward to Question"
+                },
+                {
+                    text: "Forward to User",
+                    value: "Forward to User"
+                },
+                {
+                    text: "Forward to Distribution",
+                    value: "Forward to Distribution"
+                },
+            ],
+            questionTypes: [
+                {
+                    text: "Free Response",
+                    value: "Free Response"
+                },
+                {
+                    text: "Multiple Choice",
+                    value: "Multiple Choice"
+                }
+            ]
         }
     }
 }

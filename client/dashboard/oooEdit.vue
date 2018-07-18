@@ -77,32 +77,52 @@ div [class*="pull right"] {
 <script>
 'use strict'
 module.exports = {
-    methods: {
-    
-    },
-    computed: {
-    },
-    data: () => ({ 
-        global: shared.state
-    }),
     mounted: function() {
-        console.log(this.global.onboardStatus, this.$router.path);
-
-        if (this.global.onboardStatus !== 'complete') {
-            this.$router.push({ name: 'welcome' });
-            return;
-        }
-        util.fetch.call(this, '/api/onboard/status/v1')
-        .then(result => { 
-            this.global.onboardStatus = result.theJson.status;
+        this.authenticateUser();
+        this.loadData();
+    },
+    methods: {
+        display: function(el){
+            el.displayed = !el.displayed;
+        },
+        authenticateUser: function() {
             if (this.global.onboardStatus !== 'complete') {
                 this.$router.push({ name: 'welcome' });
+                return;
             }
-        });
-        if (!this.global.apiToken) {
-            this.$router.push({ name: 'loginTag', query: { forwardTo: this.$router.path }});
-            return;
+            util.fetch.call(this, '/api/onboard/status/v1')
+            .then(result => { 
+                this.global.onboardStatus = result.theJson.status;
+                if (this.global.onboardStatus !== 'complete') {
+                    this.$router.push({ name: 'welcome' });
+                }
+            });
+            if (!this.global.apiToken) {
+                this.$router.push({ name: 'loginTag', query: { forwardTo: this.$router.path }});
+                return;
+            }
+        },
+        loadData: function() {
+            util.fetch('/api/business-hours', {method:'get'})
+            .then( res => {
+                this.oooEditData = res.theJson;
+            });
+        },
+        saveData: function() {
+            util.fetch('/api/business-hours', 
+            {
+                method:'post', 
+                body:
+                { 
+                    oooEditData: this.oooEditData 
+                }
+            });
+            
         }
-    }
+    },
+    data: () => ({ 
+        global: shared.state,
+        oooEditData: {}
+    }),
 }
 </script>

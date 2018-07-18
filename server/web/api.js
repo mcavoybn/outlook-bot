@@ -280,11 +280,9 @@ class QuestionsAPIV1 extends APIHandler {
     }
 
     async onGet(req, res){
-        let userTag = req.get('userTag');
-        let ourId = await relay.storage.getState('addr');
-        let questions = await relay.storage.get(ourId, userTag + '/questions');
+        let questions = await relay.storage.get('live-chat-bot', 'questions');
         if(!questions){
-            res.status(200).json([
+            questions = [
                 {
                     prompt: "Question Prompt",
                     type: "Multiple Choice",
@@ -294,28 +292,28 @@ class QuestionsAPIV1 extends APIHandler {
                         {
                             text: "Yes",
                             action: "Next Question",
-                            forwardDist: "",
-                            forwardQuestion: ""
+                            forwardDist: null,
+                            forwardQuestion: null,
+                            forwardUser: null
                         },
                         {
                             text: "No",
                             action: "Next Question",
-                            forwardDist: "",
-                            forwardQuestion: 4
+                            forwardDist: null,
+                            forwardQuestion: null,
+                            forwardUser: null
                         }
                     ]
                 }
-            ]);
-        }else{
-            res.status(200).json(questions);
+            ];
         }
+        res.status(200).json(questions);
+        
     }
 
     async onPost(req, res) {
-        let userTag = req.get('loginTag');
         let questions = req.body.questions;
-        let ourId = await relay.storage.getState('addr');
-        relay.storage.set(ourId, userTag + '/questions', questions)
+        relay.storage.set('live-chat-bot', 'questions', questions)
         .then( res.status(200) )
         .catch( res.status(500) );
     }
@@ -331,24 +329,57 @@ class BusinessHoursAPIV1 extends APIHandler {
     }
 
     async onGet(req, res){
-        let userTag = req.get('loginTag');
-        let ourId = await relay.storage.getState('addr');
-        let businessHours = await relay.storage.get(ourId, userTag + '/business-hours');
-        res.json(businessHours);
-        console.log('server response:');
-        console.log(res);
+        let businessHours = await relay.storage.get('live-chat-bot', 'business-hours');
+        if(!businessHours){
+            businessHours = {
+                open: '08:00:00AM',
+                close: '08:00:00PM',
+                OooMessage: 'Fuck off!'
+            };
+        }
+        res.status(200).json(businessHours);
     }
 
     async onPost(req, res) {
-        let userTag = req.get('loginTag');
-        let ourId = await relay.storage.getState('addr');
-        let businessHours = req.body;
-        console.log('req.body : ');
-        console.log(req.body);
-        relay.storage.set(ourId, userTag + '/business-hours', businessHours);
+        let businessHours = req.body.businessHours;
+        relay.storage.set('live-chat-bot', 'business-hours', businessHours)
+        .then( res.status(200) )
+        .catch( res.status(500) );
     }
 
 }
+
+class MessageHistoryAPIV1 extends APIHandler {
+
+    constructor(options) {
+        super(options);
+        this.router.get('/*', this.asyncRoute(this.onGet, false));
+        this.router.post('/*', this.asyncRoute(this.onPost, false));
+    }
+
+    async onGet(req, res){
+        let messageHistory = await relay.storage.get('live-chat-bot', 'message-history');
+        if(!messageHistory){
+            messageHistory = [
+                {
+                    prompt:"No messages found in history!",
+                    response:""
+                }
+            ];
+        }
+        res.status(200).json(messageHistory);
+    }
+
+    async onPost(req, res) {
+        let messageHistory = req.body.messageHistory;
+        relay.storage.set('live-chat-bot', 'message-history', messageHistory)
+        .then( res.status(200) )
+        .catch( res.status(500) );
+    }
+
+}
+
+
 
 
 module.exports = {
@@ -356,5 +387,6 @@ module.exports = {
     OnboardAPIV1,
     AuthenticationAPIV1,
     QuestionsAPIV1,
-    BusinessHoursAPIV1
+    BusinessHoursAPIV1,
+    MessageHistoryAPIV1
 };

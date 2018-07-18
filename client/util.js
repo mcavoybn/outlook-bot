@@ -1,4 +1,3 @@
-
 var shared = require('./globalState');
 
 function addFormErrors(formClass, errors) {

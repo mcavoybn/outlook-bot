@@ -91,13 +91,52 @@ div [class*="pull right"] {
 <script>
 'use strict'
 module.exports = {
+    mounted: function() {
+        this.authenticateUser();
+        this.loadData();
+    },
     methods: {
         display: function(el){
             el.displayed = !el.displayed;
+        },
+        authenticateUser: function() {
+            if (this.global.onboardStatus !== 'complete') {
+                this.$router.push({ name: 'welcome' });
+                return;
+            }
+            util.fetch.call(this, '/api/onboard/status/v1')
+            .then(result => { 
+                this.global.onboardStatus = result.theJson.status;
+                if (this.global.onboardStatus !== 'complete') {
+                    this.$router.push({ name: 'welcome' });
+                }
+            });
+            if (!this.global.apiToken) {
+                this.$router.push({ name: 'loginTag', query: { forwardTo: this.$router.path }});
+                return;
+            }
+        },
+        loadData: function() {
+            util.fetch('/api/message-history', {method:'get'})
+            .then( res => {
+                messageHistory = res.theJson;
+            });
+        },
+        saveData: function() {
+            util.fetch('/api/message-history', 
+            {
+                method:'post', 
+                body:
+                { 
+                    messageHistory: this.messageHistory 
+                }
+            });
+            
         }
     },
     data: () => ({ 
         global: shared.state,
+        messageHistory: {},
         submissions: [
             {
                 date: '07/07/07',
@@ -128,9 +167,6 @@ module.exports = {
                 ]
             },
         ]
-    }),
-    mounted: function() {
-        //$root.checkPrerequisites();
-    }
+    })
 }
 </script>
