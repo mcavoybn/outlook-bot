@@ -1,21 +1,4 @@
 <style>
-.response-cell{
-    padding:15px;
-}
-.hover-red:hover{
-    color:red;
-}
-.hover-blue:hover{
-    color:blue;
-}
-div [class*="pull left"] {
-  float: left;
-  margin-left: 0.25em;
-}
-div [class*="pull right"] {
-  float: right;
-   margin-right: 0.25em;
-}
 </style>
 
 <template lang="html">
@@ -92,34 +75,16 @@ div [class*="pull right"] {
 'use strict'
 module.exports = {
     mounted: function() {
-        this.authenticateUser();
         this.loadData();
     },
     methods: {
         display: function(el){
             el.displayed = !el.displayed;
         },
-        authenticateUser: function() {
-            if (this.global.onboardStatus !== 'complete') {
-                this.$router.push({ name: 'welcome' });
-                return;
-            }
-            util.fetch.call(this, '/api/onboard/status/v1')
-            .then(result => { 
-                this.global.onboardStatus = result.theJson.status;
-                if (this.global.onboardStatus !== 'complete') {
-                    this.$router.push({ name: 'welcome' });
-                }
-            });
-            if (!this.global.apiToken) {
-                this.$router.push({ name: 'loginTag', query: { forwardTo: this.$router.path }});
-                return;
-            }
-        },
         loadData: function() {
             util.fetch('/api/message-history', {method:'get'})
             .then( res => {
-                messageHistory = res.theJson;
+                this.messageHistory = res.theJson;
             });
         },
         saveData: function() {

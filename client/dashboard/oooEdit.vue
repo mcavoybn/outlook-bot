@@ -1,7 +1,4 @@
 <style>
-.response-cell{
-    padding:15px;
-}
 .hover-red:hover{
     color:red;
 }
@@ -22,30 +19,44 @@ div [class*="pull right"] {
     <div class="ui container center aligned">
 
         <!--  BUSINESS HOURS -->
-        <sui-table 
-            class="ui center aligned table">
+        <sui-table
+            class="ui left aligned table"
+            color="grey">
             <sui-table-header>
                 <sui-table-row>
-                    <sui-table-headerCell>
+                    <sui-table-headerCell
+                        @click="toggleDisplayed()">
+                        <sui-icon
+                            class="item link"
+                            name="dropdown"
+                            size="large"
+                            v-if="displayed"/>
+                        <sui-icon
+                            class="item link"
+                            name="caret right"
+                            size="large"
+                            v-else />
                         <span>Business Hours</span>
                     </sui-table-headerCell>
                 </sui-table-row>
             </sui-table-header>
 
 
-            <sui-table-body>
+            <sui-table-body v-if="displayed">
                 <sui-table-row> 
                     <sui-table-cell>
                         <div class="ui labeled input">
                             <div class="ui label">Open:</div>
-                            <input format="HH:MM:SS" 
-                                v-model="openTime" 
+                            <input format="HH:MM:AM"
+                                :value="oooEditData"
+                                v-model="oooEditData.open"
                                 type="time"/>
                         </div>
                         <div class="ui labeled input">
                             <div class="ui label">Close:</div>
-                            <input format="HH:MM:SS" 
-                                v-model="closeTime" 
+                            <input format="HH:MM:AM"
+                                :value="oooEditData" 
+                                v-model="oooEditData.close"
                                 type="time"/>
                         </div>
                     </sui-table-cell>
@@ -54,7 +65,9 @@ div [class*="pull right"] {
                     <sui-table-cell>
                         <div class="ui form field">
                             <label>Out of Office Message</label>
-                            <textarea v-model="OooMessage"></textarea>
+                            <textarea 
+                            rows="2"
+                            v-model="oooEditData.message"></textarea>
                         </div>
                     </sui-table-cell>
                 </sui-table-row>
@@ -62,11 +75,14 @@ div [class*="pull right"] {
 
             <sui-table-footer>
                 <sui-table-row>
-                    <sui-table-cell>
-                        <button class="ui button pull right" primary>
+                    <sui-table-headerCell>
+                        <sui-button 
+                            class="ui button pull right" 
+                            primary
+                            @click="saveData()">
                             Save Changes
-                        </button>
-                    </sui-table-cell>
+                        </sui-button>
+                    </sui-table-headerCell>
                 </sui-table-row>
             </sui-table-footer>
         </sui-table>
@@ -78,30 +94,9 @@ div [class*="pull right"] {
 'use strict'
 module.exports = {
     mounted: function() {
-        this.authenticateUser();
         this.loadData();
     },
     methods: {
-        display: function(el){
-            el.displayed = !el.displayed;
-        },
-        authenticateUser: function() {
-            if (this.global.onboardStatus !== 'complete') {
-                this.$router.push({ name: 'welcome' });
-                return;
-            }
-            util.fetch.call(this, '/api/onboard/status/v1')
-            .then(result => { 
-                this.global.onboardStatus = result.theJson.status;
-                if (this.global.onboardStatus !== 'complete') {
-                    this.$router.push({ name: 'welcome' });
-                }
-            });
-            if (!this.global.apiToken) {
-                this.$router.push({ name: 'loginTag', query: { forwardTo: this.$router.path }});
-                return;
-            }
-        },
         loadData: function() {
             util.fetch('/api/business-hours', {method:'get'})
             .then( res => {
@@ -117,12 +112,15 @@ module.exports = {
                     oooEditData: this.oooEditData 
                 }
             });
-            
+        },
+        toggleDisplayed: function() {
+            this.displayed = !this.displayed;
         }
     },
     data: () => ({ 
         global: shared.state,
-        oooEditData: {}
+        displayed: true,
+        oooEditData: {},
     }),
 }
 </script>

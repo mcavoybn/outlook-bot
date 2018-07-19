@@ -13,8 +13,7 @@
                     <div class="item" @click="logout">Sign Out</div>
                     <div class="item" @click="settings">Settings</div>
                     <div class="item" @click="dashboard">Dashboard</div>
-                    <div class="item" @click="oooEdit">OooEdit</div>
-                    <div class="item" @click="messageViewer">MessageViewer</div>
+                    <div class="item" @click="messageViewer">Message History</div>
                     </div>
                 </div>
             </div>
@@ -39,9 +38,6 @@ module.exports = {
         },
         dashboard: function () {
             this.$router.push({ name: 'dashboard' });
-        },
-        oooEdit: function () {
-            this.$router.push({ name: 'oooEdit' });
         },
         messageViewer: function () {
             this.$router.push({ name: 'messageViewer' });

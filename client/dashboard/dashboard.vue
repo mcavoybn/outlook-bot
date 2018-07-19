@@ -1,12 +1,18 @@
 <style>
 .response-cell{
-    padding:15px;
+    display:inline;
 }
 .hover-red:hover{
     color:red;
+    cursor:pointer;
 }
 .hover-blue:hover{
     color:blue;
+    cursor:pointer;
+}
+.hover-gray-bg:hover{
+    background-color:#eee;
+    cursor:pointer;
 }
 div [class*="pull left"] {
   float: left;
@@ -26,22 +32,29 @@ div [class*="pull right"] {
  
 <template lang="html">
     <div class="ui container center aligned">
- 
+
+        <!-- OUT OF OFFICE EDIT COMPONENT -->
+        <ooo-edit />
+        <!-- /OUT OF OFFICE EDIT COMPONENT -->
+
         <!--  QUESTION EDIT TABLE -->
         <sui-table
             class="ui left aligned table"
-            v-for="question in questions">
- 
+            v-for="question in questions"
+            v-bind:color="question.color">
             <sui-table-header>
-                <sui-table-row class="hover-red">
+                <sui-table-row>
                     <sui-table-headerCell
+                        class="hover-gray-bg"
                         colspan="2"
                         @click="display(question)">
                         <sui-icon
+                            class="item link"
                             name="dropdown"
                             size="large"
                             v-if="question.displayed"/>
                         <sui-icon
+                            class="item link"
                             name="caret right"
                             size="large"
                             v-else />
@@ -49,22 +62,22 @@ div [class*="pull right"] {
                             Question {{questions.indexOf(question)+1}}</h4>
                     </sui-table-headerCell>
                     <sui-table-headerCell colspan="2"class="right aligned">
-                        <sui-list-icon
-                            class="hover-red"
+                        <sui-icon
+                            class="item hover-red"
                             name="edit"
                             size="large"
                             vertical-align="middle"
                             v-if="question.displayed && !question.editing"
                             @click="edit(question)"/>
                         <sui-icon
-                            class="hover-red"
+                            class="item hover-red"
                             name="trash alternate outline"
                             size="large"
                             vertical-align="middle"
                             v-if="question.displayed && question.editing"
                             @click="deleteQuestion(question)"/>
-                        <sui-list-icon
-                            class="hover-blue"
+                        <sui-icon
+                            class="item hover-blue"
                             name="save"
                             size="large"
                             vertical-align="middle"
@@ -75,10 +88,11 @@ div [class*="pull right"] {
             </sui-table-header>
  
             <sui-table-body v-if="question.displayed">
-                <sui-table-row>
+                <sui-table-row class="hover-gray-bg">
                     <!-- question prompt -->
                     <sui-table-cell  colspan="4">
                         <sui-icon
+                            class="item link"
                             name="comment outline"
                             size="medium"/>
                         <h4
@@ -96,89 +110,88 @@ div [class*="pull right"] {
                 </sui-table-row>
  
                 <sui-table-row
+                    class="hover-gray-bg"
                     v-for="response in question.responses"
                     v-if="question.type!='Free Response'">
  
                     <!-- responses edit -->
                     <sui-table-cell colspan="2" collapsing>
                         <sui-icon
-                            class="hover-red"
+                            class="item link hover-red"
                             name="trash alternate outline"
                             size="medium"
                             vertical-align="middle"
                             v-if="question.editing"
                             @click="deleteResponse(question, response)"/>
-                        <span v-if="!question.editing">
-                            <span
+                            <p
                                 class="response-cell"
-                                v-text="response.text"/>
-                        </span>
-                        <span v-else>
+                                v-text="response.text"
+                                v-if="!question.editing"/>
                             <sui-input
                                 class="flexbox"
                                 v-model="response.text"
-                                :value="response.text"/>
-                        </span>
+                                :value="response.text"
+                                v-else/>
                     </sui-table-cell>
                     <!-- /responses edit -->
  
                     <!-- response action edit -->
                     <sui-table-cell collapsing>
                         <sui-icon
+                            class="item link"
                             name="arrow right"
                             size="medium"
                             vertical-align="middle" />
                         <sui-dropdown      
                             selection
-                            
                             placeholder="Response Action"
                             :options="questionActions"
                             v-model="response.action"
                             v-if="question.editing"
                             />
-                        <span
+                        <p
                             class="response-cell"
                             v-text="response.action"
                             v-else
                             />
                     </sui-table-cell>
                     <sui-table-cell>
-                        <span v-if="response.action=='Forward to Question'">
+                        <div v-if="response.action=='Forward to Question'">
                             <sui-dropdown      
-                                selection  search
+                                selection
                                 placeholder="Question"
-                                :options="questions"
-                                v-model="response.forwardQuestion"
+                                :options="questionsForDropdown"
+                                v-model="response.actionOption"
                                 v-if="question.editing" />
-                            <span
+                            <p
                                 class="response-cell"
-                                v-text="response.forwardQuestion"
+                                v-text="response.actionOption"
                                 v-else />
-                        </span>
-                        <span v-if="response.action=='Forward to Distribution'">
+                        </div>
+                        <div v-if="response.action=='Forward to Distribution'">
                             <sui-dropdown      
-                                selection  search
+                                selection
                                 placeholder="Distribution"
-                                :options="distributions"
-                                v-model="response.forwardDist"
+                                :options="dists"
+                                v-model="response.actionOption"
                                 v-if="question.editing" />
-                            <span
+                            <p
                                 class="response-cell"
-                                v-text="response.forwardDist"
+                                v-text="response.actionOption"
                                 v-else />
-                        </span>
-                        <span v-if="response.action=='Forward to User'">
+                        </div>
+                        <div v-if="response.action=='Forward to User'">
                             <sui-dropdown      
-                                selection  search
+                                selection
                                 placeholder="User"
-                                :options="user"
-                                v-model="response.forwardUser"
+                                :options="users"
+                                v-model="response.actionOption"
                                 v-if="question.editing" />
-                            <span
+                            <p
                                 class="response-cell"
-                                v-text="response.forwardUser"
+                                v-text="response.actionOption"
                                 v-else />
-                        </span>
+                        </div>
                     </sui-table-cell>
                     <!-- /response action edit -->
  
@@ -214,40 +227,34 @@ div [class*="pull right"] {
             </sui-table-footer>
         </sui-table>
         <!--  /QUESTION EDIT TABLE -->
- 
+
         <sui-button
-            class="ui big blue button"
-            @click="newQuestion(questions)">
+            class="ui large green button pull left"
+            style="margin-bottom:50px"
+            @click="newQuestion()">
             Add Question
+        </sui-button>
+        <sui-button
+            class="ui large button pull right"
+            style="margin-bottom:50px"
+            :class="{blue: changesMade, grey: !changesMade}"
+            @click="saveData()">
+            Save Changes
         </sui-button>
     </div>
 </template>
  
 <script>
+let oooEdit = require('./oooEdit.vue');
 'use strict'
 module.exports = {
     mounted: function() {
-        this.authenticateUser();
         this.loadData();
     },
+    components: {
+        'ooo-edit': oooEdit
+    },
     methods: {
-        authenticateUser: function() {
-            if (this.global.onboardStatus !== 'complete') {
-                this.$router.push({ name: 'welcome' });
-                return;
-            }
-            util.fetch.call(this, '/api/onboard/status/v1')
-            .then(result => { 
-                this.global.onboardStatus = result.theJson.status;
-                if (this.global.onboardStatus !== 'complete') {
-                    this.$router.push({ name: 'welcome' });
-                }
-            });
-            if (!this.global.apiToken) {
-                this.$router.push({ name: 'loginTag', query: { forwardTo: this.$router.path }});
-                return;
-            }
-        },
         deleteResponse: function(question, response) {
             question.responses.splice(question.responses.indexOf(response),1)
         },
@@ -256,66 +263,114 @@ module.exports = {
         },
         display: function(question) {
             if(question.editing){
-                question.editing = false;
+                return;
             }
             question.displayed = !question.displayed
         },
         loadData: function(){
             util.fetch.call(this, '/api/questions/', {method: 'get'})
             .then(result => {
+                this.questionsOriginal = JSON.stringify(result.theJson);
                 this.questions = result.theJson;
+                this.questionsForDropdown = [];
+                for(let i=0; i<this.questions.length; i++){
+                    this.questionsForDropdown.push({
+                        text: `Question ${i+1}`,
+                        value: `Question ${i+1}`,
+                        color: this.questions[i].color
+                    });
+                }
+                this.changesMade = false;
             });
             //TODO: load available dists and users
         },
-        newQuestion: function (questions) {
-            questions.push({
+        newQuestion: function () {
+            this.questions.push({
                 prompt: "Question Prompt",
                 type: "Multiple Choice",
                 editing: false,
                 displayed: true,
+                color: this.getRandomColor(),
                 responses: [
                     {
                         text: "Yes",
                         action: null,
-                        forwardDist: null,
-                        forwardQuestion: null,
-                        forwardUser: null
+                        actionOption: null
                     },
                     {
                         text: "No",
                         action: null,
-                        forwardDist: null,
-                        forwardQuestion: null,
-                        forwardUser: null
+                        actionOption: null
                     }
                 ]
-            })
+            });
+            this.questionsForDropdown.push({
+                    text: `Question ${this.questions.length}`,
+                    value: `Question ${this.questions.length}`,
+                    color: this.questions[i].color
+                });
         },
         newResponse: function (question){
             question.responses.push({
                 text: "New Response",
                 action: null,
-                forwardDist: null,
-                forwardQuestion: null,
-                forwardUser: null
+                actionOption: null
             })
         },
         edit: function (el) {
             el.editing = !el.editing;
+            if(JSON.stringify(this.questions) != this.questionsOriginal){
+                this.changesMade = true;
+            }
+        },
+        getRandomColor: function () {
+            let colors = ['red', 'orange', 'yellow', 'olive', 'green',
+                'teal', 'blue', 'violet', 'purple', 'pink', 'brown', 'grey', 'black'];
+            let idx = Math.floor(Math.random()*13);
+            return colors[idx];
         },
         saveData: function() {
             util.fetch('/api/questions/', {
                 method:'post',
                 body: {questions: this.questions}
             });
+            this.changesMade = false;
+            this.questions.forEach(question => {
+                question.editing = false;
+            });
         }
     },
     data: function() {
         return {
             global: shared.state,
+            changesMade: false,
             questions: [],
-            dists: [],
-            users: [],
+            questionsOriginal: [],
+            dists: [
+                {
+                    text: "@sales",
+                    value: "@sales"
+                },
+                {
+                    text: "@support-1",
+                    value: "@support-1"
+                },
+                {
+                    text: "@support-2",
+                    value: "@support-2"
+                }
+            ],
+            users: [
+                {
+                    text: '@mcavoybn:forsta.io',
+                    value: '@mcavoybn:forsta.io'
+                },
+                {
+                    text: '@zach:forsta.io',
+                    value: '@zach:forsta.io'
+                }
+            ],
+            questionsForDropdown: [],
             questionActions: [
                 {
                     text: "Forward to Question",

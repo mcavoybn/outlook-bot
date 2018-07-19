@@ -4,7 +4,7 @@ const BotAtlasClient = require('./atlas_client');
 const cache = require('./cache');
 const relay = require('librelay');
 const uuid4 = require('uuid/v4');
-const moment = require("moment");
+const moment = require('moment');
 const words = require("./authwords");
 
 const AUTH_FAIL_THRESHOLD = 10;
@@ -13,8 +13,6 @@ class ForstaBot {
 
     async start() {
         const ourId = await relay.storage.getState('addr');
-        console.log('ourId : ');
-        console.log(ourId);
         if (!ourId) {
             console.warn("bot is not yet registered");
             return;
@@ -29,36 +27,104 @@ class ForstaBot {
         this.msgReceiver.addEventListener('error', this.onError.bind(this));
 
         this.msgSender = await relay.MessageSender.factory();
+        this.waitingForResponse = false;
 
         await this.msgReceiver.connect();
+        
     }
 
     async onMessage(ev) {
         let msg = this.parseEv(ev);
-        if(!msg){
-            console.error("Received unsupported message!");
-        }
+        if(!msg) console.error("Received unsupported message!");
         const dist = await this.resolveTags(msg.distribution.expression);
         const threadId = msg.threadId;
         const msgTxt = msg.data.body[0].value;
-        //const msgId = msg.messageId;
 
         if(msgTxt == "init"){
-            this.questions = await relay.storage.get('live-chat-bot', 'questions');
             this.sendMessage(dist, threadId, "Initializing question set!");
+            this.businessHours = await relay.storage.get('live-chat-bot', 'business-hours');
+            this.questions = await relay.storage.get('live-chat-bot', 'questions');
+            this.currentQuestion = this.questions[0];
+            if(this.outOfOffice()){
+                this.sendMessage(dist, threadId, this.businessHours.message);
+            }
         }
 
-        if(!this.questions){
-            this.sendMessage(dist, threadId, "Question set not initialized, use 'init' to initialize");
-        }else if(this.questions.length == 0){
-            this.sendMessage(dist, threadId, "Question set empty, use 'init' to restart");
-        }else{
-            this.sendMessage(dist, threadId, this.questions[0].prompt);
-            this.questions[0].responses.forEach(response =>{
-                this.sendMessage(dist, threadId, `<a href="#">${response.text}</a>`);
-            });
-            this.questions.shift();
+        if(this.waitingForResponse){
+            let responseIndex = -1;
+            try{
+                responseIndex = Number(msgTxt);
+            }catch(error){
+                console.log(`Error in parsing user response:${error}`);
+                this.sendMessage(dist, threadId, `Invalid response - non-number detected`);
+                return;
+            }
+            if(responseIndex > this.currentQuestion.responses.length || responseIndex < 0){
+                this.sendMessage(dist, threadId, `Invalid response - response number not available`);
+                return;
+            }
+
+            let response = this.currentQuestion.responses[responseIndex-1];
+            this.handleResponse(dist, threadId, response);
+            this.waitingForResponse = false;
+            if(response.action != 'Forward to Question') return;
         }
+        
+        if(!this.questions){
+            this.sendMessage(dist, threadId, "Question set not initialized, type 'init' to initialize");
+        }else if(this.questions.length == 0){
+            this.sendMessage(dist, threadId, "Question set empty, type 'init' to restart");
+        }else{
+            this.sendMessage(dist, threadId, this.currentQuestion.prompt)
+                .then(msg => {
+                    let promptId = JSON.parse(msg.message.dataMessage.body)[0].messageId;
+                    this.currentQuestion.responses.forEach( (response, index) =>{
+                        this.sendResponse(dist, threadId, promptId,`[${index+1}] - ${response.text}`);
+                    });
+                });
+            this.waitingForResponse = true;
+        }
+    }
+
+    handleResponse(dist, threadId, response){
+        
+        if(response.action == "Forward to Distribution")
+        {
+            this.sendMessage(dist, threadId, `Forwarding to Distribution ${response.actionOption}`);
+            return;
+        }
+        else if(response.action == "Forward to User")
+        {
+            this.sendMessage(dist, threadId, `Forwarding to User ${response.actionOption}`);
+            return;
+        }
+        else if(response.action == "Forward to Question")
+        {
+            let questionNumber = Number(response.actionOption.split(' ')[1]);
+            this.currentQuestion = this.questions[questionNumber-1];
+        }
+        else if(response.action == null)
+        {
+            this.sendMessage(dist, threadId, `ERROR: response action not configured !`);
+            return;
+        }
+    }
+
+    outOfOffice(){
+        let currentTime = moment();
+        let hours = currentTime.hours(Number);
+        let mins = currentTime.minutes(Number);
+        let openHours = Number(this.businessHours.open.split(':')[0]);
+        let openMins = Number(this.businessHours.open.split(':')[1]);
+        let closeHours = Number(this.businessHours.close.split(':')[0]);
+        let closeMins = Number(this.businessHours.close.split(':')[1]);
+        if( (hours < openHours) || (hours == openHours && mins < openMins) ){
+            return true;
+        }
+        if( (hours > closeHours) || (hours == closeHours && mins > closeMins) ){
+            return true;
+        }
+        return false;
     }
 
     parseEv(ev){
@@ -74,8 +140,8 @@ class ForstaBot {
         return msg;
     }
 
-    sendMessage(dist, threadId, text){
-        this.msgSender.send({
+    async sendMessage(dist, threadId, text){
+        return this.msgSender.send({
             distribution: dist,
             threadId: threadId,
             html: `${ text }`,
@@ -83,16 +149,15 @@ class ForstaBot {
         });
     }
 
-    sendHypertextResponse(dist, threadId, msgId, html){
+    sendResponse(dist, threadId, msgId, text){
         this.msgSender.send({
             distribution: dist,
             threadId: threadId,
             messageRef: msgId,
-            html: html,
-            text: ''
+            html: `${ text }`,
+            text: text
         });
     }
-        
 
     stop() {
         if (this.msgReceiver) {

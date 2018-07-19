@@ -292,20 +292,17 @@ class QuestionsAPIV1 extends APIHandler {
                         {
                             text: "Yes",
                             action: "Next Question",
-                            forwardDist: null,
-                            forwardQuestion: null,
-                            forwardUser: null
+                            actionOption: null
                         },
                         {
                             text: "No",
                             action: "Next Question",
-                            forwardDist: null,
-                            forwardQuestion: null,
-                            forwardUser: null
+                            actionOption: null
                         }
                     ]
                 }
             ];
+            await relay.storage.set('live-chat-bot', 'questions', questions);
         }
         res.status(200).json(questions);
         
@@ -332,16 +329,17 @@ class BusinessHoursAPIV1 extends APIHandler {
         let businessHours = await relay.storage.get('live-chat-bot', 'business-hours');
         if(!businessHours){
             businessHours = {
-                open: '08:00:00AM',
-                close: '08:00:00PM',
-                OooMessage: 'Fuck off!'
+                open: '08:00',
+                close: '20:00',
+                message: 'This is the default out of office hours message.'
             };
+            relay.storage.set('live-chat-bot', 'business-hours', businessHours);
         }
         res.status(200).json(businessHours);
     }
 
     async onPost(req, res) {
-        let businessHours = req.body.businessHours;
+        let businessHours = req.body.oooEditData;
         relay.storage.set('live-chat-bot', 'business-hours', businessHours)
         .then( res.status(200) )
         .catch( res.status(500) );
@@ -353,8 +351,10 @@ class MessageHistoryAPIV1 extends APIHandler {
 
     constructor(options) {
         super(options);
+        this.router.get('/count', this.asyncRoute(this.onGetCount, false));
         this.router.get('/*', this.asyncRoute(this.onGet, false));
         this.router.post('/*', this.asyncRoute(this.onPost, false));
+        this.count = 0;
     }
 
     async onGet(req, res){
@@ -363,7 +363,8 @@ class MessageHistoryAPIV1 extends APIHandler {
             messageHistory = [
                 {
                     prompt:"No messages found in history!",
-                    response:""
+                    response:"No messages found in history!",
+                    action:"None"
                 }
             ];
         }
@@ -373,14 +374,15 @@ class MessageHistoryAPIV1 extends APIHandler {
     async onPost(req, res) {
         let messageHistory = req.body.messageHistory;
         relay.storage.set('live-chat-bot', 'message-history', messageHistory)
-        .then( res.status(200) )
-        .catch( res.status(500) );
+            .then( res.status(200) )
+            .catch( res.status(500) );
     }
 
+    async onGetCount(req, res){
+        this.count++;
+        res.status(200).json(this.count);
+    }
 }
-
-
-
 
 module.exports = {
     APIHandler,
