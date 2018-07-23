@@ -1,10 +1,4 @@
 <style>
-.hover-red:hover{
-    color:red;
-}
-.hover-blue:hover{
-    color:blue;
-}
 div [class*="pull left"] {
   float: left;
   margin-left: 0.25em;
@@ -50,14 +44,16 @@ div [class*="pull right"] {
                             <input format="HH:MM:AM"
                                 :value="oooEditData"
                                 v-model="oooEditData.open"
-                                type="time"/>
+                                type="time"
+                                @input="checkForChanges()"/>
                         </div>
                         <div class="ui labeled input">
                             <div class="ui label">Close:</div>
                             <input format="HH:MM:AM"
                                 :value="oooEditData" 
                                 v-model="oooEditData.close"
-                                type="time"/>
+                                type="time"
+                                @input="checkForChanges()"/>
                         </div>
                     </sui-table-cell>
                 </sui-table-row>
@@ -67,13 +63,14 @@ div [class*="pull right"] {
                             <label>Out of Office Message</label>
                             <textarea 
                             rows="2"
-                            v-model="oooEditData.message"></textarea>
+                            v-model="oooEditData.message"
+                            @input="checkForChanges()"></textarea>
                         </div>
                     </sui-table-cell>
                 </sui-table-row>
             </sui-table-body>
 
-            <sui-table-footer>
+            <sui-table-footer v-if="changesMade&&displayed">
                 <sui-table-row>
                     <sui-table-headerCell>
                         <sui-button 
@@ -97,10 +94,16 @@ module.exports = {
         this.loadData();
     },
     methods: {
+        checkForChanges: function() {
+            if(JSON.stringify(this.oooEditData) != this.oooEditDataOriginal){
+                this.changesMade = true;
+            }
+        },
         loadData: function() {
             util.fetch('/api/business-hours', {method:'get'})
             .then( res => {
                 this.oooEditData = res.theJson;
+                this.oooEditDataOriginal = JSON.stringify(res.theJson);
             });
         },
         saveData: function() {
@@ -112,6 +115,8 @@ module.exports = {
                     oooEditData: this.oooEditData 
                 }
             });
+            this.oooEditDataOriginal = JSON.stringify(this.oooEditData);
+            this.changesMade = false;
         },
         toggleDisplayed: function() {
             this.displayed = !this.displayed;
@@ -121,6 +126,8 @@ module.exports = {
         global: shared.state,
         displayed: true,
         oooEditData: {},
+        oooEditDataOriginal: {},
+        changesMade: false
     }),
 }
 </script>

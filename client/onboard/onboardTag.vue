@@ -117,8 +117,6 @@ module.exports = {
     mounted: function () {
         setup.call(this)
     },
-    methods: {
-    },
     directives: {
         focus: focus.focus
     }

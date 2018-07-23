@@ -5,15 +5,15 @@
                 <img class="logo" src="/static/images/forsta-logo-invert.svg"/>
                 &nbsp;&nbsp;Forsta Live Chat
             </router-link>
-            <div v-if="global.apiToken" class="header item float right" style="padding:0;">
-                <div class="ui simple dropdown item">
+            <div v-if="global.apiToken" class="header item float right" style="padding:0px;">
+                <div class="ui simple dropdown item" style="margin-top:7px">
                     <i class="large user icon"></i>
                     <i class="dropdown icon"></i>
                     <div class="menu left">
                     <div class="item" @click="logout">Sign Out</div>
                     <div class="item" @click="settings">Settings</div>
                     <div class="item" @click="dashboard">Dashboard</div>
-                    <div class="item" @click="messageViewer">Message History</div>
+                    <div class="item" @click="messageHistory">Message History</div>
                     </div>
                 </div>
             </div>
@@ -39,8 +39,8 @@ module.exports = {
         dashboard: function () {
             this.$router.push({ name: 'dashboard' });
         },
-        messageViewer: function () {
-            this.$router.push({ name: 'messageViewer' });
+        messageHistory: function () {
+            this.$router.push({ name: 'messageHistory' });
         }
     }
 }

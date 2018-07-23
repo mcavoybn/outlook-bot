@@ -51,23 +51,7 @@ class ForstaBot {
         }
 
         if(this.waitingForResponse){
-            let responseIndex = -1;
-            try{
-                responseIndex = Number(msgTxt);
-            }catch(error){
-                console.log(`Error in parsing user response:${error}`);
-                this.sendMessage(dist, threadId, `Invalid response - non-number detected`);
-                return;
-            }
-            if(responseIndex > this.currentQuestion.responses.length || responseIndex < 0){
-                this.sendMessage(dist, threadId, `Invalid response - response number not available`);
-                return;
-            }
-
-            let response = this.currentQuestion.responses[responseIndex-1];
-            this.handleResponse(dist, threadId, response);
-            this.waitingForResponse = false;
-            if(response.action != 'Forward to Question') return;
+            this.handleResponse(msgTxt, dist, threadId, msg.sender.userId);
         }
         
         if(!this.questions){
@@ -77,6 +61,7 @@ class ForstaBot {
         }else{
             this.sendMessage(dist, threadId, this.currentQuestion.prompt)
                 .then(msg => {
+                    if(this.currentQuestion.type == 'Free Response') return;
                     let promptId = JSON.parse(msg.message.dataMessage.body)[0].messageId;
                     this.currentQuestion.responses.forEach( (response, index) =>{
                         this.sendResponse(dist, threadId, promptId,`[${index+1}] - ${response.text}`);
@@ -86,7 +71,37 @@ class ForstaBot {
         }
     }
 
-    handleResponse(dist, threadId, response){
+    async handleResponse(msgTxt, dist, threadId, userId){
+        
+        let response = {};
+        if(this.currentQuestion.type == 'Free Response'){
+            let currentQuestionIndex = this.questions.indexOf(this.currentQuestion);
+            if(currentQuestionIndex == this.questions.length - 1){
+                response.action = 'End of Question Set';   
+            }else{
+                response.action = 'Forward to Question';
+                response.actionOption = 'Question ' + (currentQuestionIndex + 2); 
+            }
+            response.text = msgTxt;
+        }else{
+            let responseIndex = -1;
+            try{
+                responseIndex = Number(msgTxt);
+            }catch(error){
+                console.log(`Error parsing user response:${error}`);
+                this.sendMessage(dist, threadId, `Invalid response - non-number detected`);
+                return;
+            }
+            if(responseIndex > this.currentQuestion.responses.length || responseIndex < 0){
+                this.sendMessage(dist, threadId, `Invalid response - response number not available`);
+                return;
+            }
+            response = this.currentQuestion.responses[responseIndex-1];
+        }
+
+        this.saveMessageToHistory(response, userId);
+        
+        if(response.action != 'Forward to Question') this.questions = null;
         
         if(response.action == "Forward to Distribution")
         {
@@ -103,21 +118,44 @@ class ForstaBot {
             let questionNumber = Number(response.actionOption.split(' ')[1]);
             this.currentQuestion = this.questions[questionNumber-1];
         }
+        else if(response.action == "End of Question Set")
+        {
+            this.questions = null;
+            this.sendMessage(dist, threadId, `End of question set!`);
+        }
         else if(response.action == null)
         {
             this.sendMessage(dist, threadId, `ERROR: response action not configured !`);
             return;
         }
+
+        this.waitingForResponse = false;
+    }
+
+    async saveMessageToHistory(response, userId) {
+        let messageData = {
+            prompt: this.currentQuestion.prompt,
+            response: response.text,
+            action: response.action,
+            date: moment().format('MM/DD/YYYY'),
+            time: moment().format('hh:mm:ss'),
+            user: userId 
+        };
+        let messageHistory = (await relay.storage.get('live-chat-bot', 'message-history')) || [];
+        messageHistory.push(messageData);
+        relay.storage.set('live-chat-bot', 'message-history', messageHistory);
     }
 
     outOfOffice(){
-        let currentTime = moment();
-        let hours = currentTime.hours(Number);
-        let mins = currentTime.minutes(Number);
+        let hours = moment().hours();
+        let mins = moment().minutes();
         let openHours = Number(this.businessHours.open.split(':')[0]);
         let openMins = Number(this.businessHours.open.split(':')[1]);
         let closeHours = Number(this.businessHours.close.split(':')[0]);
         let closeMins = Number(this.businessHours.close.split(':')[1]);
+
+        if(openHours > closeHours) closeHours += 24;
+
         if( (hours < openHours) || (hours == openHours && mins < openMins) ){
             return true;
         }

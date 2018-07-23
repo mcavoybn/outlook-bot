@@ -288,6 +288,7 @@ class QuestionsAPIV1 extends APIHandler {
                     type: "Multiple Choice",
                     editing: false,
                     displayed: true,
+                    color: 'red',
                     responses: [
                         {
                             text: "Yes",
@@ -351,10 +352,8 @@ class MessageHistoryAPIV1 extends APIHandler {
 
     constructor(options) {
         super(options);
-        this.router.get('/count', this.asyncRoute(this.onGetCount, false));
         this.router.get('/*', this.asyncRoute(this.onGet, false));
         this.router.post('/*', this.asyncRoute(this.onPost, false));
-        this.count = 0;
     }
 
     async onGet(req, res){
@@ -372,15 +371,12 @@ class MessageHistoryAPIV1 extends APIHandler {
     }
 
     async onPost(req, res) {
-        let messageHistory = req.body.messageHistory;
+        let message = req.body.message;
+        let messageHistory = await relay.storage.get('live-chat-bot', 'message-history');
+        messageHistory.push(message);
         relay.storage.set('live-chat-bot', 'message-history', messageHistory)
             .then( res.status(200) )
             .catch( res.status(500) );
-    }
-
-    async onGetCount(req, res){
-        this.count++;
-        res.status(200).json(this.count);
     }
 }
 

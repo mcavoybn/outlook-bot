@@ -1,15 +1,4 @@
 <style>
-.response-cell{
-    display:inline;
-}
-.hover-red:hover{
-    color:red;
-    cursor:pointer;
-}
-.hover-blue:hover{
-    color:blue;
-    cursor:pointer;
-}
 .hover-gray-bg:hover{
     background-color:#eee;
     cursor:pointer;
@@ -33,15 +22,13 @@ div [class*="pull right"] {
 <template lang="html">
     <div class="ui container center aligned">
 
-        <!-- OUT OF OFFICE EDIT COMPONENT -->
         <ooo-edit />
-        <!-- /OUT OF OFFICE EDIT COMPONENT -->
 
         <!--  QUESTION EDIT TABLE -->
         <sui-table
             class="ui left aligned table"
             v-for="question in questions"
-            v-bind:color="question.color">
+            :color="question.color">
             <sui-table-header>
                 <sui-table-row>
                     <sui-table-headerCell
@@ -62,27 +49,21 @@ div [class*="pull right"] {
                             Question {{questions.indexOf(question)+1}}</h4>
                     </sui-table-headerCell>
                     <sui-table-headerCell colspan="2"class="right aligned">
-                        <sui-icon
-                            class="item hover-red"
-                            name="edit"
-                            size="large"
-                            vertical-align="middle"
+                        <sui-button 
+                            color="red" 
+                            content="Edit"
                             v-if="question.displayed && !question.editing"
-                            @click="edit(question)"/>
-                        <sui-icon
-                            class="item hover-red"
-                            name="trash alternate outline"
-                            size="large"
-                            vertical-align="middle"
+                            @click="edit(question)" />
+                        <sui-button 
+                            color="red"
+                            icon="trash"
                             v-if="question.displayed && question.editing"
-                            @click="deleteQuestion(question)"/>
-                        <sui-icon
-                            class="item hover-blue"
-                            name="save"
-                            size="large"
-                            vertical-align="middle"
-                            v-if="question.displayed&&question.editing"
-                            @click="edit(question)"/>
+                            @click="deleteQuestion(question)" />
+                        <sui-button 
+                            color="grey"
+                            content="Done"
+                            v-if="question.displayed && question.editing"
+                            @click="edit(question)" />
                     </sui-table-headerCell>
                 </sui-table-row>
             </sui-table-header>
@@ -90,21 +71,22 @@ div [class*="pull right"] {
             <sui-table-body v-if="question.displayed">
                 <sui-table-row class="hover-gray-bg">
                     <!-- question prompt -->
-                    <sui-table-cell  colspan="4">
+                    <sui-table-cell colspan="4">
                         <sui-icon
                             class="item link"
                             name="comment outline"
-                            size="medium"/>
+                            size="medium" />
                         <h4
+                            class="normal"
                             style="display:inline"
-                            class="response-cell normal"
                             v-text="question.prompt"
-                            v-if="!question.editing"/>
+                            v-if="!question.editing" />
                         <sui-input
                             class="flexbox"
                             v-model="question.prompt"
                             :value="question.prompt"
-                            v-else/>
+                            @input="checkForChanges()"
+                            v-else />
                     </sui-table-cell>
                     <!-- /question prompt -->
                 </sui-table-row>
@@ -117,21 +99,22 @@ div [class*="pull right"] {
                     <!-- responses edit -->
                     <sui-table-cell colspan="2" collapsing>
                         <sui-icon
-                            class="item link hover-red"
+                            class="item link"
                             name="trash alternate outline"
                             size="medium"
                             vertical-align="middle"
                             v-if="question.editing"
-                            @click="deleteResponse(question, response)"/>
-                            <p
-                                class="response-cell"
-                                v-text="response.text"
-                                v-if="!question.editing"/>
-                            <sui-input
-                                class="flexbox"
-                                v-model="response.text"
-                                :value="response.text"
-                                v-else/>
+                            @click="deleteResponse(question, response)" />
+                        <p
+                            style="display:inline"
+                            v-text="response.text"
+                            v-if="!question.editing" />
+                        <sui-input
+                            class="flexbox"
+                            v-model="response.text"
+                            :value="response.text"
+                            @input="checkForChanges()"
+                            v-else />
                     </sui-table-cell>
                     <!-- /responses edit -->
  
@@ -147,26 +130,32 @@ div [class*="pull right"] {
                             placeholder="Response Action"
                             :options="questionActions"
                             v-model="response.action"
-                            v-if="question.editing"
-                            />
+                            @input="checkForChanges()"
+                            v-if="question.editing" />
                         <p
-                            class="response-cell"
+                            style="display:inline"
                             v-text="response.action"
-                            v-else
-                            />
+                            v-else />
                     </sui-table-cell>
                     <sui-table-cell>
                         <div v-if="response.action=='Forward to Question'">
-                            <sui-dropdown      
+                            <sui-dropdown   
                                 selection
                                 placeholder="Question"
                                 :options="questionsForDropdown"
                                 v-model="response.actionOption"
+                                @input="checkForChanges()"
                                 v-if="question.editing" />
                             <p
-                                class="response-cell"
+                                style="display:inline"
                                 v-text="response.actionOption"
                                 v-else />
+                            <sui-icon
+                                name="circle"
+                                size="small"
+                                style="margin-left:5px"
+                                :color="colorFromActionOption(response.actionOption)"
+                                vertical-align="middle" />
                         </div>
                         <div v-if="response.action=='Forward to Distribution'">
                             <sui-dropdown      
@@ -174,9 +163,10 @@ div [class*="pull right"] {
                                 placeholder="Distribution"
                                 :options="dists"
                                 v-model="response.actionOption"
+                                @input="checkForChanges()"
                                 v-if="question.editing" />
                             <p
-                                class="response-cell"
+                                style="display:inline"
                                 v-text="response.actionOption"
                                 v-else />
                         </div>
@@ -186,9 +176,10 @@ div [class*="pull right"] {
                                 placeholder="User"
                                 :options="users"
                                 v-model="response.actionOption"
+                                @input="checkForChanges()"
                                 v-if="question.editing" />
                             <p
-                                class="response-cell"
+                                style="display:inline"
                                 v-text="response.actionOption"
                                 v-else />
                         </div>
@@ -200,9 +191,9 @@ div [class*="pull right"] {
                     class="left aligned"
                     v-if="question.type=='Free Response'">
                     <sui-table-cell>
-                        <span>
+                        <p>
                             This question will be saved and the user will be prompted with the next question.
-                        </span>
+                        </p>
                     </sui-table-cell>  
                 </sui-table-row>
             </sui-table-body>
@@ -212,16 +203,16 @@ div [class*="pull right"] {
                     <sui-table-header-cell colspan="4">
                         <sui-button
                             class="ui green button"
-                            @click="newResponse(question)">
-                            Add Response
-                            </sui-button>
+                            @click="newResponse(question)"
+                            v-if="question.type=='Multiple Choice'"
+                            content="Add Response" />
                         <sui-dropdown
                             class="pull right"
                             selection
                             placeholder="Question Type"
                             :options="questionTypes"
-                            v-model="question.type"
-                        />
+                            @input="checkForChanges"
+                            v-model="question.type" />
                     </sui-table-header-cell>
                 </sui-table-row>
             </sui-table-footer>
@@ -230,17 +221,15 @@ div [class*="pull right"] {
 
         <sui-button
             class="ui large green button pull left"
+            content="Add Question"
             style="margin-bottom:50px"
-            @click="newQuestion()">
-            Add Question
-        </sui-button>
+            @click="newQuestion()" />
         <sui-button
-            class="ui large button pull right"
+            class="ui large blue button pull right"
+            content="Save Changes" 
             style="margin-bottom:50px"
-            :class="{blue: changesMade, grey: !changesMade}"
-            @click="saveData()">
-            Save Changes
-        </sui-button>
+            @click="saveData()"
+            v-if="changesMade" />
     </div>
 </template>
  
@@ -255,16 +244,27 @@ module.exports = {
         'ooo-edit': oooEdit
     },
     methods: {
+        colorFromActionOption(actionOption){
+            if(!actionOption) return 'black';
+            let questionIndex = Number(actionOption.trim().split(' ')[1]) - 1;
+            return this.questions[questionIndex].color;
+        },
+        checkForChanges(){
+            if(this.changesMade) return;
+            if(JSON.stringify(this.questions) != this.questionsOriginal){
+                this.changesMade = true;
+            }
+        },
         deleteResponse: function(question, response) {
-            question.responses.splice(question.responses.indexOf(response),1)
+            question.responses.splice(question.responses.indexOf(response),1);
+            this.changesMade = true;
         },
         deleteQuestion: function(question) {
             this.questions.splice(this.questions.indexOf(question), 1);
+            this.changesMade = true;
         },
         display: function(question) {
-            if(question.editing){
-                return;
-            }
+            if(question.editing) return;
             question.displayed = !question.displayed
         },
         loadData: function(){
@@ -276,13 +276,11 @@ module.exports = {
                 for(let i=0; i<this.questions.length; i++){
                     this.questionsForDropdown.push({
                         text: `Question ${i+1}`,
-                        value: `Question ${i+1}`,
-                        color: this.questions[i].color
+                        value: `Question ${i+1}`
                     });
                 }
                 this.changesMade = false;
             });
-            //TODO: load available dists and users
         },
         newQuestion: function () {
             this.questions.push({
@@ -305,23 +303,21 @@ module.exports = {
                 ]
             });
             this.questionsForDropdown.push({
-                    text: `Question ${this.questions.length}`,
-                    value: `Question ${this.questions.length}`,
-                    color: this.questions[i].color
-                });
+                text: `Question ${this.questions.length}`,
+                value: `Question ${this.questions.length}`
+            });
+            this.changesMade = true;
         },
         newResponse: function (question){
             question.responses.push({
                 text: "New Response",
                 action: null,
                 actionOption: null
-            })
+            });
+            this.changesMade = true;
         },
         edit: function (el) {
             el.editing = !el.editing;
-            if(JSON.stringify(this.questions) != this.questionsOriginal){
-                this.changesMade = true;
-            }
         },
         getRandomColor: function () {
             let colors = ['red', 'orange', 'yellow', 'olive', 'green',
@@ -346,6 +342,7 @@ module.exports = {
             changesMade: false,
             questions: [],
             questionsOriginal: [],
+            questionsForDropdown: [],
             dists: [
                 {
                     text: "@sales",
@@ -370,7 +367,6 @@ module.exports = {
                     value: '@zach:forsta.io'
                 }
             ],
-            questionsForDropdown: [],
             questionActions: [
                 {
                     text: "Forward to Question",

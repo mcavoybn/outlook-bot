@@ -1,6 +1,3 @@
-<style>
-</style>
-
 <template>
     <div>
         <top-menu />
@@ -21,6 +18,9 @@ module.exports = {
     }),
     methods:{
         authenticateUser: function() {
+            util.fetch.call(this, '/api/auth/status/v1')
+            .then(result => { this.global.passwordSet = result.ok; });
+
             if (this.global.onboardStatus !== 'complete') {
                 this.$router.push({ name: 'welcome' });
                 return;
@@ -55,8 +55,7 @@ module.exports = {
     },
     mounted: function() {
         this.authenticateUser();
-        util.fetch.call(this, '/api/auth/status/v1')
-        .then(result => { this.global.passwordSet = result.ok; });
+        
     }
 }
 </script>

@@ -15,12 +15,23 @@ div.listgap {
                 </h1>
             </div>
             <div class="ui centered grid">
-                <div class="ui nine wide column basic segment left aligned b1" :class="{loading: loading}" style="margin-top:-1em;">
+                <div class="ui nine wide column basic segment left aligned b1" 
+                    :class="{loading: loading}" 
+                    style="margin-top:-1em;">
                     <h3 style="margin-bottom: 3px;">Authorized Site Users</h3>
                     <div class="ui list listgap">
                         <div v-for="a in admins" :key="a.id" class="item">
-                            <a v-if="admins.length > 1" @click="removeAdmin(a.id)" data-tooltip="remove this authorized user"><i class="large remove circle icon"></i></a> 
-                            <span v-else data-tooltip="cannot remove last authorized user"><i style="color: lightgray;" class="large remove circle icon"></i></span> 
+                            <a 
+                                v-if="admins.length > 1" 
+                                @click="removeAdmin(a.id)" 
+                                data-tooltip="remove this authorized user">
+                                <i class="large remove circle icon"></i>
+                            </a> 
+                            <span 
+                                v-else 
+                                data-tooltip="cannot remove last authorized user">
+                                <i style="color: lightgray;" class="large remove circle icon"></i>
+                            </span> 
                             {{a.label}}
                         </div>
                     </div>

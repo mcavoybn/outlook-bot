@@ -1,6 +1,3 @@
-<style>
-</style>
-
 <template>
     <div class="ui main text container" style="margin-top: 80px;">
         <div class="ui two column centered grid">
@@ -47,7 +44,6 @@ module.exports = {
         global: shared.state
     }),
     mounted: function() {
-        console.log(this);
         const authDash = { name: 'loginTag', query: { forwardTo: '/dashboard' }};
         if (this.global.onboardStatus === 'complete') {
             this.$router.push(authDash);
