@@ -18,29 +18,18 @@ div [class*="pull right"] {
             color="grey">
             <sui-table-header>
                 <sui-table-row>
-                    <sui-table-headerCell
-                        @click="toggleDisplayed()">
-                        <sui-icon
-                            class="item link"
-                            name="dropdown"
-                            size="large"
-                            v-if="displayed"/>
-                        <sui-icon
-                            class="item link"
-                            name="caret right"
-                            size="large"
-                            v-else />
+                    <sui-table-headerCell>
                         <span>Business Hours</span>
                     </sui-table-headerCell>
                 </sui-table-row>
             </sui-table-header>
 
 
-            <sui-table-body v-if="displayed">
+            <sui-table-body>
                 <sui-table-row> 
                     <sui-table-cell>
                         <div class="ui labeled input">
-                            <div class="ui label">Open:</div>
+                            <div style="background-color:#777;color:#fff;" class="ui label">Open:</div>
                             <input format="HH:MM:AM"
                                 :value="oooEditData"
                                 v-model="oooEditData.open"
@@ -48,7 +37,7 @@ div [class*="pull right"] {
                                 @input="checkForChanges()"/>
                         </div>
                         <div class="ui labeled input">
-                            <div class="ui label">Close:</div>
+                            <div style="background-color:#777;color:#fff;" class="ui label">Close:</div>
                             <input format="HH:MM:AM"
                                 :value="oooEditData" 
                                 v-model="oooEditData.close"
@@ -70,7 +59,7 @@ div [class*="pull right"] {
                 </sui-table-row>
             </sui-table-body>
 
-            <sui-table-footer v-if="changesMade&&displayed">
+            <sui-table-footer v-if="changesMade">
                 <sui-table-row>
                     <sui-table-headerCell>
                         <sui-button 
@@ -95,6 +84,7 @@ module.exports = {
     },
     methods: {
         checkForChanges: function() {
+            if(this.changesMade) return;
             if(JSON.stringify(this.oooEditData) != this.oooEditDataOriginal){
                 this.changesMade = true;
             }
@@ -118,13 +108,9 @@ module.exports = {
             this.oooEditDataOriginal = JSON.stringify(this.oooEditData);
             this.changesMade = false;
         },
-        toggleDisplayed: function() {
-            this.displayed = !this.displayed;
-        }
     },
     data: () => ({ 
         global: shared.state,
-        displayed: true,
         oooEditData: {},
         oooEditDataOriginal: {},
         changesMade: false

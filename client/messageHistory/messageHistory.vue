@@ -4,6 +4,13 @@
 <template lang="html">
     <div class="ui container center aligned">
 
+        <div class="ui basic segment huge">
+            <h1 class="ui header">
+                <i class="archive icon"></i>
+                Live Chat Bot Message History
+            </h1>
+        </div>
+
         <!--  QUESTION EDIT TABLE -->
         <sui-table class="ui left aligned table">
 
@@ -30,7 +37,7 @@
                 </sui-table-row>
             </sui-table-header>
 
-            <sui-table-body>
+            <sui-table-body style="height:777px;overflow:auto;">
                 <sui-table-row 
                     v-for="message in messageHistory">
                     <sui-table-cell
@@ -67,31 +74,15 @@ module.exports = {
         this.loadData();
     },
     methods: {
-        display: function(el){
-            el.displayed = !el.displayed;
-        },
         loadData: function() {
             util.fetch('/api/message-history', {method:'get'})
             .then( res => {
-                console.log('message history API fetch response');
-                console.log(res.theJson);
                 this.messageHistory = res.theJson;
+                this.messageHistory.reverse();
             });
         },
-        saveData: function() {
-            util.fetch('/api/message-history', 
-            {
-                method:'post', 
-                body:
-                { 
-                    messageHistory: this.messageHistory 
-                }
-            });
-            
-        }
     },
     data: () => ({ 
-        global: shared.state,
         messageHistory: {},
     })
 }

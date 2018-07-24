@@ -287,7 +287,7 @@ class QuestionsAPIV1 extends APIHandler {
                     prompt: "Question Prompt",
                     type: "Multiple Choice",
                     editing: false,
-                    displayed: true,
+                    hovering: false,
                     color: 'red',
                     responses: [
                         {

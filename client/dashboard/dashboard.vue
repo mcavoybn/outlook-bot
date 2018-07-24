@@ -1,8 +1,4 @@
 <style>
-.hover-gray-bg:hover{
-    background-color:#eee;
-    cursor:pointer;
-}
 div [class*="pull left"] {
   float: left;
   margin-left: 0.25em;
@@ -22,54 +18,53 @@ div [class*="pull right"] {
 <template lang="html">
     <div class="ui container center aligned">
 
+        <div class="ui basic segment huge">
+            <h1 class="ui header">
+                <i class="columns icon"></i>
+                Live Chat Bot Dashboard
+            </h1>
+        </div>
+
         <ooo-edit />
 
         <!--  QUESTION EDIT TABLE -->
         <sui-table
             class="ui left aligned table"
             v-for="question in questions"
-            :color="question.color">
+            :color="question.color"
+            @mouseenter="question.hovering=true"
+            @mouseleave="question.hovering=false">
             <sui-table-header>
                 <sui-table-row>
                     <sui-table-headerCell
-                        class="hover-gray-bg"
-                        colspan="2"
-                        @click="display(question)">
-                        <sui-icon
-                            class="item link"
-                            name="dropdown"
-                            size="large"
-                            v-if="question.displayed"/>
-                        <sui-icon
-                            class="item link"
-                            name="caret right"
-                            size="large"
-                            v-else />
+                        style="padding:23px"
+                        colspan="2">
                         <h4 style="display:inline">
-                            Question {{questions.indexOf(question)+1}}</h4>
+                            Question {{questions.indexOf(question)+1}}
+                        </h4>
                     </sui-table-headerCell>
-                    <sui-table-headerCell colspan="2"class="right aligned">
+                    <sui-table-headerCell colspan="2" class="right aligned">
                         <sui-button 
                             color="red" 
                             content="Edit"
-                            v-if="question.displayed && !question.editing"
+                            v-if="question.hovering && !question.editing"
                             @click="edit(question)" />
                         <sui-button 
                             color="red"
                             icon="trash"
-                            v-if="question.displayed && question.editing"
+                            v-if="question.editing"
                             @click="deleteQuestion(question)" />
                         <sui-button 
                             color="grey"
                             content="Done"
-                            v-if="question.displayed && question.editing"
+                            v-if="question.editing"
                             @click="edit(question)" />
                     </sui-table-headerCell>
                 </sui-table-row>
             </sui-table-header>
  
-            <sui-table-body v-if="question.displayed">
-                <sui-table-row class="hover-gray-bg">
+            <sui-table-body>
+                <sui-table-row>
                     <!-- question prompt -->
                     <sui-table-cell colspan="4">
                         <sui-icon
@@ -92,7 +87,6 @@ div [class*="pull right"] {
                 </sui-table-row>
  
                 <sui-table-row
-                    class="hover-gray-bg"
                     v-for="response in question.responses"
                     v-if="question.type!='Free Response'">
  
@@ -192,26 +186,26 @@ div [class*="pull right"] {
                     v-if="question.type=='Free Response'">
                     <sui-table-cell>
                         <p>
-                            This question will be saved and the user will be prompted with the next question.
+                            The user's response will be saved and the user will be prompted with the next question.
                         </p>
                     </sui-table-cell>  
                 </sui-table-row>
             </sui-table-body>
  
-            <sui-table-footer v-if="question.editing&&question.displayed">
+            <sui-table-footer v-if="question.editing">
                 <sui-table-row>
                     <sui-table-header-cell colspan="4">
                         <sui-button
                             class="ui green button"
+                            content="New Response"
                             @click="newResponse(question)"
-                            v-if="question.type=='Multiple Choice'"
-                            content="Add Response" />
+                            v-if="question.type=='Multiple Choice'"/>
                         <sui-dropdown
                             class="pull right"
                             selection
                             placeholder="Question Type"
                             :options="questionTypes"
-                            @input="checkForChanges"
+                            @input="checkForChanges()"
                             v-model="question.type" />
                     </sui-table-header-cell>
                 </sui-table-row>
@@ -221,7 +215,7 @@ div [class*="pull right"] {
 
         <sui-button
             class="ui large green button pull left"
-            content="Add Question"
+            content="New Question"
             style="margin-bottom:50px"
             @click="newQuestion()" />
         <sui-button
@@ -230,6 +224,7 @@ div [class*="pull right"] {
             style="margin-bottom:50px"
             @click="saveData()"
             v-if="changesMade" />
+
     </div>
 </template>
  
@@ -263,9 +258,14 @@ module.exports = {
             this.questions.splice(this.questions.indexOf(question), 1);
             this.changesMade = true;
         },
-        display: function(question) {
-            if(question.editing) return;
-            question.displayed = !question.displayed
+        edit: function (el) {
+            el.editing = !el.editing;
+        },
+        getRandomColor: function () {
+            let colors = ['red', 'orange', 'yellow', 'olive', 'green', 'teal',
+                'blue', 'violet', 'purple', 'pink', 'brown', 'grey', 'black'];
+            let idx = Math.floor(Math.random()*13);
+            return colors[idx];
         },
         loadData: function(){
             util.fetch.call(this, '/api/questions/', {method: 'get'})
@@ -279,7 +279,6 @@ module.exports = {
                         value: `Question ${i+1}`
                     });
                 }
-                this.changesMade = false;
             });
         },
         newQuestion: function () {
@@ -287,7 +286,7 @@ module.exports = {
                 prompt: "Question Prompt",
                 type: "Multiple Choice",
                 editing: false,
-                displayed: true,
+                hovering: false,
                 color: this.getRandomColor(),
                 responses: [
                     {
@@ -306,7 +305,7 @@ module.exports = {
                 text: `Question ${this.questions.length}`,
                 value: `Question ${this.questions.length}`
             });
-            this.changesMade = true;
+            this.checkForChanges();
         },
         newResponse: function (question){
             question.responses.push({
@@ -314,16 +313,7 @@ module.exports = {
                 action: null,
                 actionOption: null
             });
-            this.changesMade = true;
-        },
-        edit: function (el) {
-            el.editing = !el.editing;
-        },
-        getRandomColor: function () {
-            let colors = ['red', 'orange', 'yellow', 'olive', 'green',
-                'teal', 'blue', 'violet', 'purple', 'pink', 'brown', 'grey', 'black'];
-            let idx = Math.floor(Math.random()*13);
-            return colors[idx];
+            this.checkForChanges();
         },
         saveData: function() {
             util.fetch('/api/questions/', {
@@ -331,6 +321,7 @@ module.exports = {
                 body: {questions: this.questions}
             });
             this.changesMade = false;
+            this.questionsOriginal = JSON.stringify(this.questions);
             this.questions.forEach(question => {
                 question.editing = false;
             });

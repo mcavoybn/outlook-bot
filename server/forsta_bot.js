@@ -17,7 +17,6 @@ class ForstaBot {
             console.warn("bot is not yet registered");
             return;
         }
-        console.info("Starting message receiver for:", ourId);
         this.atlas = await BotAtlasClient.factory();
         this.getUsers = cache.ttl(60, this.atlas.getUsers.bind(this.atlas));
         this.resolveTags = cache.ttl(60, this.atlas.resolveTags.bind(this.atlas));
@@ -25,12 +24,10 @@ class ForstaBot {
         this.msgReceiver.addEventListener('keychange', this.onKeyChange.bind(this));
         this.msgReceiver.addEventListener('message', ev => this.onMessage(ev), null);
         this.msgReceiver.addEventListener('error', this.onError.bind(this));
-
         this.msgSender = await relay.MessageSender.factory();
-        this.waitingForResponse = false;
-
         await this.msgReceiver.connect();
         
+        this.waitingForResponse = false;
     }
 
     async onMessage(ev) {
@@ -56,8 +53,6 @@ class ForstaBot {
         
         if(!this.questions){
             this.sendMessage(dist, threadId, "Question set not initialized, type 'init' to initialize");
-        }else if(this.questions.length == 0){
-            this.sendMessage(dist, threadId, "Question set empty, type 'init' to restart");
         }else{
             this.sendMessage(dist, threadId, this.currentQuestion.prompt)
                 .then(msg => {
@@ -72,8 +67,8 @@ class ForstaBot {
     }
 
     async handleResponse(msgTxt, dist, threadId, userId){
-        
         let response = {};
+
         if(this.currentQuestion.type == 'Free Response'){
             let currentQuestionIndex = this.questions.indexOf(this.currentQuestion);
             if(currentQuestionIndex == this.questions.length - 1){
@@ -99,19 +94,15 @@ class ForstaBot {
             response = this.currentQuestion.responses[responseIndex-1];
         }
 
-        this.saveMessageToHistory(response, userId);
-        
-        if(response.action != 'Forward to Question') this.questions = null;
-        
         if(response.action == "Forward to Distribution")
         {
             this.sendMessage(dist, threadId, `Forwarding to Distribution ${response.actionOption}`);
-            return;
+            this.questions = null;
         }
         else if(response.action == "Forward to User")
         {
             this.sendMessage(dist, threadId, `Forwarding to User ${response.actionOption}`);
-            return;
+            this.questions = null;
         }
         else if(response.action == "Forward to Question")
         {
@@ -120,26 +111,29 @@ class ForstaBot {
         }
         else if(response.action == "End of Question Set")
         {
-            this.questions = null;
             this.sendMessage(dist, threadId, `End of question set!`);
+            this.questions = null;
         }
-        else if(response.action == null)
+        else if(!response.action)
         {
             this.sendMessage(dist, threadId, `ERROR: response action not configured !`);
-            return;
+            response.action = 'ERROR response action not configured !';
+            response.text = 'ERROR response action not configured !';
+            this.questions = null;
         }
-
+        
+        this.saveToMessageHistory(response, userId);
         this.waitingForResponse = false;
     }
 
-    async saveMessageToHistory(response, userId) {
+    async saveToMessageHistory(response, userId) {
         let messageData = {
+            user: userId,
             prompt: this.currentQuestion.prompt,
             response: response.text,
             action: response.action,
             date: moment().format('MM/DD/YYYY'),
-            time: moment().format('hh:mm:ss'),
-            user: userId 
+            time: moment().format('hh:mm:ss')
         };
         let messageHistory = (await relay.storage.get('live-chat-bot', 'message-history')) || [];
         messageHistory.push(messageData);

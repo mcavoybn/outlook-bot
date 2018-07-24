@@ -10,10 +10,10 @@
                     <i class="large user icon"></i>
                     <i class="dropdown icon"></i>
                     <div class="menu left">
-                    <div class="item" @click="logout">Sign Out</div>
-                    <div class="item" @click="settings">Settings</div>
                     <div class="item" @click="dashboard">Dashboard</div>
                     <div class="item" @click="messageHistory">Message History</div>
+                    <div class="item" @click="settings">Settings</div>
+                    <div class="item" @click="logout">Sign Out</div>
                     </div>
                 </div>
             </div>
