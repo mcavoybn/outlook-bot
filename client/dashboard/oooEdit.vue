@@ -29,17 +29,15 @@ div [class*="pull right"] {
                 <sui-table-row> 
                     <sui-table-cell>
                         <div class="ui labeled input">
-                            <div style="background-color:#777;color:#fff;" class="ui label">Open:</div>
+                            <div style="background-color:#555;color:#fff;" class="ui label">Open:</div>
                             <input format="HH:MM:AM"
-                                :value="oooEditData"
                                 v-model="oooEditData.open"
                                 type="time"
                                 @input="checkForChanges()"/>
                         </div>
                         <div class="ui labeled input">
-                            <div style="background-color:#777;color:#fff;" class="ui label">Close:</div>
+                            <div style="background-color:#555;color:#fff;" class="ui label">Close:</div>
                             <input format="HH:MM:AM"
-                                :value="oooEditData" 
                                 v-model="oooEditData.close"
                                 type="time"
                                 @input="checkForChanges()"/>
