@@ -30,6 +30,41 @@ class ForstaBot {
         this.waitingForResponse = false;
     }
 
+    stop() {
+        if (this.msgReceiver) {
+            console.warn("Stopping message receiver");
+            this.msgReceiver.close();
+            this.msgReceiver = null;
+        }
+    }
+
+    async restart() {
+        this.stop();
+        await this.start();
+    }
+
+    async onKeyChange(ev) {
+        console.warn("Auto-accepting new identity key for:", ev.addr);
+        await ev.accept();
+    }
+
+    onError(e) {
+        console.error('Message Error', e, e.stack);
+    }
+
+    fqTag(user) { 
+        return `@${user.tag.slug}:${user.org.slug}`; 
+    }
+
+    fqName(user) {
+        const fqInfo = [user.first_name, user.middle_name, user.last_name]; 
+        return fqInfo.map(s => (s || '').trim()).filter(s => !!s).join(' '); 
+    }
+
+    fqLabel(user) { 
+        return `${this.fqTag(user)} (${this.fqName(user)})`; 
+    }
+
     async onMessage(ev) {
         let msg = this.parseEv(ev);
         if(!msg) console.error("Received unsupported message!");
@@ -189,41 +224,6 @@ class ForstaBot {
             html: `${ text }`,
             text: text
         });
-    }
-
-    stop() {
-        if (this.msgReceiver) {
-            console.warn("Stopping message receiver");
-            this.msgReceiver.close();
-            this.msgReceiver = null;
-        }
-    }
-
-    async restart() {
-        this.stop();
-        await this.start();
-    }
-
-    async onKeyChange(ev) {
-        console.warn("Auto-accepting new identity key for:", ev.addr);
-        await ev.accept();
-    }
-
-    onError(e) {
-        console.error('Message Error', e, e.stack);
-    }
-
-    fqTag(user) { 
-        return `@${user.tag.slug}:${user.org.slug}`; 
-    }
-
-    fqName(user) {
-        const fqInfo = [user.first_name, user.middle_name, user.last_name]; 
-        return fqInfo.map(s => (s || '').trim()).filter(s => !!s).join(' '); 
-    }
-
-    fqLabel(user) { 
-        return `${this.fqTag(user)} (${this.fqName(user)})`; 
     }
     
     forgetStaleNotificationThreads() {
