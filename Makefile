@@ -42,7 +42,7 @@ $(LINT):
 endif
 
 $(GRUNT): $(PACKAGES) $(SEMANTIC) Gruntfile.js $(SRC) $(LINT) Makefile
-	$(NPATH)/grunt default
+	$(NPATH)/grunt development
 	touch $@
 
 $(BUILD): $(GRUNT) Makefile
@@ -71,3 +71,8 @@ run: $(BUILD)
 
 forcerun:
 	npm start
+
+watchrun:
+	node server
+	$(NPATH)/grunt watch
+	
