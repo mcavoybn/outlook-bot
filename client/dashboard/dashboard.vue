@@ -13,6 +13,9 @@ div [class*="pull right"] {
     width: 95%;
     margin-right:0.5em;
 }
+.padding {
+    padding:20px;
+}
 </style>
  
 <template lang="html">
@@ -64,7 +67,7 @@ div [class*="pull right"] {
             </sui-table-header>
  
             <sui-table-body>
-                <sui-table-row>
+                <sui-table-row :class="{'padding':!question.editing}">
                     <!-- question prompt -->
                     <sui-table-cell colspan="4">
                         <sui-icon
@@ -88,7 +91,8 @@ div [class*="pull right"] {
  
                 <sui-table-row
                     v-for="response in question.responses"
-                    v-if="question.type!='Free Response'">
+                    v-if="question.type!='Free Response'"
+                    :class="{'padding':!question.editing}">
  
                     <!-- responses edit -->
                     <sui-table-cell colspan="2" collapsing>
@@ -128,6 +132,7 @@ div [class*="pull right"] {
                             v-if="question.editing" />
                         <p
                             style="display:inline"
+                            :class="{'padding':!question.editing}"
                             v-text="response.action"
                             v-else />
                     </sui-table-cell>
@@ -142,13 +147,14 @@ div [class*="pull right"] {
                                 v-if="question.editing" />
                             <p
                                 style="display:inline"
+                                :class="{'padding':!question.editing}"
                                 v-text="response.actionOption"
                                 v-else />
                             <sui-icon
                                 name="circle"
                                 size="small"
                                 style="margin-left:5px"
-                                :color="colorFromActionOption(response.actionOption)"
+                                :color="colorFromResponse(response)"
                                 vertical-align="middle" />
                         </div>
                         <div v-if="response.action=='Forward to Distribution'">
@@ -161,6 +167,7 @@ div [class*="pull right"] {
                                 v-if="question.editing" />
                             <p
                                 style="display:inline"
+                                :class="{'padding':!question.editing}"
                                 v-text="response.actionOption"
                                 v-else />
                         </div>
@@ -174,6 +181,7 @@ div [class*="pull right"] {
                                 v-if="question.editing" />
                             <p
                                 style="display:inline"
+                                :class="{'padding':!question.editing}"
                                 v-text="response.actionOption"
                                 v-else />
                         </div>
@@ -183,6 +191,7 @@ div [class*="pull right"] {
                 </sui-table-row>
                 <sui-table-row
                     class="left aligned"
+                    :class="{'padding':!question.editing}"
                     v-if="question.type=='Free Response'">
                     <sui-table-cell>
                         <p>
@@ -225,6 +234,34 @@ div [class*="pull right"] {
             @click="saveData()"
             v-if="changesMade" />
 
+        <div>
+            <sui-modal v-model="showingSaveChangesModal">
+                <sui-modal-header>Save Changes</sui-modal-header>
+                <sui-modal-content>
+                    <sui-modal-description>
+                        <sui-header>Continue without saving changes?</sui-header>
+                        <p>Continue without saving changes?</p>
+                    </sui-modal-description>
+                </sui-modal-content>
+                <sui-modal-actions style="padding:10px">
+                    <sui-button 
+                        class="red"
+                        floated="left"
+                        @click="continueWithoutSaving()"
+                        content="Don't Save" />
+                    <sui-button 
+                        positive 
+                        @click="showingSaveChangesModal = false"
+                        content="Cancel" />
+                    <sui-button 
+                        floated="right" 
+                        class="green" 
+                        @click="saveAndContinue()"
+                        content="Save" />
+                </sui-modal-actions>
+            </sui-modal>
+        </div>
+
     </div>
 </template>
  
@@ -239,9 +276,12 @@ module.exports = {
         'ooo-edit': oooEdit
     },
     methods: {
-        colorFromActionOption(actionOption){
-            if(!actionOption) return 'black';
-            let questionIndex = Number(actionOption.trim().split(' ')[1]) - 1;
+        colorFromResponse(response){
+            if(!response.actionOption) return 'black';
+            if(response.action == 'Forward to Question' && response.actionOption.split(' ')[0].trim() != 'Question'){
+                response.actionOption = 'Question 1';
+            }
+            let questionIndex = Number(response.actionOption.trim().split(' ')[1]) - 1;
             return this.questions[questionIndex].color;
         },
         checkForChanges(){
@@ -249,6 +289,12 @@ module.exports = {
             if(JSON.stringify(this.questions) != this.questionsOriginal){
                 this.changesMade = true;
             }
+        },
+        continueWithoutSaving: function() {
+            console.log('continueing without saving you fuckin asshole!');
+            console.log('this.nextRoute : ');
+            console.log(this.nextRoute);
+            this.nextRoute();
         },
         deleteResponse: function(question, response) {
             question.responses.splice(question.responses.indexOf(response),1);
@@ -260,6 +306,7 @@ module.exports = {
         },
         edit: function (el) {
             el.editing = !el.editing;
+            this.checkForChanges();
         },
         getRandomColor: function () {
             let colors = ['red', 'orange', 'yellow', 'olive', 'green', 'teal',
@@ -285,19 +332,19 @@ module.exports = {
             this.questions.push({
                 prompt: "Question Prompt",
                 type: "Multiple Choice",
-                editing: false,
+                editing: true,
                 hovering: false,
                 color: this.getRandomColor(),
                 responses: [
                     {
                         text: "Yes",
-                        action: null,
-                        actionOption: null
+                        action: 'Forward to Question',
+                        actionOption: 'Question 1'
                     },
                     {
                         text: "No",
-                        action: null,
-                        actionOption: null
+                        action: 'Forward to Question',
+                        actionOption: 'Question 1'
                     }
                 ]
             });
@@ -306,6 +353,7 @@ module.exports = {
                 value: `Question ${this.questions.length}`
             });
             this.checkForChanges();
+            window.scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight);
         },
         newResponse: function (question){
             question.responses.push({
@@ -314,6 +362,13 @@ module.exports = {
                 actionOption: null
             });
             this.checkForChanges();
+        },
+        saveAndContinue: function() {
+            this.saveData();
+            this.nextRoute();
+            console.log('saving andcontinueingsuckin asshole!');
+            console.log('this.nextRoute : ');
+            console.log(this.nextRoute);
         },
         saveData: function() {
             util.fetch('/api/questions/', {
@@ -325,7 +380,19 @@ module.exports = {
             this.questions.forEach(question => {
                 question.editing = false;
             });
+        },
+    },
+    beforeRouteLeave: function(to, from, next){
+        if(this.changesMade){
+            this.showingSaveChangesModal = true;
+            this.nextRoute = next;
+            next(false);
+        }else{
+            next();
         }
+        this.questions.forEach(question => {
+            question.editing = false;
+        });
     },
     data: function() {
         return {
@@ -334,6 +401,8 @@ module.exports = {
             questions: [],
             questionsOriginal: [],
             questionsForDropdown: [],
+            showingSaveChangesModal: false,
+            nextRoute: null,
             dists: [
                 {
                     text: "@sales",

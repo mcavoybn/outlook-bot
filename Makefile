@@ -42,7 +42,7 @@ $(LINT):
 endif
 
 $(GRUNT): $(PACKAGES) $(SEMANTIC) Gruntfile.js $(SRC) $(LINT) Makefile
-	$(NPATH)/grunt default
+	$(NPATH)/grunt development
 	touch $@
 
 $(BUILD): $(GRUNT) Makefile
