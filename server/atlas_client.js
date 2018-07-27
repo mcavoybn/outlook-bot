@@ -2,6 +2,14 @@ const relay = require("librelay");
 
 class BotAtlasClient extends relay.AtlasClient {
 
+    constructor(){
+        super({});
+    }
+
+    async fetch(urn, options){
+        return super.fetch(urn, options);
+    }
+
     static get onboardingCreatedUser() {
         return null;
     }

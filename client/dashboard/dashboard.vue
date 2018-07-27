@@ -13,9 +13,6 @@ div [class*="pull right"] {
     width: 95%;
     margin-right:0.5em;
 }
-.padding {
-    padding:20px;
-}
 </style>
  
 <template lang="html">
@@ -28,6 +25,8 @@ div [class*="pull right"] {
             </h1>
         </div>
 
+        <user-dist-edit />
+
         <ooo-edit />
 
         <!--  QUESTION EDIT TABLE -->
@@ -35,6 +34,7 @@ div [class*="pull right"] {
             class="ui left aligned table"
             v-for="question in questions"
             :color="question.color"
+            :id="questions.indexOf(question)"
             @mouseenter="question.hovering=true"
             @mouseleave="question.hovering=false">
             <sui-table-header>
@@ -67,7 +67,7 @@ div [class*="pull right"] {
             </sui-table-header>
  
             <sui-table-body>
-                <sui-table-row :class="{'padding':!question.editing}">
+                <sui-table-row>
                     <!-- question prompt -->
                     <sui-table-cell colspan="4">
                         <sui-icon
@@ -91,8 +91,7 @@ div [class*="pull right"] {
  
                 <sui-table-row
                     v-for="response in question.responses"
-                    v-if="question.type!='Free Response'"
-                    :class="{'padding':!question.editing}">
+                    v-if="question.type!='Free Response'">
  
                     <!-- responses edit -->
                     <sui-table-cell colspan="2" collapsing>
@@ -132,7 +131,6 @@ div [class*="pull right"] {
                             v-if="question.editing" />
                         <p
                             style="display:inline"
-                            :class="{'padding':!question.editing}"
                             v-text="response.action"
                             v-else />
                     </sui-table-cell>
@@ -147,7 +145,6 @@ div [class*="pull right"] {
                                 v-if="question.editing" />
                             <p
                                 style="display:inline"
-                                :class="{'padding':!question.editing}"
                                 v-text="response.actionOption"
                                 v-else />
                             <sui-icon
@@ -167,7 +164,6 @@ div [class*="pull right"] {
                                 v-if="question.editing" />
                             <p
                                 style="display:inline"
-                                :class="{'padding':!question.editing}"
                                 v-text="response.actionOption"
                                 v-else />
                         </div>
@@ -181,7 +177,6 @@ div [class*="pull right"] {
                                 v-if="question.editing" />
                             <p
                                 style="display:inline"
-                                :class="{'padding':!question.editing}"
                                 v-text="response.actionOption"
                                 v-else />
                         </div>
@@ -191,7 +186,6 @@ div [class*="pull right"] {
                 </sui-table-row>
                 <sui-table-row
                     class="left aligned"
-                    :class="{'padding':!question.editing}"
                     v-if="question.type=='Free Response'">
                     <sui-table-cell>
                         <p>
@@ -240,24 +234,24 @@ div [class*="pull right"] {
                 <sui-modal-content>
                     <sui-modal-description>
                         <sui-header>Continue without saving changes?</sui-header>
-                        <p>Continue without saving changes?</p>
+                        <p>Your changes have not been saved.</p>
                     </sui-modal-description>
                 </sui-modal-content>
                 <sui-modal-actions style="padding:10px">
                     <sui-button 
-                        class="red"
+                        class="yellow" 
                         floated="left"
-                        @click="continueWithoutSaving()"
-                        content="Don't Save" />
-                    <sui-button 
-                        positive 
                         @click="showingSaveChangesModal = false"
                         content="Cancel" />
+                    <sui-button 
+                        class="red"
+                        @click="nextRoute()"
+                        content="Don't Save & Continue" />
                     <sui-button 
                         floated="right" 
                         class="green" 
                         @click="saveAndContinue()"
-                        content="Save" />
+                        content="Save & Continue" />
                 </sui-modal-actions>
             </sui-modal>
         </div>
@@ -266,21 +260,21 @@ div [class*="pull right"] {
 </template>
  
 <script>
-let oooEdit = require('./oooEdit.vue');
 'use strict'
 module.exports = {
     mounted: function() {
         this.loadData();
     },
     components: {
-        'ooo-edit': oooEdit
+        'ooo-edit': require('./oooEdit.vue'),
+        'user-dist-edit': require('./userDistEdit.vue')
     },
     methods: {
         colorFromResponse(response){
-            if(!response.actionOption) return 'black';
-            if(response.action == 'Forward to Question' && response.actionOption.split(' ')[0].trim() != 'Question'){
-                response.actionOption = 'Question 1';
-            }
+            if(!response.actionOption || response.action != 'Forward to Question' 
+            || response.actionOption.split(' ')[0].trim() != 'Question'){
+                return 'black';
+            } 
             let questionIndex = Number(response.actionOption.trim().split(' ')[1]) - 1;
             return this.questions[questionIndex].color;
         },
@@ -290,18 +284,13 @@ module.exports = {
                 this.changesMade = true;
             }
         },
-        continueWithoutSaving: function() {
-            console.log('continueing without saving you fuckin asshole!');
-            console.log('this.nextRoute : ');
-            console.log(this.nextRoute);
-            this.nextRoute();
-        },
         deleteResponse: function(question, response) {
             question.responses.splice(question.responses.indexOf(response),1);
             this.changesMade = true;
         },
         deleteQuestion: function(question) {
             this.questions.splice(this.questions.indexOf(question), 1);
+            this.questionsForDropdown.splice(this.questions.indexOf(question), 1);
             this.changesMade = true;
         },
         edit: function (el) {
@@ -339,12 +328,12 @@ module.exports = {
                     {
                         text: "Yes",
                         action: 'Forward to Question',
-                        actionOption: 'Question 1'
+                        actionOption: null
                     },
                     {
                         text: "No",
                         action: 'Forward to Question',
-                        actionOption: 'Question 1'
+                        actionOption: null
                     }
                 ]
             });
@@ -352,8 +341,7 @@ module.exports = {
                 text: `Question ${this.questions.length}`,
                 value: `Question ${this.questions.length}`
             });
-            this.checkForChanges();
-            window.scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight);
+            this.changesMade = true;
         },
         newResponse: function (question){
             question.responses.push({
@@ -361,14 +349,11 @@ module.exports = {
                 action: null,
                 actionOption: null
             });
-            this.checkForChanges();
+            this.changesMade = true;
         },
         saveAndContinue: function() {
             this.saveData();
             this.nextRoute();
-            console.log('saving andcontinueingsuckin asshole!');
-            console.log('this.nextRoute : ');
-            console.log(this.nextRoute);
         },
         saveData: function() {
             util.fetch('/api/questions/', {

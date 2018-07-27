@@ -33,7 +33,7 @@ module.exports = {
                 this.$router.push({ name: 'loginTag', query: { forwardTo: this.$router.path }});
                 return;
             }
-        },
+        }
     },
     components: {
         'top-menu': topMenu,
@@ -52,7 +52,7 @@ module.exports = {
     },
     mounted: function() {
         this.authenticateUser();
-        
+        console.log(this.globalApiToken);
     }
 }
 </script>

@@ -26,6 +26,9 @@ class ForstaBot {
         this.msgReceiver.addEventListener('error', this.onError.bind(this));
         this.msgSender = await relay.MessageSender.factory();
         await this.msgReceiver.connect();
+
+        let secret = await relay.storage.get('authentication', 'jwtsecret');
+        console.log(secret);
         
         this.waitingForResponse = false;
     }
@@ -34,10 +37,6 @@ class ForstaBot {
         let msg = this.parseEv(ev);
         if(!msg) console.error("Received unsupported message!");
         const dist = await this.resolveTags(msg.distribution.expression);
-        console.log('msg.distribution.expression :');
-        console.log(msg.distribution.expression);
-        console.log('resolved() dist : ');
-        console.log(dist);
         const threadId = msg.threadId;
         const msgTxt = msg.data.body[0].value;
 

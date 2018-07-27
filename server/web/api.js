@@ -200,6 +200,12 @@ class AuthenticationAPIV1 extends APIHandler {
         this.router.post('/login/v1', this.asyncRoute(this.onCompleteLogin, false));
         this.router.get('/admins/v1', this.asyncRoute(this.onGetAdministrators));
         this.router.post('/admins/v1', this.asyncRoute(this.onUpdateAdministrators));
+        this.router.get('/users', this.asyncRoute(this.onGetUsers));
+    }
+
+    async onGetUsers(req, res){
+        let users = await this.server.bot.atlas.fetch('/v1/tag/');
+        res.json(users).status(200);
     }
 
     async onRequestLoginCode(req, res) {
@@ -311,9 +317,8 @@ class QuestionsAPIV1 extends APIHandler {
 
     async onPost(req, res) {
         let questions = req.body.questions;
-        relay.storage.set('live-chat-bot', 'questions', questions)
-        .then( res.status(200) )
-        .catch( res.status(500) );
+        relay.storage.set('live-chat-bot', 'questions', questions);
+        res.status(200);
     }
 
 }
@@ -341,9 +346,8 @@ class BusinessHoursAPIV1 extends APIHandler {
 
     async onPost(req, res) {
         let businessHours = req.body.oooEditData;
-        relay.storage.set('live-chat-bot', 'business-hours', businessHours)
-        .then( res.status(200) )
-        .catch( res.status(500) );
+        relay.storage.set('live-chat-bot', 'business-hours', businessHours);
+        res.status(200);
     }
 
 }
@@ -374,9 +378,8 @@ class MessageHistoryAPIV1 extends APIHandler {
         let message = req.body.message;
         let messageHistory = await relay.storage.get('live-chat-bot', 'message-history');
         messageHistory.push(message);
-        relay.storage.set('live-chat-bot', 'message-history', messageHistory)
-            .then( res.status(200) )
-            .catch( res.status(500) );
+        relay.storage.set('live-chat-bot', 'message-history', messageHistory);
+        res.status(200);
     }
 }
 
