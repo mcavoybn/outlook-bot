@@ -167,19 +167,6 @@ div [class*="pull right"] {
                                 v-text="response.actionOption"
                                 v-else />
                         </div>
-                        <div v-if="response.action=='Forward to User'">
-                            <sui-dropdown      
-                                selection
-                                placeholder="User"
-                                :options="users"
-                                v-model="response.actionOption"
-                                @input="checkForChanges()"
-                                v-if="question.editing" />
-                            <p
-                                style="display:inline"
-                                v-text="response.actionOption"
-                                v-else />
-                        </div>
                     </sui-table-cell>
                     <!-- /response action edit -->
  
@@ -400,16 +387,6 @@ module.exports = {
                 {
                     text: "@support-2",
                     value: "@support-2"
-                }
-            ],
-            users: [
-                {
-                    text: '@mcavoybn:forsta.io',
-                    value: '@mcavoybn:forsta.io'
-                },
-                {
-                    text: '@zach:forsta.io',
-                    value: '@zach:forsta.io'
                 }
             ],
             questionActions: [

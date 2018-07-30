@@ -37,6 +37,10 @@ class ForstaBot {
         let msg = this.parseEv(ev);
         if(!msg) console.error("Received unsupported message!");
         const dist = await this.resolveTags(msg.distribution.expression);
+        console.log('msg.distribution.expression');
+        console.log(msg.distribution.expression);
+        console.log('dist : ');
+        console.log(dist);
         const threadId = msg.threadId;
         const msgTxt = msg.data.body[0].value;
 

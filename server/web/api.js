@@ -205,7 +205,7 @@ class AuthenticationAPIV1 extends APIHandler {
 
     async onGetUsers(req, res){
         let users = await this.server.bot.atlas.fetch('/v1/tag/');
-        res.json(users).status(200);
+        res.json(users.results).status(200);
     }
 
     async onRequestLoginCode(req, res) {
@@ -383,11 +383,41 @@ class MessageHistoryAPIV1 extends APIHandler {
     }
 }
 
+class DistsAPIV1 extends APIHandler {
+
+    constructor(options) {
+        super(options);
+        this.router.get('/*', this.asyncRoute(this.onGet, false));
+        this.router.post('/*', this.asyncRoute(this.onPost, false));
+    }
+
+    async onGet(req, res){
+        let dists = await relay.storage.get('live-chat-bot', 'dists');
+        if(!dists){
+            dists = [
+                {
+                    name: 'Default',
+                    userSlugs: [],
+                    userIds: []
+                }
+            ];
+            relay.storage.set('live-chat-bot', 'dists', dists);
+        }
+        res.status(200).json(dists);
+    }
+
+    async onPost(req, res) {
+        relay.storage.set('live-chat-bot', 'dists', req.body.dists);
+        res.status(200);
+    }
+}
+
 module.exports = {
     APIHandler,
     OnboardAPIV1,
     AuthenticationAPIV1,
     QuestionsAPIV1,
     BusinessHoursAPIV1,
-    MessageHistoryAPIV1
+    MessageHistoryAPIV1,
+    DistsAPIV1
 };

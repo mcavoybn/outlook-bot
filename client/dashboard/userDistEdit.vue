@@ -7,38 +7,122 @@ div [class*="pull right"] {
   float: right;
    margin-right: 0.25em;
 }
+.flexbox {
+    display: flex;
+    flex: 1;
+    width: 70%;
+    margin-right:0.5em;
+}
 </style>
 
 <template lang="html">
     <div class="ui container center aligned">
 
-        <!--  BUSINESS HOURS -->
         <sui-table
             class="ui left aligned table"
             color="grey">
             <sui-table-header>
                 <sui-table-row>
-                    <sui-table-headerCell>
-                        <span>Distribution Edit</span>
+                    <sui-table-headerCell colspan="2">
+                        <span>User Distributions</span>
                     </sui-table-headerCell>
                 </sui-table-row>
             </sui-table-header>
 
-
             <sui-table-body>
+                <sui-table-row>
+                    <sui-table-cell>
+                        <span class="ui label">Select Distribution:</span>
+                        <sui-dropdown    
+                            selection
+                            placeholder="Distributions"
+                            v-model="selectedDistIdx"
+                            @input="checkForChanges()"
+                            :options="distsForDropdown"/>
+                    </sui-table-cell>
+
+                    <sui-table-cell>
+                        <sui-button 
+                            color="green"
+                            icon="copy"
+                            content="Create New"
+                            @click="addDist()" />
+                    </sui-table-cell>
+                </sui-table-row>
+
+                <sui-table-row>
+                    <sui-table-cell>
+                        <span class="ui label">Distribution Name:</span>
+                        <sui-input
+                            class="flexbox"
+                            v-model="selectedDist.name"
+                            @input="checkForChanges()" />
+                    </sui-table-cell>
+
+                    <sui-table-cell>
+                        <sui-button 
+                            color="red"
+                            icon="trash"
+                            content="Delete Selected"
+                            @click="removeDist()" />
+                    </sui-table-cell>
+                </sui-table-row>
+                
                 <sui-table-row> 
+                    <sui-table-cell 
+                        size="large" 
+                        style="height:300px;overflow:auto" 
+                        valign="top">
+                        <sui-list divided relaxed>
+                            <sui-list-item 
+                                v-for="user in userData"
+                                v-if="selectedDist.userIds.indexOf(user.id) == -1">
+                                <sui-list-content>
+                                    <sui-list-icon 
+                                        name="plus"
+                                        class="green"
+                                        @click="addUser(user)" />
+                                    <a 
+                                        v-text="user.slug"
+                                        @click="addUser(user)"/>
+                                </sui-list-content>
+                            </sui-list-item>
+                        </sui-list>
+                    </sui-table-cell>
+
+                    <sui-table-cell 
+                        size="large"
+                        style="height:300px;overflow:auto" 
+                        valign="top">
+                        <sui-list divided relaxed>
+                            <sui-list-item 
+                                v-for="user in userData"
+                                v-if="selectedDist.userIds.indexOf(user.id) != -1">
+                                <sui-list-content >
+                                    <sui-list-icon 
+                                        name="minus" 
+                                        class="red"
+                                        @click="removeUser(user)" />
+                                    <a
+                                        @click="removeUser(user)" 
+                                        v-text="user.slug" />
+                                </sui-list-content>
+                            </sui-list-item>
+                        </sui-list>
+                    </sui-table-cell>
+                    
                 </sui-table-row>
             </sui-table-body>
 
-            <sui-table-footer v-if="changesMade">
+            <sui-table-footer>
                 <sui-table-row>
-                    <sui-table-headerCell>
+                    <sui-table-headerCell colspan="2">
                         <sui-button 
-                            class="ui button pull right" 
-                            primary
-                            @click="saveData()">
-                            Save Changes
-                        </sui-button>
+                            class="pull right" 
+                            color="blue"
+                            @click="saveData()"
+                            v-if="changesMade"
+                            content="Save Changes" />
                     </sui-table-headerCell>
                 </sui-table-row>
             </sui-table-footer>
@@ -54,36 +138,104 @@ module.exports = {
         this.loadData();
     },
     methods: {
+        addUser: function(user){
+            let sd = this.dists[this.selectedDistIdx];
+            if(sd.userIds.indexOf(user.id) == -1){
+                sd.userSlugs.push(user.slug);
+                sd.userIds.push(user.id);
+                this.checkForChanges();
+            }
+        },
+        removeUser: function(user){
+            let sd = this.dists[this.selectedDistIdx];
+            let userIdx = sd.userIds.indexOf(user.id);
+            if( userIdx != -1){
+                sd.userSlugs.splice(userIdx, 1);
+                sd.userIds.splice(userIdx, 1);
+                this.checkForChanges();
+            }
+        },
+        addDist: function(){
+            this.dists.push({
+                userIds: [],
+                userSlugs: [],
+                name: "New Dist"
+            });
+            this.distsForDropdown.push({
+                text: "New Dist",
+                value: this.dists.length - 1
+            })
+            this.selectedDistIdx = this.dists.length - 1;
+            this.selectedDist = this.dists[this.selectedDistIdx];
+            this.changesMade = true;
+        },
+        removeDist: function(){
+            if(this.selectedDistIdx == this.dists.length - 1){
+                this.selectedDistIdx--;
+                this.dists.pop();
+                this.distsForDropdown.pop();
+            }else{
+                this.dists.splice(this.selectedDistIdx, 1);
+                this.distsForDropdown.splice(this.selectedDistIdx, 1);
+            }
+            this.selectedDist = this.dists[this.selectedDistIdx];
+            this.changesMade = true;
+        },
         checkForChanges: function() {
+            this.selectedDist = this.dists[this.selectedDistIdx];
             if(this.changesMade) return;
-            if(JSON.stringify(this.oooEditData) != this.oooEditDataOriginal){
+            if(JSON.stringify(this.dists) != this.distsOriginal){
                 this.changesMade = true;
             }
         },
         loadData: function() {
             util.fetch('/api/auth/users', {method:'get'})
             .then( res => {
-                console.log('GETting from api/auth/users !');
-                console.log('res.theJson');
-                console.log(res);
+                this.userData = res.theJson;
+            });
+
+            util.fetch('/api/dists/', {method:'get'})
+            .then( res => {
+                this.dists = res.theJson;
+                this.distsOriginal = JSON.stringify(res.theJson);
+                this.dists.forEach( (dist, idx) => {
+                    this.distsForDropdown.push({
+                        text: dist.name,
+                        value: idx
+                    });
+                });
+                this.selectedDist = this.dists[this.selectedDistIdx];
             });
         },
         saveData: function() {
-            // util.fetch('/api/business-hours', 
-            // {
-            //     method:'post', 
-            //     body:
-            //     { 
-            //         oooEditData: this.oooEditData 
-            //     }
-            // });
-            // this.oooEditDataOriginal = JSON.stringify(this.oooEditData);
-            // this.changesMade = false;
+            util.fetch('/api/dists/', 
+            {
+                method:'post', 
+                body:
+                { 
+                    dists: this.dists
+                }
+            });
+            this.distsForDropdown = [];
+            this.dists.forEach( (dist, idx) => {
+                this.distsForDropdown.push({
+                    text: dist.name,
+                    value: idx
+                });
+            });
+            this.distsOriginal = JSON.stringify(this.dists);
+            this.changesMade = false;
         },
     },
     data: () => ({ 
         global: shared.state,
-        changesMade: false
+        changesMade: false,
+        userData: [],
+        dists: [],
+        distsOriginal: [],
+        distsForDropdown: [],
+        selectedDist: {},
+        selectedDistIdx: 0,
     }),
 }
 </script>
