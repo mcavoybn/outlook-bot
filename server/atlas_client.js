@@ -15,7 +15,7 @@ class BotAtlasClient extends relay.AtlasClient {
     }
 
     static get userAuthTokenDescription() {
-        return 'compliance monitor bot';
+        return 'live chat bot';
     }
 
     static async onboard(onboardClient) {

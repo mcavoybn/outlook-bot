@@ -12,8 +12,8 @@ const AUTH_FAIL_THRESHOLD = 10;
 class ForstaBot {
 
     async start() {
-        const ourId = await relay.storage.getState('addr');
-        if (!ourId) {
+        this.ourId = await relay.storage.getState('addr');
+        if (!this.ourId) {
             console.warn("bot is not yet registered");
             return;
         }
@@ -27,9 +27,6 @@ class ForstaBot {
         this.msgSender = await relay.MessageSender.factory();
         await this.msgReceiver.connect();
 
-        let secret = await relay.storage.get('authentication', 'jwtsecret');
-        console.log(secret);
-        
         this.waitingForResponse = false;
     }
 
@@ -72,10 +69,6 @@ class ForstaBot {
         let msg = this.parseEv(ev);
         if(!msg) console.error("Received unsupported message!");
         const dist = await this.resolveTags(msg.distribution.expression);
-        console.log('msg.distribution.expression');
-        console.log(msg.distribution.expression);
-        console.log('dist : ');
-        console.log(dist);
         const threadId = msg.threadId;
         const msgTxt = msg.data.body[0].value;
 
@@ -91,6 +84,7 @@ class ForstaBot {
 
         if(this.waitingForResponse){
             this.handleResponse(msgTxt, dist, threadId, msg.sender.userId);
+            return;
         }
         
         if(!this.questions){
@@ -108,43 +102,28 @@ class ForstaBot {
         }
     }
 
-    async handleResponse(msgTxt, dist, threadId, userId){
-        let response = {};
+    async handleResponse(msgTxt, dist, threadId, senderId){
+        let response = this.parseResponse(msgTxt);
+        if(!response) this.sendMessage(dist, threadId, `Invalid response !`);
 
-        if(this.currentQuestion.type == 'Free Response'){
-            let currentQuestionIndex = this.questions.indexOf(this.currentQuestion);
-            if(currentQuestionIndex == this.questions.length - 1){
-                response.action = 'End of Question Set';   
-            }else{
-                response.action = 'Forward to Question';
-                response.actionOption = 'Question ' + (currentQuestionIndex + 2); 
-            }
-            response.text = msgTxt;
-        }else{
-            let responseIndex = -1;
-            try{
-                responseIndex = Number(msgTxt);
-            }catch(error){
-                console.log(`Error parsing user response:${error}`);
-                this.sendMessage(dist, threadId, `Invalid response - non-number detected`);
-                return;
-            }
-            if(responseIndex > this.currentQuestion.responses.length || responseIndex < 0){
-                this.sendMessage(dist, threadId, `Invalid response - response number not available`);
-                return;
-            }
-            response = this.currentQuestion.responses[responseIndex-1];
+        if(!response.action){
+            this.sendMessage(dist, threadId, `ERROR: response action not configured !`);
+            this.questions = undefined;
+            return;
         }
 
         if(response.action == "Forward to Distribution")
         {
+            let forwardingDist = await this.getDistFromResponse(response);
+            if(!forwardingDist){
+                this.sendMessage(dist, threadId, `Whoops! This distribution no longer exists...`);
+                console.error('ERROR: response actionOption configured to a non-existant distribution');
+                return;
+            }
+            this.sendMessage(forwardingDist, uuid4(), 'A live chat user is trying to get in touch with you!');
+            
             this.sendMessage(dist, threadId, `Forwarding to Distribution ${response.actionOption}`);
-            this.questions = null;
-        }
-        else if(response.action == "Forward to User")
-        {
-            this.sendMessage(dist, threadId, `Forwarding to User ${response.actionOption}`);
-            this.questions = null;
+            this.questions = undefined;
         }
         else if(response.action == "Forward to Question")
         {
@@ -154,18 +133,68 @@ class ForstaBot {
         else if(response.action == "End of Question Set")
         {
             this.sendMessage(dist, threadId, `End of question set!`);
-            this.questions = null;
-        }
-        else if(!response.action)
-        {
-            this.sendMessage(dist, threadId, `ERROR: response action not configured !`);
-            response.action = 'ERROR response action not configured !';
-            response.text = 'ERROR response action not configured !';
-            this.questions = null;
+            this.questions = undefined;
         }
         
-        this.saveToMessageHistory(response, userId);
+        this.saveToMessageHistory(response, senderId);
         this.waitingForResponse = false;
+    }
+
+    async getDistFromResponse(response){
+        let dists = await relay.storage.get('live-chat-bot', 'dists');
+        let clientDist = undefined;
+        dists.forEach(dist => {
+            if(dist.name == response.actionOption){
+                clientDist = dist;
+            }
+        });
+        let distRaw = `(<${this.userId}>+`;
+        clientDist.userIds.forEach( (userId, idx) => {
+            distRaw += `<${userId}>`;
+            if(idx != clientDist.userIds.length - 1) distRaw += '+';
+        });
+        distRaw += ')';
+        let forwardingDist = await this.resolveTags(distRaw);
+        
+        // forwardingDist.universal = forwardingDist.universal.slice(0, forwardingDist.universal.length-1);
+        // forwardingDist.universal += '+';
+        // dist.userids.forEach(userid => {
+        //     forwardingDist.userids.push(userid);
+        //     forwardingDist.universal += `<${userid}>+` 
+        // });
+        // forwardingDist.universal = forwardingDist.universal.slice(0, forwardingDist.universal.length-1);
+        // forwardingDist.universal += ')';
+        // forwardingDist.pretty += ' + ' + dist.pretty;
+
+        console.log('forwardingDist : ');
+        console.log(forwardingDist);
+        return forwardingDist;
+    }
+
+    parseResponse(msgTxt){
+        let response = {};
+        if(this.currentQuestion.type == 'Free Response'){
+            let currentQuestionIndex = this.questions.indexOf(this.currentQuestion);
+            if(currentQuestionIndex == this.questions.length - 1){
+                response.action = 'End of Question Set';   
+            }else{
+                response.action = 'Forward to Question';
+                response.actionOption = 'Question ' + (currentQuestionIndex + 2); 
+            }
+            return msgTxt;
+        }else{
+            let responseIndex = -1;
+            try{
+                responseIndex = Number(msgTxt);
+            }catch(error){
+                console.log(`Error parsing user response:${error}`);
+                return false;
+            }
+            if(responseIndex > this.currentQuestion.responses.length || responseIndex < 0){
+                return false;
+            }
+            return this.currentQuestion.responses[responseIndex-1];
+        }
     }
 
     async saveToMessageHistory(response, userId) {

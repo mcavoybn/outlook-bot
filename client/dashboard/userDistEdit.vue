@@ -127,6 +127,25 @@ div [class*="pull right"] {
                 </sui-table-row>
             </sui-table-footer>
         </sui-table>
+
+        <div>
+            <sui-modal v-model="showingUniqueDistModal">
+                <sui-modal-header>Warning</sui-modal-header>
+                <sui-modal-content>
+                    <sui-modal-description>
+                        <sui-header>Distributions must have unique names</sui-header>
+                        <p>Each distribution should be given a unique name. Ensure no two distributions have the same name and try saving again.</p>
+                    </sui-modal-description>
+                </sui-modal-content>
+                <sui-modal-actions style="padding:10px">
+                    <sui-button 
+                        class="yellow" 
+                        floated="left"
+                        @click="showingUniqueDistModal = false"
+                        content="Okay" />
+                </sui-modal-actions>
+            </sui-modal>
+        </div>
         
     </div>
 </template>
@@ -208,6 +227,19 @@ module.exports = {
             });
         },
         saveData: function() {
+            let distNames = {};
+            this.dists.forEach(dist => {
+                if(!distNames[dist.name]){
+                    distNames[dist.name] = true;
+                }else{
+                    distNames = false;
+                    return;
+                }
+            });
+            if(!distNames){
+                this.showingUniqueDistModal = true;
+                return;
+            }
             util.fetch('/api/dists/', 
             {
                 method:'post', 
@@ -236,6 +268,7 @@ module.exports = {
         distsForDropdown: [],
         selectedDist: {},
         selectedDistIdx: 0,
+        showingUniqueDistModal: false
     }),
 }
 </script>

@@ -158,7 +158,7 @@ div [class*="pull right"] {
                             <sui-dropdown      
                                 selection
                                 placeholder="Distribution"
-                                :options="dists"
+                                :options="distsForDropdown"
                                 v-model="response.actionOption"
                                 @input="checkForChanges()"
                                 v-if="question.editing" />
@@ -251,6 +251,19 @@ div [class*="pull right"] {
 module.exports = {
     mounted: function() {
         this.loadData();
+        this.questions.forEach(question => {
+            question.responses.forEach(response => {
+                if(response.action == 'Forward to Distribution' 
+                && response.actionOption >= this.dists.length){
+                    response.actionOption = null;
+                    this.changesMade = true;
+                }
+            });
+        });
+        if(this.changesMade){
+            this.saveData();
+            this.changesMade = false;
+        }
     },
     components: {
         'ooo-edit': require('./oooEdit.vue'),
@@ -302,6 +315,17 @@ module.exports = {
                         value: `Question ${i+1}`
                     });
                 }
+            });
+
+            util.fetch.call(this, '/api/dists/', {method: 'get'})
+            .then(result => {
+                this.dists = result.theJson;
+                this.dists.forEach( (dist, idx) => {
+                    this.distsForDropdown.push({
+                        text: dist.name,
+                        value: dist.name
+                    });
+                });
             });
         },
         newQuestion: function () {
@@ -375,28 +399,12 @@ module.exports = {
             questionsForDropdown: [],
             showingSaveChangesModal: false,
             nextRoute: null,
-            dists: [
-                {
-                    text: "@sales",
-                    value: "@sales"
-                },
-                {
-                    text: "@support-1",
-                    value: "@support-1"
-                },
-                {
-                    text: "@support-2",
-                    value: "@support-2"
-                }
-            ],
+            dists: [],
+            distsForDropdown: [],
             questionActions: [
                 {
                     text: "Forward to Question",
                     value: "Forward to Question"
-                },
-                {
-                    text: "Forward to User",
-                    value: "Forward to User"
                 },
                 {
                     text: "Forward to Distribution",

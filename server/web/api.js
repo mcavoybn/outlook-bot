@@ -298,13 +298,13 @@ class QuestionsAPIV1 extends APIHandler {
                     responses: [
                         {
                             text: "Yes",
-                            action: "Next Question",
-                            actionOption: null
+                            action: "Forward to Question",
+                            actionOption: "Question 1"
                         },
                         {
                             text: "No",
-                            action: "Next Question",
-                            actionOption: null
+                            action: "Forward to Question",
+                            actionOption: "Question 1"
                         }
                     ]
                 }
