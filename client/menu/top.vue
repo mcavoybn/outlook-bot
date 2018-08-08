@@ -10,7 +10,9 @@
                     <i class="large user icon"></i>
                     <i class="dropdown icon"></i>
                     <div class="menu left">
-                    <div class="item" @click="dashboard">Dashboard</div>
+                    <div class="item" @click="distributions">Distributions</div>
+                    <div class="item" @click="questions">Questions</div>
+                    <div class="item" @click="businessHours">Business Hours</div>
                     <div class="item" @click="messageHistory">Message History</div>
                     <div class="item" @click="settings">Settings</div>
                     <div class="item" @click="logout">Sign Out</div>
@@ -36,8 +38,14 @@ module.exports = {
         settings: function () {
             this.$router.push({ name: 'settings' });
         },
-        dashboard: function () {
-            this.$router.push({ name: 'dashboard' });
+        questions: function () {
+            this.$router.push({ name: 'questions' });
+        },
+        businessHours: function () {
+            this.$router.push({ name: 'businessHours' });
+        },
+        distributions: function () {
+            this.$router.push({ name: 'distributions' });
         },
         messageHistory: function () {
             this.$router.push({ name: 'messageHistory' });

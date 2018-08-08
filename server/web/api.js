@@ -345,7 +345,7 @@ class BusinessHoursAPIV1 extends APIHandler {
     }
 
     async onPost(req, res) {
-        let businessHours = req.body.oooEditData;
+        let businessHours = req.body.businessHoursData;
         relay.storage.set('live-chat-bot', 'business-hours', businessHours);
         res.status(200);
     }

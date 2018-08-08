@@ -21,13 +21,9 @@ div [class*="pull right"] {
         <div class="ui basic segment huge">
             <h1 class="ui header">
                 <i class="columns icon"></i>
-                Live Chat Bot Dashboard
+                Live Chat Questions
             </h1>
         </div>
-
-        <user-dist-edit />
-
-        <ooo-edit />
 
         <!--  QUESTION EDIT TABLE -->
         <sui-table
@@ -265,13 +261,10 @@ module.exports = {
             this.changesMade = false;
         }
     },
-    components: {
-        'ooo-edit': require('./oooEdit.vue'),
-        'user-dist-edit': require('./userDistEdit.vue')
-    },
     methods: {
         colorFromResponse(response){
-            if(!response.actionOption || response.action != 'Forward to Question' 
+            if(!response.actionOption 
+            || response.action != 'Forward to Question' 
             || response.actionOption.split(' ')[0].trim() != 'Question'){
                 return 'black';
             } 
@@ -295,7 +288,6 @@ module.exports = {
         },
         edit: function (el) {
             el.editing = !el.editing;
-            this.checkForChanges();
         },
         getRandomColor: function () {
             let colors = ['red', 'orange', 'yellow', 'olive', 'green', 'teal',
@@ -367,15 +359,15 @@ module.exports = {
             this.nextRoute();
         },
         saveData: function() {
+            this.questions.forEach(question => {
+                question.editing = false;
+            });
             util.fetch('/api/questions/', {
                 method:'post',
                 body: {questions: this.questions}
             });
             this.changesMade = false;
             this.questionsOriginal = JSON.stringify(this.questions);
-            this.questions.forEach(question => {
-                question.editing = false;
-            });
         },
     },
     beforeRouteLeave: function(to, from, next){
@@ -386,9 +378,6 @@ module.exports = {
         }else{
             next();
         }
-        this.questions.forEach(question => {
-            question.editing = false;
-        });
     },
     data: function() {
         return {

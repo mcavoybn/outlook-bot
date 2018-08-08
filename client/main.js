@@ -14,7 +14,9 @@ function main() {
         { path: '/onboard/tag', name: 'onboardTag', component: require('./onboard/onboardTag.vue') },
         { path: '/onboard/auth/:type/:tag', name: 'onboardAuth', component: require('./onboard/onboardAuth.vue') },
         { path: '/settings', name: 'settings', component: require('./settings/settings.vue') },
-        { path: '/dashboard', name: 'dashboard', component: require('./dashboard/dashboard.vue') },
+        { path: '/questions', name: 'questions', component: require('./questions/questions.vue') },
+        { path: '/distributions', name: 'distributions', component: require('./distributions/distributions.vue') },
+        { path: '/businessHours', name: 'businessHours', component: require('./businessHours/businessHours.vue') },
         { path: '/messageHistory', name: 'messageHistory', component: require('./messageHistory/messageHistory.vue') },
         { path: '*', redirect: '/welcome' }
     ];

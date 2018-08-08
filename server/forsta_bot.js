@@ -83,7 +83,7 @@ class ForstaBot {
         }
 
         if(this.waitingForResponse){
-            this.handleResponse(msgTxt, dist, threadId, msg.sender.userId);
+            this.handleResponse(msg, dist, threadId, msg.sender.userId);
             return;
         }
         
@@ -102,8 +102,8 @@ class ForstaBot {
         }
     }
 
-    async handleResponse(msgTxt, dist, threadId, senderId){
-        let response = this.parseResponse(msgTxt);
+    async handleResponse(msg, dist, threadId, senderId){
+        let response = this.parseResponse(msg.data.body[0].value);
         if(!response) this.sendMessage(dist, threadId, `Invalid response !`);
 
         if(!response.action){
@@ -114,15 +114,15 @@ class ForstaBot {
 
         if(response.action == "Forward to Distribution")
         {
-            let forwardingDist = await this.getDistFromResponse(response);
+            let forwardingDist = await this.getDistFromResponse(msg, response);
             if(!forwardingDist){
                 this.sendMessage(dist, threadId, `Whoops! This distribution no longer exists...`);
                 console.error('ERROR: response actionOption configured to a non-existant distribution');
                 return;
             }
-            this.sendMessage(forwardingDist, uuid4(), 'A live chat user is trying to get in touch with you!');
+            this.sendMessage(forwardingDist, threadId, 'A live chat user is trying to get in touch with you!');
             
-            this.sendMessage(dist, threadId, `Forwarding to Distribution ${response.actionOption}`);
+            //this.sendMessage(dist, threadId, `Forwarding to Distribution ${response.actionOption}`);
             this.questions = undefined;
         }
         else if(response.action == "Forward to Question")
@@ -140,7 +140,7 @@ class ForstaBot {
         this.waitingForResponse = false;
     }
 
-    async getDistFromResponse(response){
+    async getDistFromResponse(msg, response){
         let dists = await relay.storage.get('live-chat-bot', 'dists');
         let clientDist = undefined;
         dists.forEach(dist => {
@@ -148,7 +148,8 @@ class ForstaBot {
                 clientDist = dist;
             }
         });
-        let distRaw = `(<${this.userId}>+`;
+        let senderId = msg.distribution.expression.split('+')[0];
+        let distRaw = '('+senderId+'+';
         clientDist.userIds.forEach( (userId, idx) => {
             distRaw += `<${userId}>`;
             if(idx != clientDist.userIds.length - 1) distRaw += '+';
@@ -156,18 +157,6 @@ class ForstaBot {
         distRaw += ')';
         let forwardingDist = await this.resolveTags(distRaw);
         
-        // forwardingDist.universal = forwardingDist.universal.slice(0, forwardingDist.universal.length-1);
-        // forwardingDist.universal += '+';
-        // dist.userids.forEach(userid => {
-        //     forwardingDist.userids.push(userid);
-        //     forwardingDist.universal += `<${userid}>+` 
-        // });
-        // forwardingDist.universal = forwardingDist.universal.slice(0, forwardingDist.universal.length-1);
-        // forwardingDist.universal += ')';
-        // forwardingDist.pretty += ' + ' + dist.pretty;
-
-        console.log('forwardingDist : ');
-        console.log(forwardingDist);
         return forwardingDist;
     }
 

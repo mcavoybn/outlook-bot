@@ -12,6 +12,13 @@ div [class*="pull right"] {
 <template lang="html">
     <div class="ui container center aligned">
 
+        <div class="ui basic segment huge">
+            <h1 class="ui header">
+                <i class="columns icon"></i>
+                Live Chat Business Hours
+            </h1>
+        </div>
+
         <!--  BUSINESS HOURS -->
         <sui-table
             class="ui left aligned table"
@@ -31,14 +38,14 @@ div [class*="pull right"] {
                         <div class="ui labeled input">
                             <div style="background-color:#555;color:#fff;" class="ui label">Open:</div>
                             <input format="HH:MM:AM"
-                                v-model="oooEditData.open"
+                                v-model="businessHoursData.open"
                                 type="time"
                                 @input="checkForChanges()"/>
                         </div>
                         <div class="ui labeled input">
                             <div style="background-color:#555;color:#fff;" class="ui label">Close:</div>
                             <input format="HH:MM:AM"
-                                v-model="oooEditData.close"
+                                v-model="businessHoursData.close"
                                 type="time"
                                 @input="checkForChanges()"/>
                         </div>
@@ -50,7 +57,7 @@ div [class*="pull right"] {
                             <label>Out of Office Message</label>
                             <textarea 
                             rows="2"
-                            v-model="oooEditData.message"
+                            v-model="businessHoursData.message"
                             @input="checkForChanges()"></textarea>
                         </div>
                     </sui-table-cell>
@@ -70,6 +77,34 @@ div [class*="pull right"] {
                 </sui-table-row>
             </sui-table-footer>
         </sui-table>
+
+        <div>
+            <sui-modal v-model="showingSaveChangesModal">
+                <sui-modal-header>Save Changes</sui-modal-header>
+                <sui-modal-content>
+                    <sui-modal-description>
+                        <sui-header>Continue without saving changes?</sui-header>
+                        <p>Your changes have not been saved.</p>
+                    </sui-modal-description>
+                </sui-modal-content>
+                <sui-modal-actions style="padding:10px">
+                    <sui-button 
+                        class="yellow" 
+                        floated="left"
+                        @click="showingSaveChangesModal = false"
+                        content="Cancel" />
+                    <sui-button 
+                        class="red"
+                        @click="nextRoute()"
+                        content="Don't Save & Continue" />
+                    <sui-button 
+                        floated="right" 
+                        class="green" 
+                        @click="saveAndContinue()"
+                        content="Save & Continue" />
+                </sui-modal-actions>
+            </sui-modal>
+        </div>
         
     </div>
 </template>
@@ -83,35 +118,46 @@ module.exports = {
     methods: {
         checkForChanges: function() {
             if(this.changesMade) return;
-            if(JSON.stringify(this.oooEditData) != this.oooEditDataOriginal){
+            if(JSON.stringify(this.businessHoursData) != this.businessHoursDataOriginal){
                 this.changesMade = true;
             }
         },
         loadData: function() {
-            util.fetch('/api/business-hours', {method:'get'})
+            util.fetch('/api/business-hours/', {method:'get'})
             .then( res => {
-                this.oooEditData = res.theJson;
-                this.oooEditDataOriginal = JSON.stringify(res.theJson);
+                this.businessHoursData = res.theJson;
+                this.businessHoursDataOriginal = JSON.stringify(res.theJson);
             });
         },
         saveData: function() {
-            util.fetch('/api/business-hours', 
+            util.fetch('/api/business-hours/', 
             {
                 method:'post', 
                 body:
                 { 
-                    oooEditData: this.oooEditData 
+                    businessHoursData: this.businessHoursData 
                 }
             });
-            this.oooEditDataOriginal = JSON.stringify(this.oooEditData);
+            this.businessHoursDataOriginal = JSON.stringify(this.businessHoursData);
             this.changesMade = false;
         },
     },
+    beforeRouteLeave: function(to, from, next){ 
+        if(this.changesMade){
+            this.showingSaveChangesModal = true;
+            this.nextRoute = next;
+            next(false);
+        }else{
+            next();
+        }
+    },
     data: () => ({ 
         global: shared.state,
-        oooEditData: {},
-        oooEditDataOriginal: {},
-        changesMade: false
+        businessHoursData: {},
+        businessHoursDataOriginal: {},
+        changesMade: false,
+        showingSaveChangesModal: false,
+        nextRoute: null
     }),
 }
 </script>

@@ -37,7 +37,7 @@
                 </sui-table-row>
             </sui-table-header>
 
-            <sui-table-body style="max-height:777px;overflow:auto;">
+            <sui-table-body style="height:777px;overflow:auto;">
                 <sui-table-row 
                     v-for="message in messageHistory">
                     <sui-table-cell

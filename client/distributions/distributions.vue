@@ -18,6 +18,13 @@ div [class*="pull right"] {
 <template lang="html">
     <div class="ui container center aligned">
 
+        <div class="ui basic segment huge">
+            <h1 class="ui header">
+                <i class="columns icon"></i>
+                Live Chat User Distributions
+            </h1>
+        </div>
+
         <sui-table
             class="ui left aligned table"
             color="grey">
@@ -32,16 +39,6 @@ div [class*="pull right"] {
             <sui-table-body>
                 <sui-table-row>
                     <sui-table-cell>
-                        <span class="ui label">Select Distribution:</span>
-                        <sui-dropdown    
-                            selection
-                            placeholder="Distributions"
-                            v-model="selectedDistIdx"
-                            @input="checkForChanges()"
-                            :options="distsForDropdown"/>
-                    </sui-table-cell>
-
-                    <sui-table-cell>
                         <sui-button 
                             color="green"
                             icon="copy"
@@ -51,20 +48,30 @@ div [class*="pull right"] {
                 </sui-table-row>
 
                 <sui-table-row>
-                    <sui-table-cell>
+                    <sui-table-cell colspan="2">
+                        <span class="ui label">Select Distribution:</span>
+                        <sui-dropdown    
+                            selection
+                            placeholder="Distributions"
+                            v-model="selectedDistIdx"
+                            @input="checkForChanges()"
+                            :options="distsForDropdown"/>
+                        <sui-button 
+                            color="red"
+                            icon="trash"
+                            style="margin-left:15px"
+                            content="Delete Selected"
+                            @click="removeDist()" />
+                    </sui-table-cell>
+                </sui-table-row>
+
+                <sui-table-row>
+                    <sui-table-cell colspan="2">
                         <span class="ui label">Distribution Name:</span>
                         <sui-input
                             class="flexbox"
                             v-model="selectedDist.name"
                             @input="checkForChanges()" />
-                    </sui-table-cell>
-
-                    <sui-table-cell>
-                        <sui-button 
-                            color="red"
-                            icon="trash"
-                            content="Delete Selected"
-                            @click="removeDist()" />
                     </sui-table-cell>
                 </sui-table-row>
                 
@@ -146,15 +153,46 @@ div [class*="pull right"] {
                 </sui-modal-actions>
             </sui-modal>
         </div>
+
+        <div>
+            <sui-modal v-model="showingSaveChangesModal">
+                <sui-modal-header>Save Changes</sui-modal-header>
+                <sui-modal-content>
+                    <sui-modal-description>
+                        <sui-header>Continue without saving changes?</sui-header>
+                        <p>Your changes have not been saved.</p>
+                    </sui-modal-description>
+                </sui-modal-content>
+                <sui-modal-actions style="padding:10px">
+                    <sui-button 
+                        class="yellow" 
+                        floated="left"
+                        @click="showingSaveChangesModal = false"
+                        content="Cancel" />
+                    <sui-button 
+                        class="red"
+                        @click="nextRoute()"
+                        content="Don't Save & Continue" />
+                    <sui-button 
+                        floated="right" 
+                        class="green" 
+                        @click="saveAndContinue()"
+                        content="Save & Continue" />
+                </sui-modal-actions>
+            </sui-modal>
+        </div>
         
     </div>
 </template>
 
 <script>
+let global = require('../globalState');
 'use strict'
 module.exports = {
     mounted: function() {
         this.loadData();
+        console.log('global.state.loginTag : ');
+        console.log(global.state.loginTag);
     },
     methods: {
         addUser: function(user){
@@ -211,6 +249,8 @@ module.exports = {
             util.fetch('/api/auth/users', {method:'get'})
             .then( res => {
                 this.userData = res.theJson;
+                console.log('this.userData : ');
+                console.log(this.userData);
             });
 
             util.fetch('/api/dists/', {method:'get'})
@@ -258,6 +298,19 @@ module.exports = {
             this.distsOriginal = JSON.stringify(this.dists);
             this.changesMade = false;
         },
+        saveAndContinue: function() {
+        this.saveData();
+        this.nextRoute();
+        },
+    },
+    beforeRouteLeave: function(to, from, next){
+        if(this.changesMade){
+            this.showingSaveChangesModal = true;
+            this.nextRoute = next;
+            next(false);
+        }else{
+            next();
+        }
     },
     data: () => ({ 
         global: shared.state,
@@ -268,7 +321,9 @@ module.exports = {
         distsForDropdown: [],
         selectedDist: {},
         selectedDistIdx: 0,
-        showingUniqueDistModal: false
+        showingUniqueDistModal: false,
+        showingSaveChangesModal: false,
+        nextRoute: null
     }),
 }
 </script>
