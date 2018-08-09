@@ -27,7 +27,8 @@ class ForstaBot {
         this.msgSender = await relay.MessageSender.factory();
         await this.msgReceiver.connect();
 
-        this.waitingForResponse = false;
+        this.waitingForResponse = {};
+        this.waitingForDistTakeover = {};
     }
 
     stop() {
@@ -69,37 +70,47 @@ class ForstaBot {
         let msg = this.parseEv(ev);
         if(!msg) console.error("Received unsupported message!");
         const dist = await this.resolveTags(msg.distribution.expression);
-        const threadId = msg.threadId;
-        const msgTxt = msg.data.body[0].value;
 
-        if(msgTxt == "init"){
-            this.sendMessage(dist, threadId, "Initializing question set!");
+        if(msg.data.body[0].value == "init"){
             this.businessHours = await relay.storage.get('live-chat-bot', 'business-hours');
             this.questions = await relay.storage.get('live-chat-bot', 'questions');
             this.currentQuestion = this.questions[0];
             if(this.outOfOffice()){
-                this.sendMessage(dist, threadId, this.businessHours.message);
+                this.sendMessage(dist, msg.threadId, this.businessHours.message);
             }
         }
 
-        if(this.waitingForResponse){
-            this.handleResponse(msg, dist, threadId, msg.sender.userId);
+        if(this.waitingForDistTakeover[msg.threadId]){
+            this.handleDistTakeover(msg, dist, msg.threadId);
+            return;
+        }
+
+        if(this.waitingForResponse[msg.threadId]){
+            this.handleResponse(msg, dist, msg.threadId, msg.sender.userId);
             return;
         }
         
         if(!this.questions){
-            this.sendMessage(dist, threadId, "Question set not initialized, type 'init' to initialize");
+            this.sendMessage(dist, msg.threadId, "Question set not initialized, type 'init' to initialize");
         }else{
-            this.sendMessage(dist, threadId, this.currentQuestion.prompt)
-                .then(msg => {
+            this.sendMessage(dist, msg.threadId, this.currentQuestion.prompt)
+                .then(message => {
                     if(this.currentQuestion.type == 'Free Response') return;
-                    let promptId = JSON.parse(msg.message.dataMessage.body)[0].messageId;
+                    let promptId = JSON.parse(message.message.dataMessage.body)[0].messageId;
                     this.currentQuestion.responses.forEach( (response, index) =>{
-                        this.sendResponse(dist, threadId, promptId,`[${index+1}] - ${response.text}`);
+                        this.sendResponse(dist, msg.threadId, promptId,`[${index+1}] - ${response.text}`);
                     });
                 });
-            this.waitingForResponse = true;
+            this.waitingForResponse[msg.threadId] = true;
         }
+    }
+
+    async handleDistTakeover(msg, dist, threadId){
+        let botId = msg.distribution.expression.split('+')[0];
+        let senderId = this.waitingForDistTakeover[threadId];
+        let newDist = await this.resolveTags(`(${senderId}+${botId})`);
+        this.sendMessage(newDist, threadId, `The thread is now taken over !`);
+        this.waitingForDistTakeover[threadId] = false;
     }
 
     async handleResponse(msg, dist, threadId, senderId){
@@ -121,9 +132,8 @@ class ForstaBot {
                 return;
             }
             this.sendMessage(forwardingDist, threadId, 'A live chat user is trying to get in touch with you!');
-            
-            //this.sendMessage(forwardingDist, threadId, `Forwarding to Distribution ${response.actionOption}`);
             this.questions = undefined;
+            this.waitingForDistTakeover[threadId] = msg.distribution.expression.split('+')[0];
         }
         else if(response.action == "Forward to Question")
         {
@@ -137,25 +147,20 @@ class ForstaBot {
         }
         
         this.saveToMessageHistory(response, senderId);
-        this.waitingForResponse = false;
+        this.waitingForResponse[threadId] = false;
     }
 
     async getDistFromResponse(msg, response){
         let dists = await relay.storage.get('live-chat-bot', 'dists');
         let clientDist = undefined;
-        console.log('dists : ');
-        console.log(dists);
-        console.log('response.actionOption : ');
-        console.log(response.actionOption);
         dists.forEach(dist => {
             if(dist.name == response.actionOption){
                 clientDist = dist;
             }
         });
-        console.log('clientDist : ');
-        console.log(clientDist);
-        let senderId = msg.distribution.expression.split('+')[0];
-        let distRaw = '('+senderId+'+';
+        
+        let botId = msg.distribution.expression.split('+')[1];
+        let distRaw = `(${botId}+`;
         clientDist.userIds.forEach( (userId, idx) => {
             distRaw += `<${userId}>`;
             if(idx != clientDist.userIds.length - 1) distRaw += '+';
@@ -163,14 +168,12 @@ class ForstaBot {
         distRaw += ')';
         let forwardingDist = await this.resolveTags(distRaw);
 
-        console.log(forwardingDist);
-        
         return forwardingDist;
     }
 
     parseResponse(msgTxt){
-        let response = {};
         if(this.currentQuestion.type == 'Free Response'){
+            let response = {};
             let currentQuestionIndex = this.questions.indexOf(this.currentQuestion);
             if(currentQuestionIndex == this.questions.length - 1){
                 response.action = 'End of Question Set';   
@@ -178,7 +181,7 @@ class ForstaBot {
                 response.action = 'Forward to Question';
                 response.actionOption = 'Question ' + (currentQuestionIndex + 2); 
             }
-            return msgTxt;
+            return response;
         }else{
             let responseIndex = -1;
             try{
@@ -217,7 +220,6 @@ class ForstaBot {
         let closeMins = Number(this.businessHours.close.split(':')[1]);
 
         if(openHours > closeHours) closeHours += 24;
-
         if( (hours < openHours) || (hours == openHours && mins < openMins) ){
             return true;
         }
