@@ -117,12 +117,12 @@ class ForstaBot {
             let forwardingDist = await this.getDistFromResponse(msg, response);
             if(!forwardingDist){
                 this.sendMessage(dist, threadId, `Whoops! This distribution no longer exists...`);
-                console.error('ERROR: response actionOption configured to a non-existant distribution');
+                console.error('ERROR: response actionOption configured to a non-existent distribution');
                 return;
             }
             this.sendMessage(forwardingDist, threadId, 'A live chat user is trying to get in touch with you!');
             
-            //this.sendMessage(dist, threadId, `Forwarding to Distribution ${response.actionOption}`);
+            //this.sendMessage(forwardingDist, threadId, `Forwarding to Distribution ${response.actionOption}`);
             this.questions = undefined;
         }
         else if(response.action == "Forward to Question")
@@ -143,11 +143,17 @@ class ForstaBot {
     async getDistFromResponse(msg, response){
         let dists = await relay.storage.get('live-chat-bot', 'dists');
         let clientDist = undefined;
+        console.log('dists : ');
+        console.log(dists);
+        console.log('response.actionOption : ');
+        console.log(response.actionOption);
         dists.forEach(dist => {
             if(dist.name == response.actionOption){
                 clientDist = dist;
             }
         });
+        console.log('clientDist : ');
+        console.log(clientDist);
         let senderId = msg.distribution.expression.split('+')[0];
         let distRaw = '('+senderId+'+';
         clientDist.userIds.forEach( (userId, idx) => {
@@ -156,6 +162,8 @@ class ForstaBot {
         });
         distRaw += ')';
         let forwardingDist = await this.resolveTags(distRaw);
+
+        console.log(forwardingDist);
         
         return forwardingDist;
     }

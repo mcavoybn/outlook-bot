@@ -191,8 +191,7 @@ let global = require('../globalState');
 module.exports = {
     mounted: function() {
         this.loadData();
-        console.log('global.state.loginTag : ');
-        console.log(global.state.loginTag);
+        
     },
     methods: {
         addUser: function(user){
@@ -246,16 +245,12 @@ module.exports = {
             }
         },
         loadData: function() {
-            util.fetch('/api/auth/users', {method:'get'})
-            .then( res => {
-                this.userData = res.theJson;
-                console.log('this.userData : ');
-                console.log(this.userData);
-            });
-
             util.fetch('/api/dists/', {method:'get'})
             .then( res => {
-                this.dists = res.theJson;
+                console.log('res.theJson : ');
+                console.log(res.theJson);
+                this.dists = res.theJson.dists;
+                this.userData = res.theJson.users.results;
                 this.distsOriginal = JSON.stringify(res.theJson);
                 this.dists.forEach( (dist, idx) => {
                     this.distsForDropdown.push({

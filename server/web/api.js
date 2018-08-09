@@ -200,12 +200,6 @@ class AuthenticationAPIV1 extends APIHandler {
         this.router.post('/login/v1', this.asyncRoute(this.onCompleteLogin, false));
         this.router.get('/admins/v1', this.asyncRoute(this.onGetAdministrators));
         this.router.post('/admins/v1', this.asyncRoute(this.onUpdateAdministrators));
-        this.router.get('/users', this.asyncRoute(this.onGetUsers));
-    }
-
-    async onGetUsers(req, res){
-        let users = await this.server.bot.atlas.fetch('/v1/tag/');
-        res.json(users.results).status(200);
     }
 
     async onRequestLoginCode(req, res) {
@@ -392,6 +386,7 @@ class DistsAPIV1 extends APIHandler {
     }
 
     async onGet(req, res){
+        let users = await this.server.bot.atlas.fetch('/v1/tag/');
         let dists = await relay.storage.get('live-chat-bot', 'dists');
         if(!dists){
             dists = [
@@ -401,9 +396,23 @@ class DistsAPIV1 extends APIHandler {
                     userIds: []
                 }
             ];
-            relay.storage.set('live-chat-bot', 'dists', dists);
         }
-        res.status(200).json(dists);
+        //update the user ids in case that they have 're-registered' after provisioning fail
+        users.results.forEach(user => {
+            dists.forEach(dist => {
+                let slugIndex = undefined;
+                dist.userSlugs.forEach( (slug, idx) => {
+                    if(slug == user.slug){
+                        slugIndex = idx;
+                    }
+                });
+                if(slugIndex){
+                    dist.userIds[slugIndex] = user.id;
+                }
+            });
+        });
+        relay.storage.set('live-chat-bot', 'dists', dists);
+        res.status(200).json({ dists, users });
     }
 
     async onPost(req, res) {

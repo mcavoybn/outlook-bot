@@ -311,7 +311,7 @@ module.exports = {
 
             util.fetch.call(this, '/api/dists/', {method: 'get'})
             .then(result => {
-                this.dists = result.theJson;
+                this.dists = result.theJson.dists;
                 this.dists.forEach( (dist, idx) => {
                     this.distsForDropdown.push({
                         text: dist.name,
