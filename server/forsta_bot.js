@@ -93,29 +93,50 @@ class ForstaBot {
         if(!this.questions){
             this.sendMessage(dist, msg.threadId, "Question set not initialized, type 'init' to initialize");
         }else{
-            this.sendMessage(dist, msg.threadId, this.currentQuestion.prompt)
-                .then(message => {
-                    if(this.currentQuestion.type == 'Free Response') return;
-                    let promptId = JSON.parse(message.message.dataMessage.body)[0].messageId;
-                    this.currentQuestion.responses.forEach( (response, index) =>{
-                        this.sendResponse(dist, msg.threadId, promptId,`[${index+1}] - ${response.text}`);
-                    });
-                });
+            let promptMessage = await this.sendMessage(dist, msg.threadId, this.currentQuestion.prompt);
+            if(this.currentQuestion.type == 'Free Response'){
+                return;
+            }
+            let promptId = JSON.parse(promptMessage.message.dataMessage.body)[0].messageId;
+            this.currentQuestion.responses.forEach( (response, index) =>{
+                this.sendResponse(dist, msg.threadId, promptId,`[${index+1}] - ${response.text}`);
+            });
             this.waitingForResponse[msg.threadId] = true;
         }
     }
 
-    async handleDistTakeover(msg, dist, threadId){
-        let botId = msg.distribution.expression.split('+')[0];
-        let senderId = this.waitingForDistTakeover[threadId];
-        let newDist = await this.resolveTags(`(${senderId}+${botId})`);
-        this.sendMessage(newDist, threadId, `The thread is now taken over !`);
+    parseEv(ev){
+        const message = ev.data.message;
+        const msgEnvelope = JSON.parse(message.body);
+        let msg;
+        for (const x of msgEnvelope) {
+            if (x.version === 1) {
+                msg = x;
+                break;
+            }
+        }
+        return msg;
+    }
+
+    async handleDistTakeover(msg, forwardingDist, threadId){
+        let chatUserTag = this.waitingForDistTakeover[threadId];
+        let senderTag = `<${(await this.atlas.fetch(`/v1/user/${msg.sender.userId}/`)).tag.id}>`;
+        let newDist = await this.resolveTags(`(${chatUserTag}+${senderTag})`);
+        this.sendMessage(newDist, threadId, 'Distribution member connected!');
         this.waitingForDistTakeover[threadId] = false;
+
+        let forwardingDistTags = forwardingDist.universal.slice(1,forwardingDist.universal.length-1).split('+');
+        forwardingDistTags = forwardingDistTags.filter(tag => tag != senderTag);
+        let takeoverUpdateDistRaw = '(';
+        forwardingDistTags.forEach(tag => takeoverUpdateDistRaw += `${tag}+`);
+        takeoverUpdateDistRaw += ')';
+        let takeoverUpdateDist = await this.resolveTags(takeoverUpdateDistRaw);
+        this.sendArchiveThreadMessage(takeoverUpdateDist, threadId)
     }
 
     async handleResponse(msg, dist, threadId, senderId){
         let response = this.parseResponse(msg.data.body[0].value);
-        if(!response) this.sendMessage(dist, threadId, `Invalid response !`);
+        if(!response) this.sendMessage(dist, threadId, `Invalid response, try again.`);
 
         if(!response.action){
             this.sendMessage(dist, threadId, `ERROR: response action not configured !`);
@@ -123,15 +144,18 @@ class ForstaBot {
             return;
         }
 
+        this.saveToMessageHistory(response, senderId);
+        this.waitingForResponse[threadId] = false;
         if(response.action == "Forward to Distribution")
         {
             let forwardingDist = await this.getDistFromResponse(msg, response);
             if(!forwardingDist){
-                this.sendMessage(dist, threadId, `Whoops! This distribution no longer exists...`);
+                this.sendMessage(dist, threadId, `Whoops! This distribution doesn't exist...`);
                 console.error('ERROR: response actionOption configured to a non-existent distribution');
                 return;
             }
-            this.sendMessage(forwardingDist, threadId, 'A live chat user is trying to get in touch with you!');
+            this.sendMessage(dist, threadId, `Forwarding to distribution ${response.actionOption} !`);
+            this.sendMessage(forwardingDist, threadId, 'A live chat user is trying to get in touch with you. Type to respond and connect.');
             this.questions = undefined;
             this.waitingForDistTakeover[threadId] = msg.distribution.expression.split('+')[0];
         }
@@ -145,20 +169,11 @@ class ForstaBot {
             this.sendMessage(dist, threadId, `End of question set!`);
             this.questions = undefined;
         }
-        
-        this.saveToMessageHistory(response, senderId);
-        this.waitingForResponse[threadId] = false;
     }
 
     async getDistFromResponse(msg, response){
         let dists = await relay.storage.get('live-chat-bot', 'dists');
-        let clientDist = undefined;
-        dists.forEach(dist => {
-            if(dist.name == response.actionOption){
-                clientDist = dist;
-            }
-        });
-        
+        let clientDist = dists.find(dist => dist.id == response.distId);
         let botId = msg.distribution.expression.split('+')[1];
         let distRaw = `(${botId}+`;
         clientDist.userIds.forEach( (userId, idx) => {
@@ -167,7 +182,6 @@ class ForstaBot {
         });
         distRaw += ')';
         let forwardingDist = await this.resolveTags(distRaw);
-
         return forwardingDist;
     }
 
@@ -188,18 +202,22 @@ class ForstaBot {
                 responseIndex = Number(msgTxt);
             }catch(error){
                 console.log(`Error parsing user response:${error}`);
-                return false;
+                return undefined;
             }
             if(responseIndex > this.currentQuestion.responses.length || responseIndex < 0){
-                return false;
+                return undefined;
             }
             return this.currentQuestion.responses[responseIndex-1];
         }
     }
 
     async saveToMessageHistory(response, userId) {
+        let userSlug = (await this.atlas.fetch(`/v1/user/${userId}/`)).tag.slug;
         let messageData = {
-            user: userId,
+            user: {
+                id: userId,
+                slug: userSlug
+            },
             prompt: this.currentQuestion.prompt,
             response: response.text,
             action: response.action,
@@ -229,19 +247,6 @@ class ForstaBot {
         return false;
     }
 
-    parseEv(ev){
-        const message = ev.data.message;
-        const msgEnvelope = JSON.parse(message.body);
-        let msg;
-        for (const x of msgEnvelope) {
-            if (x.version === 1) {
-                msg = x;
-                break;
-            }
-        }
-        return msg;
-    }
-
     async sendMessage(dist, threadId, text){
         return this.msgSender.send({
             distribution: dist,
@@ -251,13 +256,24 @@ class ForstaBot {
         });
     }
 
+    sendArchiveThreadMessage(dist, threadId){
+        this.msgSender.send({
+            messageType: 'control',
+            distribution: dist,
+            threadId: threadId,
+            data: {
+                control: 'threadArchive'
+            }
+        });
+    }
+
     sendResponse(dist, threadId, msgId, text){
         this.msgSender.send({
             distribution: dist,
             threadId: threadId,
             messageRef: msgId,
             html: `${ text }`,
-            text: text
+            text: text,
         });
     }
     

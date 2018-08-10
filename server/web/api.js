@@ -284,7 +284,7 @@ class QuestionsAPIV1 extends APIHandler {
         if(!questions){
             questions = [
                 {
-                    prompt: "Question Prompt",
+                    prompt: "Hello, I am the live chat bot! Bleep bloop. How can I help you?",
                     type: "Multiple Choice",
                     editing: false,
                     hovering: false,
@@ -293,12 +293,14 @@ class QuestionsAPIV1 extends APIHandler {
                         {
                             text: "Yes",
                             action: "Forward to Question",
-                            actionOption: "Question 1"
+                            actionOption: "Question 1",
+                            distId: null
                         },
                         {
                             text: "No",
                             action: "Forward to Question",
-                            actionOption: "Question 1"
+                            actionOption: "Question 1",
+                            distId: null
                         }
                     ]
                 }
@@ -326,16 +328,16 @@ class BusinessHoursAPIV1 extends APIHandler {
     }
 
     async onGet(req, res){
-        let businessHours = await relay.storage.get('live-chat-bot', 'business-hours');
-        if(!businessHours){
-            businessHours = {
+        let businessHoursData = await relay.storage.get('live-chat-bot', 'business-hours');
+        if(!businessHoursData){
+            businessHoursData = {
                 open: '08:00',
                 close: '20:00',
                 message: 'This is the default out of office hours message.'
             };
-            relay.storage.set('live-chat-bot', 'business-hours', businessHours);
+            relay.storage.set('live-chat-bot', 'business-hours', businessHoursData);
         }
-        res.status(200).json(businessHours);
+        res.status(200).json(businessHoursData);
     }
 
     async onPost(req, res) {
@@ -359,6 +361,9 @@ class MessageHistoryAPIV1 extends APIHandler {
         if(!messageHistory){
             messageHistory = [
                 {
+                    user: {slug: "", id: ""},
+                    date: "",
+                    time: "",
                     prompt:"No messages found in history!",
                     response:"No messages found in history!",
                     action:"None"
@@ -393,7 +398,8 @@ class DistsAPIV1 extends APIHandler {
                 {
                     name: 'Default',
                     userSlugs: [],
-                    userIds: []
+                    userIds: [],
+                    id: uuidv4()
                 }
             ];
         }

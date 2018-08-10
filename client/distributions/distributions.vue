@@ -20,7 +20,7 @@ div [class*="pull right"] {
 
         <div class="ui basic segment huge">
             <h1 class="ui header">
-                <i class="columns icon"></i>
+                <i class="address book icon"></i>
                 Live Chat User Distributions
             </h1>
         </div>
@@ -136,25 +136,6 @@ div [class*="pull right"] {
         </sui-table>
 
         <div>
-            <sui-modal v-model="showingUniqueDistModal">
-                <sui-modal-header>Warning</sui-modal-header>
-                <sui-modal-content>
-                    <sui-modal-description>
-                        <sui-header>Distributions must have unique names</sui-header>
-                        <p>Each distribution should be given a unique name. Ensure no two distributions have the same name and try saving again.</p>
-                    </sui-modal-description>
-                </sui-modal-content>
-                <sui-modal-actions style="padding:10px">
-                    <sui-button 
-                        class="yellow" 
-                        floated="left"
-                        @click="showingUniqueDistModal = false"
-                        content="Okay" />
-                </sui-modal-actions>
-            </sui-modal>
-        </div>
-
-        <div>
             <sui-modal v-model="showingSaveChangesModal">
                 <sui-modal-header>Save Changes</sui-modal-header>
                 <sui-modal-content>
@@ -187,11 +168,11 @@ div [class*="pull right"] {
 
 <script>
 let global = require('../globalState');
+let uuidv4 = require('uuid/v4');
 'use strict'
 module.exports = {
     mounted: function() {
         this.loadData();
-        
     },
     methods: {
         addUser: function(user){
@@ -215,7 +196,8 @@ module.exports = {
             this.dists.push({
                 userIds: [],
                 userSlugs: [],
-                name: "New Dist"
+                name: "New Dist",
+                id: uuidv4()
             });
             this.distsForDropdown.push({
                 text: "New Dist",
@@ -247,8 +229,6 @@ module.exports = {
         loadData: function() {
             util.fetch('/api/dists/', {method:'get'})
             .then( res => {
-                console.log('res.theJson : ');
-                console.log(res.theJson);
                 this.dists = res.theJson.dists;
                 this.userData = res.theJson.users.results;
                 this.distsOriginal = JSON.stringify(res.theJson);
@@ -262,19 +242,6 @@ module.exports = {
             });
         },
         saveData: function() {
-            let distNames = {};
-            this.dists.forEach(dist => {
-                if(!distNames[dist.name]){
-                    distNames[dist.name] = true;
-                }else{
-                    distNames = false;
-                    return;
-                }
-            });
-            if(!distNames){
-                this.showingUniqueDistModal = true;
-                return;
-            }
             util.fetch('/api/dists/', 
             {
                 method:'post', 
@@ -294,8 +261,8 @@ module.exports = {
             this.changesMade = false;
         },
         saveAndContinue: function() {
-        this.saveData();
-        this.nextRoute();
+            this.saveData();
+            this.nextRoute();
         },
     },
     beforeRouteLeave: function(to, from, next){
@@ -316,7 +283,6 @@ module.exports = {
         distsForDropdown: [],
         selectedDist: {},
         selectedDistIdx: 0,
-        showingUniqueDistModal: false,
         showingSaveChangesModal: false,
         nextRoute: null
     }),

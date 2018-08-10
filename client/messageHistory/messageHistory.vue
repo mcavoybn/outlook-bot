@@ -7,7 +7,7 @@
         <div class="ui basic segment huge">
             <h1 class="ui header">
                 <i class="archive icon"></i>
-                Live Chat Bot Message History
+                Live Chat Message History
             </h1>
         </div>
 
@@ -41,7 +41,7 @@
                 <sui-table-row 
                     v-for="message in messageHistory">
                     <sui-table-cell
-                        v-text="message.user">
+                        v-text="message.user.slug">
                     </sui-table-cell>
                     <sui-table-cell
                         v-text="message.prompt">

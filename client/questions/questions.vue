@@ -20,7 +20,7 @@ div [class*="pull right"] {
 
         <div class="ui basic segment huge">
             <h1 class="ui header">
-                <i class="columns icon"></i>
+                <i class="comments icon"></i>
                 Live Chat Questions
             </h1>
         </div>
@@ -155,8 +155,8 @@ div [class*="pull right"] {
                                 selection
                                 placeholder="Distribution"
                                 :options="distsForDropdown"
-                                v-model="response.actionOption"
-                                @input="checkForChanges()"
+                                v-model="response.distId"
+                                @input="updateDistData(response)"
                                 v-if="question.editing" />
                             <p
                                 style="display:inline"
@@ -247,24 +247,10 @@ div [class*="pull right"] {
 module.exports = {
     mounted: function() {
         this.loadData();
-        this.questions.forEach(question => {
-            question.responses.forEach(response => {
-                if(response.action == 'Forward to Distribution' 
-                && response.actionOption >= this.dists.length){
-                    response.actionOption = null;
-                    this.changesMade = true;
-                }
-            });
-        });
-        if(this.changesMade){
-            this.saveData();
-            this.changesMade = false;
-        }
     },
     methods: {
         colorFromResponse(response){
-            if(!response.actionOption 
-            || response.action != 'Forward to Question' 
+            if(response.action != 'Forward to Question' 
             || response.actionOption.split(' ')[0].trim() != 'Question'){
                 return 'black';
             } 
@@ -315,7 +301,7 @@ module.exports = {
                 this.dists.forEach( (dist, idx) => {
                     this.distsForDropdown.push({
                         text: dist.name,
-                        value: dist.name
+                        value: dist.id
                     });
                 });
             });
@@ -350,7 +336,8 @@ module.exports = {
             question.responses.push({
                 text: "New Response",
                 action: null,
-                actionOption: null
+                actionOption: null,
+                distId: null
             });
             this.changesMade = true;
         },
@@ -369,6 +356,14 @@ module.exports = {
             this.changesMade = false;
             this.questionsOriginal = JSON.stringify(this.questions);
         },
+        updateDistData: function(response) {
+            this.dists.forEach(dist => {
+                if(dist.id == response.distId){
+                    response.actionOption = dist.name;
+                }
+            });
+            this.checkForChanges();
+        }
     },
     beforeRouteLeave: function(to, from, next){
         if(this.changesMade){

@@ -16,14 +16,25 @@
                         <div class="field">
                             <label>Forsta {{label}}</label>
                             <div class="ui left icon input">
-                                <input v-focus.lazy="true" :type="inputType" name="secret" :placeholder="placeholder" autocomplete="off" v-model='secret'>
+                                <input 
+                                    v-focus.lazy="true" 
+                                    :type="inputType" 
+                                    name="secret"
+                                    :placeholder="placeholder" 
+                                    autocomplete="off" 
+                                    v-model='secret'>
                                 <i class="lock icon"></i>
                             </div>
                         </div>
                         <div class="field" v-if="type === 'totp'">
                             <label>Authentication Code</label>
                             <div class="ui left icon input">
-                                <input type="number" name="otp" placeholder="authentication code" autocomplete="off" v-model='otp'>
+                                <input 
+                                    type="number" 
+                                    name="otp" 
+                                    placeholder="authentication code" 
+                                    autocomplete="off" 
+                                    v-model='otp'>
                                 <i class="clock icon"></i>
                             </div>
                         </div>

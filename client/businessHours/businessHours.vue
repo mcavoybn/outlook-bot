@@ -14,12 +14,11 @@ div [class*="pull right"] {
 
         <div class="ui basic segment huge">
             <h1 class="ui header">
-                <i class="columns icon"></i>
+                <i class="clock icon"></i>
                 Live Chat Business Hours
             </h1>
         </div>
 
-        <!--  BUSINESS HOURS -->
         <sui-table
             class="ui left aligned table"
             color="grey">
