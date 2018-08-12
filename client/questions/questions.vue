@@ -317,12 +317,14 @@ module.exports = {
                     {
                         text: "Yes",
                         action: 'Forward to Question',
-                        actionOption: null
+                        actionOption: "Question 1",
+                        distId: null
                     },
                     {
                         text: "No",
                         action: 'Forward to Question',
-                        actionOption: null
+                        actionOption: "Question 1",
+                        distId: null
                     }
                 ]
             });

@@ -52,7 +52,6 @@ module.exports = {
     },
     mounted: function() {
         this.authenticateUser();
-        console.log(this.global.apiToken);
     }
 }
 </script>

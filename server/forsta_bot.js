@@ -72,12 +72,12 @@ class ForstaBot {
         const dist = await this.resolveTags(msg.distribution.expression);
 
         if(msg.data.body[0].value == "init"){
-            this.businessHours = await relay.storage.get('live-chat-bot', 'business-hours');
+            let businessHours = await relay.storage.get('live-chat-bot', 'business-hours');
+            if(businessHours && this.outOfOffice(businessHours)){
+                this.sendMessage(dist, msg.threadId, businessHours.message);
+            }
             this.questions = await relay.storage.get('live-chat-bot', 'questions');
             this.currentQuestion = this.questions[0];
-            if(this.outOfOffice()){
-                this.sendMessage(dist, msg.threadId, this.businessHours.message);
-            }
         }
 
         if(this.waitingForDistTakeover[msg.threadId]){
@@ -86,13 +86,14 @@ class ForstaBot {
         }
 
         if(this.waitingForResponse[msg.threadId]){
-            this.handleResponse(msg, dist, msg.threadId, msg.sender.userId);
-            return;
+            let validResponse = await this.handleResponse(msg, dist, msg.threadId, msg.sender.userId);
+            if(!validResponse) return;
         }
         
         if(!this.questions){
             this.sendMessage(dist, msg.threadId, "Question set not initialized, type 'init' to initialize");
         }else{
+            this.waitingForResponse[msg.threadId] = true;
             let promptMessage = await this.sendMessage(dist, msg.threadId, this.currentQuestion.prompt);
             if(this.currentQuestion.type == 'Free Response'){
                 return;
@@ -101,7 +102,6 @@ class ForstaBot {
             this.currentQuestion.responses.forEach( (response, index) =>{
                 this.sendResponse(dist, msg.threadId, promptId,`[${index+1}] - ${response.text}`);
             });
-            this.waitingForResponse[msg.threadId] = true;
         }
     }
 
@@ -120,31 +120,37 @@ class ForstaBot {
 
     async handleDistTakeover(msg, forwardingDist, threadId){
         let chatUserTag = this.waitingForDistTakeover[threadId];
-        let senderTag = `<${(await this.atlas.fetch(`/v1/user/${msg.sender.userId}/`)).tag.id}>`;
+        let distMemberUser = await this.atlas.fetch(`/v1/user/${msg.sender.userId}/`);
+        let senderTag = `<${distMemberUser.tag.id}>`;
         let newDist = await this.resolveTags(`(${chatUserTag}+${senderTag})`);
-        this.sendMessage(newDist, threadId, 'Distribution member connected!');
+        this.sendMessage(newDist, threadId, `Distribution member ${distMemberUser.tag.slug} connected!`);
         this.waitingForDistTakeover[threadId] = false;
 
-        let forwardingDistTags = forwardingDist.universal.slice(1,forwardingDist.universal.length-1).split('+');
-        forwardingDistTags = forwardingDistTags.filter(tag => tag != senderTag);
         let takeoverUpdateDistRaw = '(';
-        forwardingDistTags.forEach(tag => takeoverUpdateDistRaw += `${tag}+`);
+        forwardingDist.universal
+        .slice(1,forwardingDist.universal.length-1)
+        .split('+')
+        .filter(tag => tag != senderTag)
+        .forEach(tag => takeoverUpdateDistRaw += `${tag}+`);
         takeoverUpdateDistRaw += ')';
         let takeoverUpdateDist = await this.resolveTags(takeoverUpdateDistRaw);
-        this.sendArchiveThreadMessage(takeoverUpdateDist, threadId)
+        this.sendArchiveThreadMessage(takeoverUpdateDist, threadId);
     }
 
     async handleResponse(msg, dist, threadId, senderId){
         let response = this.parseResponse(msg.data.body[0].value);
-        if(!response) this.sendMessage(dist, threadId, `Invalid response, try again.`);
+        if(!response){
+            this.sendMessage(dist, threadId, `Invalid response, try again.`);
+            return false;
+        }
 
         if(!response.action){
             this.sendMessage(dist, threadId, `ERROR: response action not configured !`);
             this.questions = undefined;
-            return;
+            return false;
         }
 
-        this.saveToMessageHistory(response, senderId);
+        this.saveToMessageHistory(response, senderId, threadId);
         this.waitingForResponse[threadId] = false;
         if(response.action == "Forward to Distribution")
         {
@@ -169,16 +175,24 @@ class ForstaBot {
             this.sendMessage(dist, threadId, `End of question set!`);
             this.questions = undefined;
         }
+        return true;
     }
 
     async getDistFromResponse(msg, response){
+        let users = await this.atlas.fetch('/v1/user/');
         let dists = await relay.storage.get('live-chat-bot', 'dists');
+        //update the user tag ids in case that they have 're-registered' after provisioning fail
+        users.results.forEach(user => {
+            dists.forEach(dist => {
+                let updateUser = dist.users.find(u => u.slug == user.tag.slug);
+                if(updateUser) updateUser.id = user.tag.id;
+            });
+        });
         let clientDist = dists.find(dist => dist.id == response.distId);
         let botId = msg.distribution.expression.split('+')[1];
         let distRaw = `(${botId}+`;
-        clientDist.userIds.forEach( (userId, idx) => {
-            distRaw += `<${userId}>`;
-            if(idx != clientDist.userIds.length - 1) distRaw += '+';
+        clientDist.users.forEach( (user, idx) => {
+            distRaw += `<${user.id}>+`;
         });
         distRaw += ')';
         let forwardingDist = await this.resolveTags(distRaw);
@@ -197,21 +211,23 @@ class ForstaBot {
             }
             return response;
         }else{
-            let responseIndex = -1;
+            let responseNumber = -1;
             try{
-                responseIndex = Number(msgTxt);
+                responseNumber = Number(msgTxt);
             }catch(error){
                 console.log(`Error parsing user response:${error}`);
                 return undefined;
             }
-            if(responseIndex > this.currentQuestion.responses.length || responseIndex < 0){
+            if(responseNumber > this.currentQuestion.responses.length || responseNumber < 1){
                 return undefined;
             }
-            return this.currentQuestion.responses[responseIndex-1];
+            return this.currentQuestion.responses[responseNumber-1];
         }
     }
 
-    async saveToMessageHistory(response, userId) {
+    async saveToMessageHistory(response, userId, threadId) {
+        const dateNow = moment().format('MM/DD/YYYY');
+        const timeNow = moment().format('hh:mm:ss');
         let userSlug = (await this.atlas.fetch(`/v1/user/${userId}/`)).tag.slug;
         let messageData = {
             user: {
@@ -221,27 +237,38 @@ class ForstaBot {
             prompt: this.currentQuestion.prompt,
             response: response.text,
             action: response.action,
-            date: moment().format('MM/DD/YYYY'),
-            time: moment().format('hh:mm:ss')
+            date: dateNow,
+            time: timeNow
         };
-        let messageHistory = (await relay.storage.get('live-chat-bot', 'message-history')) || [];
-        messageHistory.push(messageData);
+        let messageHistory = (await relay.storage.get('live-chat-bot', 'message-history')) || {};
+        if(!messageHistory[threadId]){
+            messageHistory[threadId] = {
+                date: dateNow,
+                time: timeNow,
+                user: {
+                    id: userId,
+                    slug: userSlug
+                },
+                messages: []
+            };
+        }
+        messageHistory[threadId].messages.push(messageData);
         relay.storage.set('live-chat-bot', 'message-history', messageHistory);
     }
 
-    outOfOffice(){
-        let hours = moment().hours();
-        let mins = moment().minutes();
-        let openHours = Number(this.businessHours.open.split(':')[0]);
-        let openMins = Number(this.businessHours.open.split(':')[1]);
-        let closeHours = Number(this.businessHours.close.split(':')[0]);
-        let closeMins = Number(this.businessHours.close.split(':')[1]);
+    outOfOffice(businessHours){
+        let hoursNow = moment().hours();
+        let minsNow = moment().minutes();
+        let openHours = Number(businessHours.open.split(':')[0]);
+        let openMins = Number(businessHours.open.split(':')[1]);
+        let closeHours = Number(businessHours.close.split(':')[0]);
+        let closeMins = Number(businessHours.close.split(':')[1]);
 
         if(openHours > closeHours) closeHours += 24;
-        if( (hours < openHours) || (hours == openHours && mins < openMins) ){
+        if( (hoursNow < openHours) || (hoursNow == openHours && minsNow < openMins) ){
             return true;
         }
-        if( (hours > closeHours) || (hours == closeHours && mins > closeMins) ){
+        if( (hoursNow > closeHours) || (hoursNow == closeHours && minsNow > closeMins) ){
             return true;
         }
         return false;

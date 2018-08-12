@@ -83,14 +83,14 @@ div [class*="pull right"] {
                         <sui-list divided relaxed>
                             <sui-list-item 
                                 v-for="user in userData"
-                                v-if="selectedDist.userIds.indexOf(user.id) == -1">
+                                v-if="!selectedDist.users.find(u => u.id == user.tag.id)">
                                 <sui-list-content>
                                     <sui-list-icon 
                                         name="plus"
                                         class="green"
                                         @click="addUser(user)" />
                                     <a 
-                                        v-text="user.slug"
+                                        v-text="user.tag.slug"
                                         @click="addUser(user)"/>
                                 </sui-list-content>
                             </sui-list-item>
@@ -104,7 +104,7 @@ div [class*="pull right"] {
                         <sui-list divided relaxed>
                             <sui-list-item 
                                 v-for="user in userData"
-                                v-if="selectedDist.userIds.indexOf(user.id) != -1">
+                                v-if="selectedDist.users.find(u => u.id == user.tag.id)">
                                 <sui-list-content >
                                     <sui-list-icon 
                                         name="minus" 
@@ -112,7 +112,7 @@ div [class*="pull right"] {
                                         @click="removeUser(user)" />
                                     <a
                                         @click="removeUser(user)" 
-                                        v-text="user.slug" />
+                                        v-text="user.tag.slug" />
                                 </sui-list-content>
                             </sui-list-item>
                         </sui-list>
@@ -177,25 +177,22 @@ module.exports = {
     methods: {
         addUser: function(user){
             let sd = this.dists[this.selectedDistIdx];
-            if(sd.userIds.indexOf(user.id) == -1){
-                sd.userSlugs.push(user.slug);
-                sd.userIds.push(user.id);
+            if(!sd.users.find(u => u.id == user.tag.id)){
+                sd.users.push({id:user.tag.id, slug:user.tag.slug});
                 this.checkForChanges();
             }
         },
         removeUser: function(user){
             let sd = this.dists[this.selectedDistIdx];
-            let userIdx = sd.userIds.indexOf(user.id);
-            if( userIdx != -1){
-                sd.userSlugs.splice(userIdx, 1);
-                sd.userIds.splice(userIdx, 1);
+            let distUser = sd.users.find(u => u.id = user.tag.id);
+            if( distUser ){
+                sd.users.splice(sd.users.indexOf(distUser), 1);
                 this.checkForChanges();
             }
         },
         addDist: function(){
             this.dists.push({
-                userIds: [],
-                userSlugs: [],
+                users: [],
                 name: "New Dist",
                 id: uuidv4()
             });
@@ -231,6 +228,8 @@ module.exports = {
             .then( res => {
                 this.dists = res.theJson.dists;
                 this.userData = res.theJson.users.results;
+                console.log('this.userData : ');
+                console.log(this.userData);
                 this.distsOriginal = JSON.stringify(res.theJson);
                 this.dists.forEach( (dist, idx) => {
                     this.distsForDropdown.push({
