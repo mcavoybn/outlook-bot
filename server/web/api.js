@@ -284,7 +284,7 @@ class QuestionsAPIV1 extends APIHandler {
         if(!questions){
             questions = [
                 {
-                    prompt: "Question Prompt",
+                    prompt: "Hello, I am the live chat bot! Bleep bloop. How can I help you?",
                     type: "Multiple Choice",
                     editing: false,
                     hovering: false,
@@ -292,13 +292,15 @@ class QuestionsAPIV1 extends APIHandler {
                     responses: [
                         {
                             text: "Yes",
-                            action: "Next Question",
-                            actionOption: null
+                            action: "Forward to Question",
+                            actionOption: "Question 1",
+                            distId: null
                         },
                         {
                             text: "No",
-                            action: "Next Question",
-                            actionOption: null
+                            action: "Forward to Question",
+                            actionOption: "Question 1",
+                            distId: null
                         }
                     ]
                 }
@@ -311,9 +313,8 @@ class QuestionsAPIV1 extends APIHandler {
 
     async onPost(req, res) {
         let questions = req.body.questions;
-        relay.storage.set('live-chat-bot', 'questions', questions)
-        .then( res.status(200) )
-        .catch( res.status(500) );
+        relay.storage.set('live-chat-bot', 'questions', questions);
+        res.status(200);
     }
 
 }
@@ -327,23 +328,22 @@ class BusinessHoursAPIV1 extends APIHandler {
     }
 
     async onGet(req, res){
-        let businessHours = await relay.storage.get('live-chat-bot', 'business-hours');
-        if(!businessHours){
-            businessHours = {
+        let businessHoursData = await relay.storage.get('live-chat-bot', 'business-hours');
+        if(!businessHoursData){
+            businessHoursData = {
                 open: '08:00',
                 close: '20:00',
                 message: 'This is the default out of office hours message.'
             };
-            relay.storage.set('live-chat-bot', 'business-hours', businessHours);
+            relay.storage.set('live-chat-bot', 'business-hours', businessHoursData);
         }
-        res.status(200).json(businessHours);
+        res.status(200).json(businessHoursData);
     }
 
     async onPost(req, res) {
-        let businessHours = req.body.oooEditData;
-        relay.storage.set('live-chat-bot', 'business-hours', businessHours)
-        .then( res.status(200) )
-        .catch( res.status(500) );
+        let businessHours = req.body.businessHoursData;
+        relay.storage.set('live-chat-bot', 'business-hours', businessHours);
+        res.status(200);
     }
 
 }
@@ -353,30 +353,64 @@ class MessageHistoryAPIV1 extends APIHandler {
     constructor(options) {
         super(options);
         this.router.get('/*', this.asyncRoute(this.onGet, false));
-        this.router.post('/*', this.asyncRoute(this.onPost, false));
     }
 
     async onGet(req, res){
         let messageHistory = await relay.storage.get('live-chat-bot', 'message-history');
         if(!messageHistory){
-            messageHistory = [
-                {
+            messageHistory = {
+                date: 'MM/DD/YYYY',
+                messages: [{
+                    user: {slug: "", id: ""},
+                    date: "",
+                    time: "",
                     prompt:"No messages found in history!",
                     response:"No messages found in history!",
                     action:"None"
-                }
-            ];
+                }]
+            };
         }
         res.status(200).json(messageHistory);
     }
 
+}
+
+class DistsAPIV1 extends APIHandler {
+
+    constructor(options) {
+        super(options);
+        this.router.get('/*', this.asyncRoute(this.onGet, false));
+        this.router.post('/*', this.asyncRoute(this.onPost, false));
+    }
+
+    async onGet(req, res){
+        let users = await this.server.bot.atlas.fetch('/v1/user/');
+        let dists = await relay.storage.get('live-chat-bot', 'dists');
+        if(!dists){
+            dists = [
+                {
+                    name: 'Default',
+                    users: [],
+                    id: uuidv4()
+                }
+            ];
+        }
+        //update the user ids in case that they have 're-registered' after provisioning fail
+        users.results.forEach(user => {
+            dists.forEach(dist => {
+                let updateUser = dist.users.find(u => u.slug == user.tag.slug);
+                if(updateUser){
+                    updateUser.id = user.tag.id;
+                }
+            });
+        });
+        relay.storage.set('live-chat-bot', 'dists', dists);
+        res.status(200).json({ dists, users });
+    }
+
     async onPost(req, res) {
-        let message = req.body.message;
-        let messageHistory = await relay.storage.get('live-chat-bot', 'message-history');
-        messageHistory.push(message);
-        relay.storage.set('live-chat-bot', 'message-history', messageHistory)
-            .then( res.status(200) )
-            .catch( res.status(500) );
+        relay.storage.set('live-chat-bot', 'dists', req.body.dists);
+        res.status(200);
     }
 }
 
@@ -386,5 +420,6 @@ module.exports = {
     AuthenticationAPIV1,
     QuestionsAPIV1,
     BusinessHoursAPIV1,
-    MessageHistoryAPIV1
+    MessageHistoryAPIV1,
+    DistsAPIV1
 };

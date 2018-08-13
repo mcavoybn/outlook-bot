@@ -2,12 +2,20 @@ const relay = require("librelay");
 
 class BotAtlasClient extends relay.AtlasClient {
 
+    constructor(){
+        super({});
+    }
+
+    async fetch(urn, options){
+        return super.fetch(urn, options);
+    }
+
     static get onboardingCreatedUser() {
         return null;
     }
 
     static get userAuthTokenDescription() {
-        return 'compliance monitor bot';
+        return 'live chat bot';
     }
 
     static async onboard(onboardClient) {

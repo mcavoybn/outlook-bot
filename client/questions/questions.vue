@@ -13,9 +13,6 @@ div [class*="pull right"] {
     width: 95%;
     margin-right:0.5em;
 }
-.padding {
-    padding:20px;
-}
 </style>
  
 <template lang="html">
@@ -23,18 +20,17 @@ div [class*="pull right"] {
 
         <div class="ui basic segment huge">
             <h1 class="ui header">
-                <i class="columns icon"></i>
-                Live Chat Bot Dashboard
+                <i class="comments icon"></i>
+                Live Chat Questions
             </h1>
         </div>
-
-        <ooo-edit />
 
         <!--  QUESTION EDIT TABLE -->
         <sui-table
             class="ui left aligned table"
             v-for="question in questions"
             :color="question.color"
+            :id="questions.indexOf(question)"
             @mouseenter="question.hovering=true"
             @mouseleave="question.hovering=false">
             <sui-table-header>
@@ -67,7 +63,7 @@ div [class*="pull right"] {
             </sui-table-header>
  
             <sui-table-body>
-                <sui-table-row :class="{'padding':!question.editing}">
+                <sui-table-row>
                     <!-- question prompt -->
                     <sui-table-cell colspan="4">
                         <sui-icon
@@ -91,8 +87,7 @@ div [class*="pull right"] {
  
                 <sui-table-row
                     v-for="response in question.responses"
-                    v-if="question.type!='Free Response'"
-                    :class="{'padding':!question.editing}">
+                    v-if="question.type!='Free Response'">
  
                     <!-- responses edit -->
                     <sui-table-cell colspan="2" collapsing>
@@ -132,7 +127,6 @@ div [class*="pull right"] {
                             v-if="question.editing" />
                         <p
                             style="display:inline"
-                            :class="{'padding':!question.editing}"
                             v-text="response.action"
                             v-else />
                     </sui-table-cell>
@@ -147,7 +141,6 @@ div [class*="pull right"] {
                                 v-if="question.editing" />
                             <p
                                 style="display:inline"
-                                :class="{'padding':!question.editing}"
                                 v-text="response.actionOption"
                                 v-else />
                             <sui-icon
@@ -161,27 +154,12 @@ div [class*="pull right"] {
                             <sui-dropdown      
                                 selection
                                 placeholder="Distribution"
-                                :options="dists"
-                                v-model="response.actionOption"
-                                @input="checkForChanges()"
+                                :options="distsForDropdown"
+                                v-model="response.distId"
+                                @input="updateDistData(response)"
                                 v-if="question.editing" />
                             <p
                                 style="display:inline"
-                                :class="{'padding':!question.editing}"
-                                v-text="response.actionOption"
-                                v-else />
-                        </div>
-                        <div v-if="response.action=='Forward to User'">
-                            <sui-dropdown      
-                                selection
-                                placeholder="User"
-                                :options="users"
-                                v-model="response.actionOption"
-                                @input="checkForChanges()"
-                                v-if="question.editing" />
-                            <p
-                                style="display:inline"
-                                :class="{'padding':!question.editing}"
                                 v-text="response.actionOption"
                                 v-else />
                         </div>
@@ -191,7 +169,6 @@ div [class*="pull right"] {
                 </sui-table-row>
                 <sui-table-row
                     class="left aligned"
-                    :class="{'padding':!question.editing}"
                     v-if="question.type=='Free Response'">
                     <sui-table-cell>
                         <p>
@@ -240,24 +217,24 @@ div [class*="pull right"] {
                 <sui-modal-content>
                     <sui-modal-description>
                         <sui-header>Continue without saving changes?</sui-header>
-                        <p>Continue without saving changes?</p>
+                        <p>Your changes have not been saved.</p>
                     </sui-modal-description>
                 </sui-modal-content>
                 <sui-modal-actions style="padding:10px">
                     <sui-button 
-                        class="red"
+                        class="yellow" 
                         floated="left"
-                        @click="continueWithoutSaving()"
-                        content="Don't Save" />
-                    <sui-button 
-                        positive 
                         @click="showingSaveChangesModal = false"
                         content="Cancel" />
+                    <sui-button 
+                        class="red"
+                        @click="nextRoute()"
+                        content="Don't Save & Continue" />
                     <sui-button 
                         floated="right" 
                         class="green" 
                         @click="saveAndContinue()"
-                        content="Save" />
+                        content="Save & Continue" />
                 </sui-modal-actions>
             </sui-modal>
         </div>
@@ -266,21 +243,17 @@ div [class*="pull right"] {
 </template>
  
 <script>
-let oooEdit = require('./oooEdit.vue');
 'use strict'
 module.exports = {
     mounted: function() {
         this.loadData();
     },
-    components: {
-        'ooo-edit': oooEdit
-    },
     methods: {
         colorFromResponse(response){
-            if(!response.actionOption) return 'black';
-            if(response.action == 'Forward to Question' && response.actionOption.split(' ')[0].trim() != 'Question'){
-                response.actionOption = 'Question 1';
-            }
+            if(response.action != 'Forward to Question' 
+            || response.actionOption.split(' ')[0].trim() != 'Question'){
+                return 'black';
+            } 
             let questionIndex = Number(response.actionOption.trim().split(' ')[1]) - 1;
             return this.questions[questionIndex].color;
         },
@@ -290,23 +263,17 @@ module.exports = {
                 this.changesMade = true;
             }
         },
-        continueWithoutSaving: function() {
-            console.log('continueing without saving you fuckin asshole!');
-            console.log('this.nextRoute : ');
-            console.log(this.nextRoute);
-            this.nextRoute();
-        },
         deleteResponse: function(question, response) {
             question.responses.splice(question.responses.indexOf(response),1);
             this.changesMade = true;
         },
         deleteQuestion: function(question) {
             this.questions.splice(this.questions.indexOf(question), 1);
+            this.questionsForDropdown.splice(this.questions.indexOf(question), 1);
             this.changesMade = true;
         },
         edit: function (el) {
             el.editing = !el.editing;
-            this.checkForChanges();
         },
         getRandomColor: function () {
             let colors = ['red', 'orange', 'yellow', 'olive', 'green', 'teal',
@@ -327,6 +294,17 @@ module.exports = {
                     });
                 }
             });
+
+            util.fetch.call(this, '/api/dists/', {method: 'get'})
+            .then(result => {
+                this.dists = result.theJson.dists;
+                this.dists.forEach( (dist, idx) => {
+                    this.distsForDropdown.push({
+                        text: dist.name,
+                        value: dist.id
+                    });
+                });
+            });
         },
         newQuestion: function () {
             this.questions.push({
@@ -339,12 +317,14 @@ module.exports = {
                     {
                         text: "Yes",
                         action: 'Forward to Question',
-                        actionOption: 'Question 1'
+                        actionOption: "Question 1",
+                        distId: null
                     },
                     {
                         text: "No",
                         action: 'Forward to Question',
-                        actionOption: 'Question 1'
+                        actionOption: "Question 1",
+                        distId: null
                     }
                 ]
             });
@@ -352,35 +332,40 @@ module.exports = {
                 text: `Question ${this.questions.length}`,
                 value: `Question ${this.questions.length}`
             });
-            this.checkForChanges();
-            window.scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight);
+            this.changesMade = true;
         },
         newResponse: function (question){
             question.responses.push({
                 text: "New Response",
                 action: null,
-                actionOption: null
+                actionOption: null,
+                distId: null
             });
-            this.checkForChanges();
+            this.changesMade = true;
         },
         saveAndContinue: function() {
             this.saveData();
             this.nextRoute();
-            console.log('saving andcontinueingsuckin asshole!');
-            console.log('this.nextRoute : ');
-            console.log(this.nextRoute);
         },
         saveData: function() {
+            this.questions.forEach(question => {
+                question.editing = false;
+            });
             util.fetch('/api/questions/', {
                 method:'post',
                 body: {questions: this.questions}
             });
             this.changesMade = false;
             this.questionsOriginal = JSON.stringify(this.questions);
-            this.questions.forEach(question => {
-                question.editing = false;
-            });
         },
+        updateDistData: function(response) {
+            this.dists.forEach(dist => {
+                if(dist.id == response.distId){
+                    response.actionOption = dist.name;
+                }
+            });
+            this.checkForChanges();
+        }
     },
     beforeRouteLeave: function(to, from, next){
         if(this.changesMade){
@@ -390,9 +375,6 @@ module.exports = {
         }else{
             next();
         }
-        this.questions.forEach(question => {
-            question.editing = false;
-        });
     },
     data: function() {
         return {
@@ -403,38 +385,12 @@ module.exports = {
             questionsForDropdown: [],
             showingSaveChangesModal: false,
             nextRoute: null,
-            dists: [
-                {
-                    text: "@sales",
-                    value: "@sales"
-                },
-                {
-                    text: "@support-1",
-                    value: "@support-1"
-                },
-                {
-                    text: "@support-2",
-                    value: "@support-2"
-                }
-            ],
-            users: [
-                {
-                    text: '@mcavoybn:forsta.io',
-                    value: '@mcavoybn:forsta.io'
-                },
-                {
-                    text: '@zach:forsta.io',
-                    value: '@zach:forsta.io'
-                }
-            ],
+            dists: [],
+            distsForDropdown: [],
             questionActions: [
                 {
                     text: "Forward to Question",
                     value: "Forward to Question"
-                },
-                {
-                    text: "Forward to User",
-                    value: "Forward to User"
                 },
                 {
                     text: "Forward to Distribution",

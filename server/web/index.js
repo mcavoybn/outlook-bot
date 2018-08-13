@@ -32,6 +32,7 @@ class WebServer {
         this.app.use('/api/questions/', (new api.QuestionsAPIV1({server: this})).router);
         this.app.use('/api/business-hours/', (new api.BusinessHoursAPIV1({server: this})).router);
         this.app.use('/api/message-history/', (new api.MessageHistoryAPIV1({server: this})).router);
+        this.app.use('/api/dists/', (new api.DistsAPIV1({server: this})).router);
         this.app.use('/static/', express.static(path.join(root, 'static'), {strict: true}));
         
         this.app.get('/env.js', (req, res) => {
