@@ -298,7 +298,7 @@ module.exports = {
 
             util.fetch.call(this, '/api/tags/', {method: 'get'})
             .then(result => {
-                console.log(result);
+                this.tags = result.theJson.tags;
                 this.tags.forEach( (tag, idx) => {
                     this.tagsForDropdown.push({
                         text: tag.slug,

@@ -119,7 +119,7 @@ class ForstaBot {
     }
 
     async handleDistTakeover(msg, forwardingDist, threadId){
-        let chatUserTag = this.waitingForDistTakeover[threadId].userTag.slice(1, this.waitingForDistTakeover[threadId].userTag.length-1);
+        let chatUserTag = this.waitingForDistTakeover[threadId].userTag.slice(2, this.waitingForDistTakeover[threadId].userTag.length-1);
         let distMemberUser = await this.atlas.fetch(`/v1/user/${msg.sender.userId}/`);
         let newDist = await this.resolveTags(`(<${chatUserTag}>+<${distMemberUser.tag.id}>)`);
         this.sendResponse(
@@ -129,9 +129,8 @@ class ForstaBot {
             `Distribution member ${distMemberUser.tag.slug} connected!`
         );
         this.waitingForDistTakeover[threadId] = false;
-        let takeoverUpdateDist = forwardingDist;
-        takeoverUpdateDist.userids = forwardingDist.userids.filter(id => (id != chatUserTag && id != distMemberUser.tag.id));
-        this.sendArchiveThreadMessage(takeoverUpdateDist, threadId);
+        forwardingDist.userids = forwardingDist.userids.filter(id => id != distMemberUser.id);
+        this.sendArchiveThreadMessage(forwardingDist, threadId);
     }
 
     async handleResponse(msg, dist, threadId, senderId){
@@ -162,7 +161,7 @@ class ForstaBot {
             this.sendMessage(
                 forwardingDist, 
                 threadId, 
-                'A live chat user is trying to get in touch with you. Type to respond and connect.'
+                'A live chat user is trying to get in touch with you. Respond to take over the chat.'
             );
             this.questions = undefined;
             this.waitingForDistTakeover[threadId] = {
