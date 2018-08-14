@@ -150,13 +150,13 @@ div [class*="pull right"] {
                                 :color="colorFromResponse(response)"
                                 vertical-align="middle" />
                         </div>
-                        <div v-if="response.action=='Forward to Distribution'">
+                        <div v-if="response.action=='Forward to Tag'">
                             <sui-dropdown      
                                 selection
-                                placeholder="Distribution"
-                                :options="distsForDropdown"
-                                v-model="response.distId"
-                                @input="updateDistData(response)"
+                                placeholder="Tag"
+                                :options="tagsForDropdown"
+                                v-model="response.tagId"
+                                @input="updateTagData(response)"
                                 v-if="question.editing" />
                             <p
                                 style="display:inline"
@@ -250,7 +250,8 @@ module.exports = {
     },
     methods: {
         colorFromResponse(response){
-            if(response.action != 'Forward to Question' 
+            if(!response.actionOption
+            || response.action != 'Forward to Question' 
             || response.actionOption.split(' ')[0].trim() != 'Question'){
                 return 'black';
             } 
@@ -277,7 +278,7 @@ module.exports = {
         },
         getRandomColor: function () {
             let colors = ['red', 'orange', 'yellow', 'olive', 'green', 'teal',
-                'blue', 'violet', 'purple', 'pink', 'brown', 'grey', 'black'];
+                'blue', 'violet', 'purple', 'pink'];
             let idx = Math.floor(Math.random()*13);
             return colors[idx];
         },
@@ -295,13 +296,13 @@ module.exports = {
                 }
             });
 
-            util.fetch.call(this, '/api/dists/', {method: 'get'})
+            util.fetch.call(this, '/api/tags/', {method: 'get'})
             .then(result => {
-                this.dists = result.theJson.dists;
-                this.dists.forEach( (dist, idx) => {
-                    this.distsForDropdown.push({
-                        text: dist.name,
-                        value: dist.id
+                console.log(result);
+                this.tags.forEach( (tag, idx) => {
+                    this.tagsForDropdown.push({
+                        text: tag.slug,
+                        value: tag.id
                     });
                 });
             });
@@ -318,13 +319,13 @@ module.exports = {
                         text: "Yes",
                         action: 'Forward to Question',
                         actionOption: "Question 1",
-                        distId: null
+                        tagId: null
                     },
                     {
                         text: "No",
                         action: 'Forward to Question',
                         actionOption: "Question 1",
-                        distId: null
+                        tagId: null
                     }
                 ]
             });
@@ -353,17 +354,13 @@ module.exports = {
             });
             util.fetch('/api/questions/', {
                 method:'post',
-                body: {questions: this.questions}
+                body: { questions: this.questions }
             });
             this.changesMade = false;
             this.questionsOriginal = JSON.stringify(this.questions);
         },
-        updateDistData: function(response) {
-            this.dists.forEach(dist => {
-                if(dist.id == response.distId){
-                    response.actionOption = dist.name;
-                }
-            });
+        updateTagData: function(response) {
+            response.actionOption = this.tags.find(t => t.id == response.tagId).slug;
             this.checkForChanges();
         }
     },
@@ -385,16 +382,16 @@ module.exports = {
             questionsForDropdown: [],
             showingSaveChangesModal: false,
             nextRoute: null,
-            dists: [],
-            distsForDropdown: [],
+            tags: [],
+            tagsForDropdown: [],
             questionActions: [
                 {
                     text: "Forward to Question",
                     value: "Forward to Question"
                 },
                 {
-                    text: "Forward to Distribution",
-                    value: "Forward to Distribution"
+                    text: "Forward to Tag",
+                    value: "Forward to Tag"
                 },
             ],
             questionTypes: [

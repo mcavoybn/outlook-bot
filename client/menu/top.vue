@@ -12,7 +12,7 @@ div [class*="pull right"] {
 <template>
     <div class="ui inverted menu" style="z-index: 1;">
         <div class="ui container">
-            <router-link :to="{name: 'welcome'}" class="header item">
+            <router-link :to="{name: 'questions'}" class="header item">
                 <img class="logo" src="/static/images/forsta-logo-invert.svg"/>
                 &nbsp;&nbsp;Forsta Live Chat
             </router-link>
@@ -25,12 +25,6 @@ div [class*="pull right"] {
                     <i class="large user icon"></i>
                     <i class="dropdown icon"></i>
                     <div class="menu left">
-                        <div class="item" @click="distributions">
-                            <i class="address book icon tiny"></i> Distributions 
-                        </div>
-                        <div class="item" @click="questions">
-                            <i class="comments icon tiny"></i> Questions 
-                        </div>
                         <div class="item" @click="businessHours">
                             <i class="clock icon tiny"></i> Business Hours 
                         </div>
@@ -64,9 +58,6 @@ module.exports = {
         },
         settings: function () {
             this.$router.push({ name: 'settings' });
-        },
-        questions: function () {
-            this.$router.push({ name: 'questions' });
         },
         businessHours: function () {
             this.$router.push({ name: 'businessHours' });

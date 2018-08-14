@@ -375,43 +375,19 @@ class MessageHistoryAPIV1 extends APIHandler {
 
 }
 
-class DistsAPIV1 extends APIHandler {
+class TagsAPIV1 extends APIHandler {
 
     constructor(options) {
         super(options);
         this.router.get('/*', this.asyncRoute(this.onGet, false));
-        this.router.post('/*', this.asyncRoute(this.onPost, false));
     }
 
     async onGet(req, res){
-        let users = await this.server.bot.atlas.fetch('/v1/user/');
-        let dists = await relay.storage.get('live-chat-bot', 'dists');
-        if(!dists){
-            dists = [
-                {
-                    name: 'Default',
-                    users: [],
-                    id: uuidv4()
-                }
-            ];
-        }
-        //update the user ids in case that they have 're-registered' after provisioning fail
-        users.results.forEach(user => {
-            dists.forEach(dist => {
-                let updateUser = dist.users.find(u => u.slug == user.tag.slug);
-                if(updateUser){
-                    updateUser.id = user.tag.id;
-                }
-            });
-        });
-        relay.storage.set('live-chat-bot', 'dists', dists);
-        res.status(200).json({ dists, users });
+        let tags = (await this.server.bot.atlas.fetch('/v1/tag-pick/')).results;
+        tags = tags.filter(t => t.created_by);
+        res.status(200).json({tags});
     }
 
-    async onPost(req, res) {
-        relay.storage.set('live-chat-bot', 'dists', req.body.dists);
-        res.status(200);
-    }
 }
 
 module.exports = {
@@ -421,5 +397,5 @@ module.exports = {
     QuestionsAPIV1,
     BusinessHoursAPIV1,
     MessageHistoryAPIV1,
-    DistsAPIV1
+    TagsAPIV1
 };

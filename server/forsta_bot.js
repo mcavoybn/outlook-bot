@@ -119,26 +119,23 @@ class ForstaBot {
     }
 
     async handleDistTakeover(msg, forwardingDist, threadId){
-        let chatUserTag = this.waitingForDistTakeover[threadId];
+        let chatUserTag = this.waitingForDistTakeover[threadId].userTag.slice(1, this.waitingForDistTakeover[threadId].userTag.length-1);
         let distMemberUser = await this.atlas.fetch(`/v1/user/${msg.sender.userId}/`);
-        let senderTag = `<${distMemberUser.tag.id}>`;
-        let newDist = await this.resolveTags(`(${chatUserTag}+${senderTag})`);
-        this.sendMessage(newDist, threadId, `Distribution member ${distMemberUser.tag.slug} connected!`);
+        let newDist = await this.resolveTags(`(<${chatUserTag}>+<${distMemberUser.tag.id}>)`);
+        this.sendResponse(
+            newDist, 
+            threadId, 
+            this.waitingForDistTakeover[threadId].msgId, 
+            `Distribution member ${distMemberUser.tag.slug} connected!`
+        );
         this.waitingForDistTakeover[threadId] = false;
-
-        let takeoverUpdateDistRaw = '(';
-        forwardingDist.universal
-        .slice(1,forwardingDist.universal.length-1)
-        .split('+')
-        .filter(tag => tag != senderTag)
-        .forEach(tag => takeoverUpdateDistRaw += `${tag}+`);
-        takeoverUpdateDistRaw += ')';
-        let takeoverUpdateDist = await this.resolveTags(takeoverUpdateDistRaw);
+        let takeoverUpdateDist = forwardingDist;
+        takeoverUpdateDist.userids = forwardingDist.userids.filter(id => (id != chatUserTag && id != distMemberUser.tag.id));
         this.sendArchiveThreadMessage(takeoverUpdateDist, threadId);
     }
 
     async handleResponse(msg, dist, threadId, senderId){
-        let response = this.parseResponse(msg.data.body[0].value);
+        let response = this.parseResponse(msg.data.body[0].value);  
         if(!response){
             this.sendMessage(dist, threadId, `Invalid response, try again.`);
             return false;
@@ -152,18 +149,27 @@ class ForstaBot {
 
         this.saveToMessageHistory(response, senderId, threadId);
         this.waitingForResponse[threadId] = false;
-        if(response.action == "Forward to Distribution")
+        if(response.action == "Forward to Tag")
         {
-            let forwardingDist = await this.getDistFromResponse(msg, response);
+            let botTag = msg.distribution.expression.split('+')[1];
+            let forwardingDist = await this.resolveTags(`(<${response.tagId}>${botTag})`);
             if(!forwardingDist){
                 this.sendMessage(dist, threadId, `Whoops! This distribution doesn't exist...`);
                 console.error('ERROR: response actionOption configured to a non-existent distribution');
                 return;
             }
-            this.sendMessage(dist, threadId, `Forwarding to distribution ${response.actionOption} !`);
-            this.sendMessage(forwardingDist, threadId, 'A live chat user is trying to get in touch with you. Type to respond and connect.');
+            let forwardingToDistMsg = await this.sendMessage(dist, threadId, `Forwarding to distribution ${response.actionOption} !`);
+            this.sendMessage(
+                forwardingDist, 
+                threadId, 
+                'A live chat user is trying to get in touch with you. Type to respond and connect.'
+            );
             this.questions = undefined;
-            this.waitingForDistTakeover[threadId] = msg.distribution.expression.split('+')[0];
+            this.waitingForDistTakeover[threadId] = {
+                userTag: msg.distribution.expression.split('+')[0], 
+                msgId: JSON.parse(forwardingToDistMsg.message.dataMessage.body)[0].messageId
+            };
+            return false;
         }
         else if(response.action == "Forward to Question")
         {
@@ -176,27 +182,6 @@ class ForstaBot {
             this.questions = undefined;
         }
         return true;
-    }
-
-    async getDistFromResponse(msg, response){
-        let users = await this.atlas.fetch('/v1/user/');
-        let dists = await relay.storage.get('live-chat-bot', 'dists');
-        //update the user tag ids in case that they have 're-registered' after provisioning fail
-        users.results.forEach(user => {
-            dists.forEach(dist => {
-                let updateUser = dist.users.find(u => u.slug == user.tag.slug);
-                if(updateUser) updateUser.id = user.tag.id;
-            });
-        });
-        let clientDist = dists.find(dist => dist.id == response.distId);
-        let botId = msg.distribution.expression.split('+')[1];
-        let distRaw = `(${botId}+`;
-        clientDist.users.forEach( (user, idx) => {
-            distRaw += `<${user.id}>+`;
-        });
-        distRaw += ')';
-        let forwardingDist = await this.resolveTags(distRaw);
-        return forwardingDist;
     }
 
     parseResponse(msgTxt){
