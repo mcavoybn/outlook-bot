@@ -71,7 +71,7 @@ class ForstaBot {
         if(!msg) console.error("Received unsupported message!");
         const dist = await this.resolveTags(msg.distribution.expression);
 
-        if(msg.data.body[0].value == "init"){
+        if(msg.data.body && msg.data.body[0].value == "init"){
             let businessHours = await relay.storage.get('live-chat-bot', 'business-hours');
             if(businessHours && this.outOfOffice(businessHours)){
                 this.sendMessage(dist, msg.threadId, businessHours.message);
@@ -94,14 +94,14 @@ class ForstaBot {
             this.sendMessage(dist, msg.threadId, "Question set not initialized, type 'init' to initialize");
         }else{
             this.waitingForResponse[msg.threadId] = true;
-            let promptMessage = await this.sendMessage(dist, msg.threadId, this.currentQuestion.prompt);
             if(this.currentQuestion.type == 'Free Response'){
                 return;
             }
-            let promptId = JSON.parse(promptMessage.message.dataMessage.body)[0].messageId;
+            let actions = [];
             this.currentQuestion.responses.forEach( (response, index) =>{
-                this.sendResponse(dist, msg.threadId, promptId,`[${index+1}] - ${response.text}`);
+                actions.push({title: response.text, color: 'blue', action: index})
             });
+            this.sendActionMessage(dist, msg.threadId, this.currentQuestion.prompt, actions);
         }
     }
 
@@ -134,11 +134,7 @@ class ForstaBot {
     }
 
     async handleResponse(msg, dist, threadId, senderId){
-        let response = this.parseResponse(msg.data.body[0].value);  
-        if(!response){
-            this.sendMessage(dist, threadId, `Invalid response, try again.`);
-            return false;
-        }
+        let response = this.parseResponse(msg.data.action);  
 
         if(!response.action){
             this.sendMessage(dist, threadId, `ERROR: response action not configured !`);
@@ -158,10 +154,11 @@ class ForstaBot {
                 return;
             }
             let forwardingToDistMsg = await this.sendMessage(dist, threadId, `Forwarding to distribution ${response.actionOption} !`);
-            this.sendMessage(
+            this.sendActionMessage(
                 forwardingDist, 
                 threadId, 
-                'A live chat user is trying to get in touch with you. Respond to take over the chat.'
+                'A live chat user is trying to get in touch with you. Respond to take over the chat.',
+                [{title:'Connect', action:'distTakeover', color:'blue'}]
             );
             this.questions = undefined;
             this.waitingForDistTakeover[threadId] = {
@@ -195,17 +192,11 @@ class ForstaBot {
             }
             return response;
         }else{
-            let responseNumber = -1;
-            try{
-                responseNumber = Number(msgTxt);
-            }catch(error){
-                console.log(`Error parsing user response:${error}`);
+            let responseNumber = Number(msgTxt);
+            if(responseNumber > this.currentQuestion.responses.length - 1 || responseNumber < 0){
                 return undefined;
             }
-            if(responseNumber > this.currentQuestion.responses.length || responseNumber < 1){
-                return undefined;
-            }
-            return this.currentQuestion.responses[responseNumber-1];
+            return this.currentQuestion.responses[responseNumber];
         }
     }
 
@@ -285,6 +276,16 @@ class ForstaBot {
             messageRef: msgId,
             html: `${ text }`,
             text: text,
+        });
+    }
+
+    sendActionMessage(dist, threadId, text, actions){
+        this.msgSender.send({
+            distribution: dist,
+            threadId: threadId,
+            html: `${ text }`,
+            text: text,
+            actions
         });
     }
     
