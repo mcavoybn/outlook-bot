@@ -99,7 +99,7 @@ class ForstaBot {
             }
             let actions = [];
             this.currentQuestion.responses.forEach( (response, index) =>{
-                actions.push({title: response.text, color: 'blue', action: index})
+                actions.push({title: response.text, color: 'blue', action: index});
             });
             this.sendActionMessage(dist, msg.threadId, this.currentQuestion.prompt, actions);
         }

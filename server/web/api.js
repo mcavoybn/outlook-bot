@@ -384,7 +384,9 @@ class TagsAPIV1 extends APIHandler {
 
     async onGet(req, res){
         let tags = (await this.server.bot.atlas.fetch('/v1/tag-pick/')).results;
+        console.log("TAGS UNFILTERED: ", tags);
         tags = tags.filter(t => t.created_by);
+        console.log("\nTAGS FILTERED; ", tags);
         res.status(200).json({tags});
     }
 
