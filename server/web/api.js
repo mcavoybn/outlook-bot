@@ -284,7 +284,7 @@ class QuestionsAPIV1 extends APIHandler {
         if(!questions){
             questions = [
                 {
-                    prompt: "Hello, I am the live chat bot! Bleep bloop. How can I help you?",
+                    prompt: "Hello, I am the live chat bot! Can I help you?",
                     type: "Multiple Choice",
                     editing: false,
                     hovering: false,
@@ -384,9 +384,7 @@ class TagsAPIV1 extends APIHandler {
 
     async onGet(req, res){
         let tags = (await this.server.bot.atlas.fetch('/v1/tag-pick/')).results;
-        console.log("TAGS UNFILTERED: ", tags);
         tags = tags.filter(t => t.created_by);
-        console.log("\nTAGS FILTERED; ", tags);
         res.status(200).json({tags});
     }
 
