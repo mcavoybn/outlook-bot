@@ -284,7 +284,7 @@ class QuestionsAPIV1 extends APIHandler {
         if(!questions){
             questions = [
                 {
-                    prompt: "Hello, I am the live chat bot! Bleep bloop. How can I help you?",
+                    prompt: "Hello, I am the live chat bot! Can I help you?",
                     type: "Multiple Choice",
                     editing: false,
                     hovering: false,

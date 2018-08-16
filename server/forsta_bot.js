@@ -72,7 +72,7 @@ class ForstaBot {
         if(!msg) console.error("Received unsupported message!");
         const dist = await this.resolveTags(msg.distribution.expression);
 
-        if(msg.data.body && msg.data.body[0].value == "init"){
+        if(msg.data.control === "threadUpdate"){
             let businessHours = await relay.storage.get('live-chat-bot', 'business-hours');
             if(businessHours && this.outOfOffice(businessHours)){
                 this.sendMessage(dist, msg.threadId, businessHours.message);
@@ -99,7 +99,7 @@ class ForstaBot {
                 return;
             }
             let actions = [];
-            this.currentQuestion[msg.threadId].responses.forEach( (response, index) =>{
+            this.currentQuestion.responses.forEach( (response, index) =>{
                 actions.push({title: response.text, color: 'blue', action: index});
             });
             this.sendActionMessage(dist, msg.threadId, this.currentQuestion[msg.threadId].prompt, actions);
@@ -120,14 +120,13 @@ class ForstaBot {
     }
 
     async handleDistTakeover(msg, forwardingDist, threadId){
-        let chatUserTag = this.waitingForDistTakeover[threadId].userTag.slice(2, this.waitingForDistTakeover[threadId].userTag.length-1);
+        let chatUserTag = this.waitingForDistTakeover[threadId].userTag;
         let distMemberUser = await this.atlas.fetch(`/v1/user/${msg.sender.userId}/`);
         let newDist = await this.resolveTags(`(<${chatUserTag}>+<${distMemberUser.tag.id}>)`);
-        this.sendResponse(
+        this.sendMessage(
             newDist, 
             threadId, 
-            this.waitingForDistTakeover[threadId].msgId, 
-            `Distribution member ${distMemberUser.tag.slug} connected!`
+            `You are now connected with ${distMemberUser.tag.slug}`
         );
         this.waitingForDistTakeover[threadId] = false;
         forwardingDist.userids = forwardingDist.userids.filter(id => id != distMemberUser.id);
@@ -135,7 +134,9 @@ class ForstaBot {
     }
 
     async handleResponse(msg, dist, threadId, senderId){
-        let response = this.parseResponse(msg);  
+        const users = await this.getUsers(dist.userids);
+        console.log('OUR ID', this.ourId, '\nUSERS: ', users);
+        let response = this.parseResponse(msg.data.action);  
 
         if(!response.action){
             this.sendMessage(dist, threadId, `ERROR: response action not configured !`);
@@ -147,14 +148,15 @@ class ForstaBot {
         this.waitingForResponse[threadId] = false;
         if(response.action == "Forward to Tag")
         {
-            let botTag = msg.distribution.expression.split('+')[1];
-            let forwardingDist = await this.resolveTags(`(<${response.tagId}>${botTag})`);
+            let botTag = users.filter(u => u.id === this.ourId)[0];
+            let forwardingDist = await this.resolveTags(`(<${response.tagId}>+<${botTag.tag.id}>)`);
+            console.log(forwardingDist);
             if(!forwardingDist){
                 this.sendMessage(dist, threadId, `Whoops! This distribution doesn't exist...`);
                 console.error('ERROR: response actionOption configured to a non-existent distribution');
                 return;
             }
-            let forwardingToDistMsg = await this.sendMessage(dist, threadId, `Forwarding to distribution ${response.actionOption} !`);
+            let forwardingToDistMsg = await this.sendMessage(dist, threadId, `A member of our team will be with you shortly.`);
             this.sendActionMessage(
                 forwardingDist, 
                 threadId, 
@@ -163,8 +165,8 @@ class ForstaBot {
             );
             this.questions = undefined;
             this.waitingForDistTakeover[threadId] = {
-                userTag: msg.distribution.expression.split('+')[0], 
-                msgId: JSON.parse(forwardingToDistMsg.message.dataMessage.body)[0].messageId,
+                userTag: users.filter(u => u.id !== this.ourId)[0].tag.id, 
+                msgId: JSON.parse(forwardingToDistMsg.message.dataMessage.body)[0].messageId
             };
             return false;
         }
