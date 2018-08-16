@@ -122,11 +122,10 @@ class ForstaBot {
         let chatUserTag = this.waitingForDistTakeover[threadId].userTag;
         let distMemberUser = await this.atlas.fetch(`/v1/user/${msg.sender.userId}/`);
         let newDist = await this.resolveTags(`(<${chatUserTag}>+<${distMemberUser.tag.id}>)`);
-        this.sendResponse(
+        this.sendMessage(
             newDist, 
             threadId, 
-            this.waitingForDistTakeover[threadId].msgId, 
-            `Distribution member ${distMemberUser.tag.slug} connected!`
+            `You are now connected with ${distMemberUser.tag.slug}`
         );
         this.waitingForDistTakeover[threadId] = false;
         forwardingDist.userids = forwardingDist.userids.filter(id => id != distMemberUser.id);
