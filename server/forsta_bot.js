@@ -29,6 +29,7 @@ class ForstaBot {
 
         this.waitingForResponse = {};
         this.waitingForDistTakeover = {};
+        this.currentQuestion = {};
     }
 
     stop() {
@@ -77,7 +78,7 @@ class ForstaBot {
                 this.sendMessage(dist, msg.threadId, businessHours.message);
             }
             this.questions = await relay.storage.get('live-chat-bot', 'questions');
-            this.currentQuestion = this.questions[0];
+            this.currentQuestion[msg.threadId] = this.questions[0];
         }
 
         if(this.waitingForDistTakeover[msg.threadId]){
@@ -94,14 +95,14 @@ class ForstaBot {
             this.sendMessage(dist, msg.threadId, "Question set not initialized, type 'init' to initialize");
         }else{
             this.waitingForResponse[msg.threadId] = true;
-            if(this.currentQuestion.type == 'Free Response'){
+            if(this.currentQuestion[msg.threadId].type == 'Free Response'){
                 return;
             }
             let actions = [];
-            this.currentQuestion.responses.forEach( (response, index) =>{
+            this.currentQuestion[msg.threadId].responses.forEach( (response, index) =>{
                 actions.push({title: response.text, color: 'blue', action: index});
             });
-            this.sendActionMessage(dist, msg.threadId, this.currentQuestion.prompt, actions);
+            this.sendActionMessage(dist, msg.threadId, this.currentQuestion[msg.threadId].prompt, actions);
         }
     }
 
@@ -134,8 +135,7 @@ class ForstaBot {
 
     async handleResponse(msg, dist, threadId, senderId){
         const users = await this.getUsers(dist.userids);
-        console.log('OUR ID', this.ourId, '\nUSERS: ', users);
-        let response = this.parseResponse(msg.data.action);  
+        let response = this.parseResponse(msg);  
 
         if(!response.action){
             this.sendMessage(dist, threadId, `ERROR: response action not configured !`);
@@ -172,7 +172,7 @@ class ForstaBot {
         else if(response.action == "Forward to Question")
         {
             let questionNumber = Number(response.actionOption.split(' ')[1]);
-            this.currentQuestion = this.questions[questionNumber-1];
+            this.currentQuestion[threadId] = this.questions[questionNumber-1];
         }
         else if(response.action == "End of Question Set")
         {
@@ -182,10 +182,10 @@ class ForstaBot {
         return true;
     }
 
-    parseResponse(msgTxt){
-        if(this.currentQuestion.type == 'Free Response'){
+    parseResponse(msg){
+        if(this.currentQuestion[msg.threadId].type == 'Free Response'){
             let response = {};
-            let currentQuestionIndex = this.questions.indexOf(this.currentQuestion);
+            let currentQuestionIndex = this.questions.indexOf(this.currentQuestion[msg.threadId]);
             if(currentQuestionIndex == this.questions.length - 1){
                 response.action = 'End of Question Set';   
             }else{
@@ -194,11 +194,11 @@ class ForstaBot {
             }
             return response;
         }else{
-            let responseNumber = Number(msgTxt);
-            if(responseNumber > this.currentQuestion.responses.length - 1 || responseNumber < 0){
+            let responseNumber = Number(msg.data.action);
+            if(responseNumber > this.currentQuestion[msg.threadId].responses.length - 1 || responseNumber < 0){
                 return undefined;
             }
-            return this.currentQuestion.responses[responseNumber];
+            return this.currentQuestion[msg.threadId].responses[responseNumber];
         }
     }
 
@@ -211,7 +211,7 @@ class ForstaBot {
                 id: userId,
                 slug: userSlug
             },
-            prompt: this.currentQuestion.prompt,
+            prompt: this.currentQuestion[threadId].prompt,
             response: response.text,
             action: response.action,
             date: dateNow,
@@ -282,7 +282,7 @@ class ForstaBot {
     }
 
     sendActionMessage(dist, threadId, text, actions){
-        this.msgSender.send({
+        return this.msgSender.send({
             distribution: dist,
             threadId: threadId,
             html: `${ text }`,
