@@ -89,16 +89,17 @@ class ForstaBot {
             let validResponse = await this.handleResponse(msg, dist, msg.threadId, msg.sender.userId);
             if(!validResponse) return;
         }
-        
+
         this.waitingForResponse[msg.threadId] = true;
         if(this.currentQuestion.type == 'Free Response'){
             this.sendMessage(dist, msg.threadId, this.currentQuestion.prompt);
+        } else {
+            let actions = [];
+            this.currentQuestion.responses.forEach( (response, index) =>{
+                actions.push({title: response.text, color: 'blue', action: index});
+            });
+            this.sendActionMessage(dist, msg.threadId, this.currentQuestion.prompt, actions);
         }
-        let actions = [];
-        this.currentQuestion.responses.forEach( (response, index) =>{
-            actions.push({title: response.text, color: 'blue', action: index});
-        });
-        this.sendActionMessage(dist, msg.threadId, this.currentQuestion.prompt, actions);
 
     }
 
