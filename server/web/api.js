@@ -294,13 +294,15 @@ class QuestionsAPIV1 extends APIHandler {
                             text: "Yes",
                             action: "Forward to Question",
                             actionOption: "Question 1",
-                            distId: null
+                            distId: null,
+                            color: 'blue'
                         },
                         {
                             text: "No",
                             action: "Forward to Question",
                             actionOption: "Question 1",
-                            distId: null
+                            distId: null,
+                            color: 'red'
                         }
                     ]
                 }
