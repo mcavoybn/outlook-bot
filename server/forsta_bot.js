@@ -90,19 +90,16 @@ class ForstaBot {
             if(!validResponse) return;
         }
         
-        if(!this.questions){
-            this.sendMessage(dist, msg.threadId, "Question set not initialized, type 'init' to initialize");
-        }else{
-            this.waitingForResponse[msg.threadId] = true;
-            if(this.currentQuestion.type == 'Free Response'){
-                return;
-            }
-            let actions = [];
-            this.currentQuestion.responses.forEach( (response, index) =>{
-                actions.push({title: response.text, color: 'blue', action: index});
-            });
-            this.sendActionMessage(dist, msg.threadId, this.currentQuestion.prompt, actions);
+        this.waitingForResponse[msg.threadId] = true;
+        if(this.currentQuestion.type == 'Free Response'){
+            this.sendMessage(dist, msg.threadId, this.currentQuestion.prompt);
         }
+        let actions = [];
+        this.currentQuestion.responses.forEach( (response, index) =>{
+            actions.push({title: response.text, color: 'blue', action: index});
+        });
+        this.sendActionMessage(dist, msg.threadId, this.currentQuestion.prompt, actions);
+
     }
 
     parseEv(ev){
