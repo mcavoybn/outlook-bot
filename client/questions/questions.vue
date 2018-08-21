@@ -10,8 +10,16 @@ div [class*="pull right"] {
 .flexbox {
     display: flex;
     flex: 1;
-    width: 95%;
     margin-right:0.5em;
+}
+.color-box {
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+    background-color: #ccc;
+    position: absolute;
+    left: 5px;
+    top: 5px;
 }
 </style>
  
@@ -42,7 +50,7 @@ div [class*="pull right"] {
                             Question {{questions.indexOf(question)+1}}
                         </h4>
                     </sui-table-headerCell>
-                    <sui-table-headerCell colspan="2" class="right aligned">
+                    <sui-table-headerCell colspan="3" class="right aligned">
                         <sui-button 
                             color="red" 
                             content="Edit"
@@ -76,6 +84,7 @@ div [class*="pull right"] {
                             v-text="question.prompt"
                             v-if="!question.editing" />
                         <sui-input
+                            style="width:95%"
                             class="flexbox"
                             v-model="question.prompt"
                             :value="question.prompt"
@@ -98,11 +107,33 @@ div [class*="pull right"] {
                             vertical-align="middle"
                             v-if="question.editing"
                             @click="deleteResponse(question, response)" />
+                        <sui-dropdown 
+                            button
+                            icon="square"
+                            :class="lowercaseFirst(response.color)"
+                            v-if="question.editing">
+                            <sui-dropdown-menu selection>
+                                <sui-dropdown-item
+                                    v-for="color in colorsForDropdown"
+                                    @click="setResponseColor(response, color.text)"
+                                    :value="color.text">
+                                    <sui-icon 
+                                        name="stop"
+                                        :color="lowercaseFirst(color.text)" />
+                                </sui-dropdown-item>
+                            </sui-dropdown-menu>
+                        </sui-dropdown>
+                        <sui-icon
+                            name="stop"
+                            :color="lowercaseFirst(response.color)"
+                            style="display:inline"
+                            v-else />
                         <p
                             style="display:inline"
                             v-text="response.text"
                             v-if="!question.editing" />
                         <sui-input
+                            style="width:75%"
                             class="flexbox"
                             v-model="response.text"
                             :value="response.text"
@@ -180,7 +211,7 @@ div [class*="pull right"] {
  
             <sui-table-footer v-if="question.editing">
                 <sui-table-row>
-                    <sui-table-header-cell colspan="4">
+                    <sui-table-header-cell colspan="5">
                         <sui-button
                             class="ui green button"
                             content="New Response"
@@ -282,6 +313,9 @@ module.exports = {
             let idx = Math.floor(Math.random()*13);
             return colors[idx];
         },
+        lowercaseFirst: function (str) {
+            return str.charAt(0).toLowerCase() + str.slice(1, str.length);
+        },
         loadData: function(){
             util.fetch.call(this, '/api/questions/', {method: 'get'})
             .then(result => {
@@ -319,13 +353,15 @@ module.exports = {
                         text: "Yes",
                         action: 'Forward to Question',
                         actionOption: "Question 1",
-                        tagId: null
+                        tagId: null,
+                        color: 'blue'
                     },
                     {
                         text: "No",
                         action: 'Forward to Question',
                         actionOption: "Question 1",
-                        tagId: null
+                        tagId: null,
+                        color: 'blue'
                     }
                 ]
             });
@@ -340,7 +376,8 @@ module.exports = {
                 text: "New Response",
                 action: null,
                 actionOption: null,
-                distId: null
+                distId: null,
+                color: 'blue'
             });
             this.changesMade = true;
         },
@@ -358,6 +395,10 @@ module.exports = {
             });
             this.changesMade = false;
             this.questionsOriginal = JSON.stringify(this.questions);
+        },
+        setResponseColor: function(response, color) {
+            this.checkForChanges();
+            response.color = color;
         },
         updateTagData: function(response) {
             response.actionOption = this.tags.find(t => t.id == response.tagId).slug;
@@ -402,6 +443,28 @@ module.exports = {
                 {
                     text: "Multiple Choice",
                     value: "Multiple Choice"
+                }
+            ],
+            colorsForDropdown: [
+                {
+                    text: 'Red',
+                    value: 'Red'
+                },
+                {
+                    text: 'Orange',
+                    value: 'Orange'
+                },
+                {
+                    text: 'Yellow',
+                    value: 'Yellow'
+                },
+                {
+                    text: 'Green',
+                    value: 'Green'
+                },
+                {
+                    text: 'Blue',
+                    value: 'Blue'
                 }
             ]
         }
