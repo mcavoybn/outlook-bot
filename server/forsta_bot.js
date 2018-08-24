@@ -57,9 +57,6 @@ class ForstaBot {
         let msg = this.parseEv(ev);
         if(!msg) console.error("Received unsupported message!");
 
-        console.log('threadStatus on message recieve');
-        console.log(this.threadStatus[msg.threadId]);
-
         if(!this.threadStatus[msg.threadId]){ //initialize
             let businessHours = await relay.storage.get('live-chat-bot', 'business-hours');
             if(businessHours && this.outOfOffice(businessHours)){
@@ -76,8 +73,8 @@ class ForstaBot {
 
         const dist = await this.resolveTags(msg.distribution.expression);
         if(msg.data.action 
-            && this.threadStatus[msg.data.action] 
-            && this.threadStatus[msg.data.action].waitingForDistTakeover){
+        && this.threadStatus[msg.data.action] 
+        && this.threadStatus[msg.data.action].waitingForDistTakeover){
             this.handleDistTakeover(msg, dist);
             return;
         }else if(this.threadStatus[msg.threadId].waitingForResponse){

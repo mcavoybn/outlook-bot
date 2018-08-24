@@ -5,43 +5,96 @@ div [class*="pull left"] {
 }
 div [class*="pull right"] {
   float: right;
-   margin-right: 0.25em;
+  margin-right: 0.25em;
+}
+a{
+    color:#ddd;
+}
+a:hover{
+    color:#aaa;
+}
+.hover-gray:hover{
+    cursor: pointer;
+    color:#ddd;
+}
+.header{
+    color:white;
+    display:inline;
+    vertical-align:middle;
+    margin-left:7px;
 }
 </style>
 
 <template>
-    <div class="ui inverted menu" style="z-index: 1;">
-        <div class="ui container">
-            <router-link :to="{name: 'questions'}" class="header item">
-                <img class="logo" src="/static/images/forsta-logo-invert.svg"/>
-                &nbsp;&nbsp;Forsta Live Chat
-            </router-link>
-            <div 
-                class="header item float right" 
-                style="padding:0px;"
-                v-if="global.apiToken">
+    <sui-sidebar
+        v-if="global.apiToken"
+        style="background-color:#222"
+        animation="slide out"
+        direction="left"
+        visible=true
+        width="very wide">
 
-                <div class="ui simple dropdown item" style="margin-top:7px">
-                    <i class="large user icon"></i>
-                    <i class="dropdown icon"></i>
-                    <div class="menu left">
-                        <div class="item" @click="businessHours">
-                            <i class="clock icon tiny"></i> Business Hours 
-                        </div>
-                        <div class="item" @click="messageHistory">
-                            <i class="archive icon tiny"></i> Message History 
-                        </div>
-                        <div class="item" @click="settings">
-                            Settings
-                        </div>
-                        <div class="item" @click="logout">
-                            Sign Out
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+        <img 
+            class="logo" 
+            src="/static/images/forsta-logo-invert.svg" 
+            height="50px"
+            width="50px"
+            style="padding:8px"
+            @click="questions()">
+        <h3 class="header" @click="questions()">&nbsp;&nbsp;Forsta Live Chat</h3>
+        
+        <sui-list divided relaxed size="huge" style="padding:7px; margin-top:50px">
+            <sui-list-item @click="questions()">
+                <sui-list-icon 
+                    class="hover-gray"
+                    name="comments" 
+                    size="large" 
+                    vertical-align="middle" 
+                    style="color:white" />
+                <sui-list-content>
+                    <a>Questions</a>
+                </sui-list-content>
+            </sui-list-item>
+            <sui-list-item @click="businessHours()">
+                <sui-list-icon 
+                    class="hover-gray"
+                    name="clock" 
+                    size="large" 
+                    vertical-align="middle" 
+                    style="color:white" />
+                <sui-list-content>
+                    <a>Business Hours</a>
+                </sui-list-content>
+            </sui-list-item>
+            <sui-list-item @click="messageHistory()">
+                <sui-list-icon 
+                    class="hover-gray"
+                    name="cog" 
+                    size="large" 
+                    vertical-align="middle" 
+                    style="color:white" />
+                <sui-list-content>
+                    <a>Message History</a>
+                </sui-list-content>
+            </sui-list-item>
+            <sui-list-item @click="settings()">
+                <sui-list-icon 
+                    class="hover-gray"  
+                    name="archive" 
+                    size="large" 
+                    vertical-align="middle" 
+                    style="color:white" />
+                <sui-list-content>
+                    <a>Settings</a>
+                </sui-list-content>
+            </sui-list-item>
+            <sui-list-item @click="logout()">
+                <sui-list-content>
+                    <a>&nbsp;&nbsp;Sign Out</a>
+                </sui-list-content>
+            </sui-list-item>
+        </sui-list>
+    </sui-sidebar>
 </template>
 
 <script>
@@ -56,14 +109,14 @@ module.exports = {
         logout: function () {
             this.global.apiToken = null;
         },
+        questions: function () {
+            this.$router.push({ name: 'questions' });
+        },
         settings: function () {
             this.$router.push({ name: 'settings' });
         },
         businessHours: function () {
             this.$router.push({ name: 'businessHours' });
-        },
-        distributions: function () {
-            this.$router.push({ name: 'distributions' });
         },
         messageHistory: function () {
             this.$router.push({ name: 'messageHistory' });

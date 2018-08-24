@@ -24,223 +24,172 @@ div [class*="pull right"] {
 </style>
  
 <template lang="html">
-    <div class="ui container center aligned">
+    <div class="ui container left aligned" @keyup.alt.67="saveChanges()">
 
-        <div class="ui basic segment huge">
-            <h1 class="ui header">
-                <i class="comments icon"></i>
-                Live Chat Questions
-            </h1>
+          <sui-grid 
+            style="padding:5% 0% 0% 10%"
+            divided="vertically"
+            v-for="question in questions">
+            <sui-grid-row 
+                :columns="1">
+                <sui-grid-column>
+                    <h2 class="pull left" style="display:inline;vertical-align:middle">
+                        Question {{questions.indexOf(question)+1}}
+                    </h2>
+                    <sui-button
+                        class="pull right"
+                        icon="trash"
+                        @click="deleteQuestion(question)" />
+                    <sui-button
+                        class="pull right"
+                        icon="edit"
+                        @click="toggleEditAllResponses(question)" />
+                </sui-grid-column>
+            </sui-grid-row>
+            <sui-grid-row style="padding:0px">
+                <sui-grid-column>
+                    <sui-list relaxed>
+                        <sui-list-item >
+                            <sui-list-content>
+                                <span is="sui-list-header">
+                                    <sui-label
+                                        pointing="right"
+                                        color="teal"
+                                        style="vertical-align:middle">Prompt</sui-label>
+                                    <sui-input
+                                        style="width:90%"
+                                        class="flexbox"
+                                        v-model="question.prompt"
+                                        :value="question.prompt"
+                                        @input="checkForChanges()"/>
+                                </span>
+                            </sui-list-content>
+                        </sui-list-item>
+                        <sui-list-item>
+                            <sui-list-content>
+                                <span is="sui-list-header">
+                                    <sui-label
+                                        pointing="right"
+                                        color="teal"
+                                        style="vertical-align:middle">Type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</sui-label>
+                                    <sui-dropdown
+                                        selection
+                                        placeholder="Question Tsype"
+                                        :options="questionTypes"
+                                        @input="checkForChanges()"
+                                        v-model="question.type" />
+                                </span>
+                            </sui-list-content>
+                        </sui-list-item>
+                    </sui-list>
+                </sui-grid-column>
+            </sui-grid-row>
+            <sui-grid-row>
+                <sui-grid-column>
+                    <sui-grid v-for="response in question.responses">
+                        <sui-grid-row 
+                            :columns="1"
+                            v-if="question.type!='Free Response'">
+                            <sui-grid-column>
+                                <sui-button 
+                                    icon="edit"
+                                    style="vertical-align:middle"
+                                    @click="toggleResponseEdit(response)" />
+                                <sui-button 
+                                    v-if="response.editing"
+                                    color="red"
+                                    icon="trash alternate outline"
+                                    style="vertical-align:middle"
+                                    @click="deleteResponse(question, response)" />
+                                <sui-input
+                                    style="width:85%"
+                                    class="flexbox"
+                                    v-model="response.text"
+                                    :value="response.text"
+                                    @input="checkForChanges()"/>
+                                <sui-dropdown
+                                    button
+                                    :class="response.color">
+                                    <sui-dropdown-menu selection>
+                                        <sui-dropdown-item
+                                            v-for="color in colorsForDropdown"
+                                            @click="setResponseColor(response, color.text)"
+                                            :value="color.text">
+                                            <sui-icon 
+                                                name="stop"
+                                                :color="color.text" />
+                                        </sui-dropdown-item>
+                                    </sui-dropdown-menu>
+                                </sui-dropdown>
+                                <sui-list divided relaxed v-if="response.editing">
+                                    <sui-list-item>
+                                        <sui-list-content style="color:#777">
+                                            <span is="sui-list-header">
+                                                <sui-dropdown      
+                                                    selection
+                                                    :options="questionActions"
+                                                    v-model="response.action"
+                                                    @input="checkForChanges()"/>
+                                                <sui-icon
+                                                    name="arrow right"
+                                                    size="large" />
+                                                <span v-if="response.action==='Forward to Question'">
+                                                    <sui-dropdown   
+                                                        selection
+                                                        placeholder="Question"
+                                                        :options="questionsForDropdown"
+                                                        v-model="response.actionOption"
+                                                        @input="checkForChanges()"/>
+                                                </span>
+                                                <span v-if="response.action==='Forward to Tag'">
+                                                    <sui-dropdown      
+                                                        selection
+                                                        placeholder="Tag"
+                                                        :options="tagsForDropdown"
+                                                        v-model="response.tagId"
+                                                        @input="updateTagData(response)"/>
+                                                </span>
+                                            </span>
+                                        </sui-list-content>
+                                    </sui-list-item>
+                                </sui-list>
+                            </sui-grid-column>
+                        </sui-grid-row>
+                    </sui-grid>
+                <sui-button
+                    style="margin-top:25px"
+                    color="green"
+                    icon="plus"
+                    @click="newResponse(question)"
+                    v-if="question.type==='Multiple Choice'"/>
+                </sui-grid-column>
+            </sui-grid-row>
+            
+            <sui-grid-row
+                class="left aligned"
+                v-if="question.type==='Free Response'">
+                <sui-grid-column>
+                    <p>
+                        The user's response will be saved and the user will be prompted with the next question.
+                    </p>
+                </sui-grid-column>
+            </sui-grid-row>
+        </sui-grid>
+
+        <div style="margin-bottom:100px; margin-left:10%">
+            <sui-divider />
+            <sui-button
+                class="ui large green button pull left"
+                content="New Question"
+                @click="newQuestion()" />
+
+            <sui-button
+                class="ui large blue button pull right"
+                content="Save Changes" 
+                @click="saveData()"
+                v-if="changesMade" />
         </div>
-
-        <!--  QUESTION EDIT TABLE -->
-        <sui-table
-            class="ui left aligned table"
-            v-for="question in questions"
-            :color="question.color"
-            :id="questions.indexOf(question)"
-            @mouseenter="question.hovering=true"
-            @mouseleave="question.hovering=false">
-            <sui-table-header>
-                <sui-table-row>
-                    <sui-table-headerCell
-                        style="padding:23px"
-                        colspan="2">
-                        <h4 style="display:inline">
-                            Question {{questions.indexOf(question)+1}}
-                        </h4>
-                    </sui-table-headerCell>
-                    <sui-table-headerCell colspan="3" class="right aligned">
-                        <sui-button 
-                            color="red" 
-                            content="Edit"
-                            v-if="question.hovering && !question.editing"
-                            @click="edit(question)" />
-                        <sui-button 
-                            color="red"
-                            icon="trash"
-                            v-if="question.editing"
-                            @click="deleteQuestion(question)" />
-                        <sui-button 
-                            color="grey"
-                            content="Done"
-                            v-if="question.editing"
-                            @click="edit(question)" />
-                    </sui-table-headerCell>
-                </sui-table-row>
-            </sui-table-header>
- 
-            <sui-table-body>
-                <sui-table-row>
-                    <!-- question prompt -->
-                    <sui-table-cell colspan="4">
-                        <sui-icon
-                            class="item link"
-                            name="comment outline"
-                            size="medium" />
-                        <h4
-                            class="normal"
-                            style="display:inline"
-                            v-text="question.prompt"
-                            v-if="!question.editing" />
-                        <sui-input
-                            style="width:95%"
-                            class="flexbox"
-                            v-model="question.prompt"
-                            :value="question.prompt"
-                            @input="checkForChanges()"
-                            v-else />
-                    </sui-table-cell>
-                    <!-- /question prompt -->
-                </sui-table-row>
- 
-                <sui-table-row
-                    v-for="response in question.responses"
-                    v-if="question.type!='Free Response'">
- 
-                    <!-- responses edit -->
-                    <sui-table-cell colspan="2" collapsing>
-                        <sui-icon
-                            class="item link"
-                            name="trash alternate outline"
-                            size="medium"
-                            vertical-align="middle"
-                            v-if="question.editing"
-                            @click="deleteResponse(question, response)" />
-                        <sui-dropdown 
-                            button
-                            icon="square"
-                            :class="lowercaseFirst(response.color)"
-                            v-if="question.editing">
-                            <sui-dropdown-menu selection>
-                                <sui-dropdown-item
-                                    v-for="color in colorsForDropdown"
-                                    @click="setResponseColor(response, color.text)"
-                                    :value="color.text">
-                                    <sui-icon 
-                                        name="stop"
-                                        :color="lowercaseFirst(color.text)" />
-                                </sui-dropdown-item>
-                            </sui-dropdown-menu>
-                        </sui-dropdown>
-                        <sui-icon
-                            name="stop"
-                            :color="lowercaseFirst(response.color)"
-                            style="display:inline"
-                            v-else />
-                        <p
-                            style="display:inline"
-                            v-text="response.text"
-                            v-if="!question.editing" />
-                        <sui-input
-                            style="width:75%"
-                            class="flexbox"
-                            v-model="response.text"
-                            :value="response.text"
-                            @input="checkForChanges()"
-                            v-else />
-                    </sui-table-cell>
-                    <!-- /responses edit -->
- 
-                    <!-- response action edit -->
-                    <sui-table-cell collapsing>
-                        <sui-icon
-                            class="item link"
-                            name="arrow right"
-                            size="medium"
-                            vertical-align="middle" />
-                        <sui-dropdown      
-                            selection
-                            placeholder="Response Action"
-                            :options="questionActions"
-                            v-model="response.action"
-                            @input="checkForChanges()"
-                            v-if="question.editing" />
-                        <p
-                            style="display:inline"
-                            v-text="response.action"
-                            v-else />
-                    </sui-table-cell>
-                    <sui-table-cell>
-                        <div v-if="response.action=='Forward to Question'">
-                            <sui-dropdown   
-                                selection
-                                placeholder="Question"
-                                :options="questionsForDropdown"
-                                v-model="response.actionOption"
-                                @input="checkForChanges()"
-                                v-if="question.editing" />
-                            <p
-                                style="display:inline"
-                                v-text="response.actionOption"
-                                v-else />
-                            <sui-icon
-                                name="circle"
-                                size="small"
-                                style="margin-left:5px"
-                                :color="colorFromResponse(response)"
-                                vertical-align="middle" />
-                        </div>
-                        <div v-if="response.action=='Forward to Tag'">
-                            <sui-dropdown      
-                                selection
-                                placeholder="Tag"
-                                :options="tagsForDropdown"
-                                v-model="response.tagId"
-                                @input="updateTagData(response)"
-                                v-if="question.editing" />
-                            <p
-                                style="display:inline"
-                                v-text="response.actionOption"
-                                v-else />
-                        </div>
-                    </sui-table-cell>
-                    <!-- /response action edit -->
- 
-                </sui-table-row>
-                <sui-table-row
-                    class="left aligned"
-                    v-if="question.type=='Free Response'">
-                    <sui-table-cell>
-                        <p>
-                            The user's response will be saved and the user will be prompted with the next question.
-                        </p>
-                    </sui-table-cell>  
-                </sui-table-row>
-            </sui-table-body>
- 
-            <sui-table-footer v-if="question.editing">
-                <sui-table-row>
-                    <sui-table-header-cell colspan="5">
-                        <sui-button
-                            class="ui green button"
-                            content="New Response"
-                            @click="newResponse(question)"
-                            v-if="question.type=='Multiple Choice'"/>
-                        <sui-dropdown
-                            class="pull right"
-                            selection
-                            placeholder="Question Type"
-                            :options="questionTypes"
-                            @input="checkForChanges()"
-                            v-model="question.type" />
-                    </sui-table-header-cell>
-                </sui-table-row>
-            </sui-table-footer>
-        </sui-table>
-        <!--  /QUESTION EDIT TABLE -->
-
-        <sui-button
-            class="ui large green button pull left"
-            content="New Question"
-            style="margin-bottom:50px"
-            @click="newQuestion()" />
-        <sui-button
-            class="ui large blue button pull right"
-            content="Save Changes" 
-            style="margin-bottom:50px"
-            @click="saveData()"
-            v-if="changesMade" />
+        
 
         <div>
             <sui-modal v-model="showingSaveChangesModal">
@@ -280,15 +229,6 @@ module.exports = {
         this.loadData();
     },
     methods: {
-        colorFromResponse(response){
-            if(!response.actionOption
-            || response.action != 'Forward to Question' 
-            || response.actionOption.split(' ')[0].trim() != 'Question'){
-                return 'black';
-            } 
-            let questionIndex = Number(response.actionOption.trim().split(' ')[1]) - 1;
-            return this.questions[questionIndex].color;
-        },
         checkForChanges(){
             if(this.changesMade) return;
             if(JSON.stringify(this.questions) != this.questionsOriginal){
@@ -303,18 +243,6 @@ module.exports = {
             this.questions.splice(this.questions.indexOf(question), 1);
             this.questionsForDropdown.splice(this.questions.indexOf(question), 1);
             this.changesMade = true;
-        },
-        edit: function (el) {
-            el.editing = !el.editing;
-        },
-        getRandomColor: function () {
-            let colors = ['red', 'orange', 'yellow', 'olive', 'green', 'teal',
-                'blue', 'violet', 'purple', 'pink'];
-            let idx = Math.floor(Math.random()*13);
-            return colors[idx];
-        },
-        lowercaseFirst: function (str) {
-            return str.charAt(0).toLowerCase() + str.slice(1, str.length);
         },
         loadData: function(){
             util.fetch.call(this, '/api/questions/', {method: 'get'})
@@ -345,23 +273,22 @@ module.exports = {
             this.questions.push({
                 prompt: "Question Prompt",
                 type: "Multiple Choice",
-                editing: true,
-                hovering: false,
-                color: this.getRandomColor(),
                 responses: [
                     {
                         text: "Yes",
                         action: 'Forward to Question',
                         actionOption: "Question 1",
                         tagId: null,
-                        color: 'blue'
+                        color: 'blue',
+                        editing: false
                     },
                     {
                         text: "No",
                         action: 'Forward to Question',
                         actionOption: "Question 1",
                         tagId: null,
-                        color: 'blue'
+                        color: 'blue',
+                        editing: false
                     }
                 ]
             });
@@ -374,10 +301,11 @@ module.exports = {
         newResponse: function (question){
             question.responses.push({
                 text: "New Response",
-                action: null,
-                actionOption: null,
+                action: "Forward to Question",
+                actionOption: `Question ${this.questions.indexOf(question)+1}`,
                 distId: null,
-                color: 'blue'
+                color: 'blue',
+                editing: false
             });
             this.changesMade = true;
         },
@@ -387,7 +315,7 @@ module.exports = {
         },
         saveData: function() {
             this.questions.forEach(question => {
-                question.editing = false;
+                question.responses.forEach(response => response.editing = false);
             });
             util.fetch('/api/questions/', {
                 method:'post',
@@ -400,8 +328,14 @@ module.exports = {
             this.checkForChanges();
             response.color = color;
         },
+        toggleEditAllResponses: function(question) {
+            question.responses.forEach(response => response.editing = !response.editing);
+        },
+        toggleResponseEdit: function(response){
+            response.editing = !response.editing;
+        },
         updateTagData: function(response) {
-            response.actionOption = this.tags.find(t => t.id == response.tagId).slug;
+            response.actionOption = this.tags.find(t => t.id === response.tagId).slug;
             this.checkForChanges();
         }
     },
@@ -447,24 +381,20 @@ module.exports = {
             ],
             colorsForDropdown: [
                 {
-                    text: 'Red',
-                    value: 'Red'
+                    text: 'blue',
+                    value: 'blue'
                 },
                 {
-                    text: 'Orange',
-                    value: 'Orange'
+                    text: 'green',
+                    value: 'green'
                 },
                 {
-                    text: 'Yellow',
-                    value: 'Yellow'
+                    text: 'red',
+                    value: 'red'
                 },
                 {
-                    text: 'Green',
-                    value: 'Green'
-                },
-                {
-                    text: 'Blue',
-                    value: 'Blue'
+                    text: 'yellow',
+                    value: 'yellow'
                 }
             ]
         }

@@ -56,7 +56,7 @@ module.exports = function(grunt) {
         options: {
           transform: [['envify', {"global": true}], 'vueify'],
         }
-      }
+      } 
     },
 
     uglify: {

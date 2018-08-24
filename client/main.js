@@ -17,7 +17,7 @@ function main() {
         { path: '/questions', name: 'questions', component: require('./questions/questions.vue') },
         { path: '/businessHours', name: 'businessHours', component: require('./businessHours/businessHours.vue') },
         { path: '/messageHistory', name: 'messageHistory', component: require('./messageHistory/messageHistory.vue') },
-        { path: '*', redirect: '/welcome' }
+        { path: '*', redirect: 'welcome' }
     ];
 
     const router = new VueRouter({
