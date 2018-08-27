@@ -24,12 +24,13 @@ div [class*="pull right"] {
 </style>
  
 <template lang="html">
-    <div class="ui container left aligned" @keyup.alt.67="saveChanges()">
+    <div class="ui container left aligned">
 
           <sui-grid 
-            style="padding:5% 0% 0% 10%"
+            style="padding-top:5%;"
             divided="vertically"
             v-for="question in questions">
+
             <sui-grid-row 
                 :columns="1">
                 <sui-grid-column>
@@ -46,6 +47,7 @@ div [class*="pull right"] {
                         @click="toggleEditAllResponses(question)" />
                 </sui-grid-column>
             </sui-grid-row>
+
             <sui-grid-row style="padding:0px">
                 <sui-grid-column>
                     <sui-list relaxed>
@@ -176,7 +178,7 @@ div [class*="pull right"] {
             </sui-grid-row>
         </sui-grid>
 
-        <div style="margin-bottom:100px; margin-left:10%">
+        <div style="margin-bottom:100px">
             <sui-divider />
             <sui-button
                 class="ui large green button pull left"

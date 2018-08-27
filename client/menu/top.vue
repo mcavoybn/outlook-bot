@@ -21,80 +21,73 @@ a:hover{
     color:white;
     display:inline;
     vertical-align:middle;
-    margin-left:7px;
+    margin-left:12px;
+    cursor:pointer;
 }
+
 </style>
 
 <template>
-    <sui-sidebar
-        v-if="global.apiToken"
-        style="background-color:#222"
-        animation="slide out"
-        direction="left"
-        visible=true
-        width="very wide">
+    <div>
+     <div class="ui inverted menu" style="z-index: 1;">
+        <div class="ui container">
+            <router-link :to="{name: 'questions'}" class="header item">
+                <img class="logo" src="/static/images/forsta-logo-invert.svg"/>
+                &nbsp;&nbsp;Forsta Live Chat
+            </router-link>
+            <div 
+                class="header item float right" 
+                style="padding:0px;"
+                v-if="global.apiToken">
 
-        <img 
-            class="logo" 
-            src="/static/images/forsta-logo-invert.svg" 
-            height="50px"
-            width="50px"
-            style="padding:8px"
-            @click="questions()">
-        <h3 class="header" @click="questions()">&nbsp;&nbsp;Forsta Live Chat</h3>
-        
-        <sui-list divided relaxed size="huge" style="padding:7px; margin-top:50px">
-            <sui-list-item @click="questions()">
-                <sui-list-icon 
-                    class="hover-gray"
-                    name="comments" 
-                    size="large" 
-                    vertical-align="middle" 
-                    style="color:white" />
-                <sui-list-content>
-                    <a>Questions</a>
-                </sui-list-content>
-            </sui-list-item>
-            <sui-list-item @click="businessHours()">
-                <sui-list-icon 
-                    class="hover-gray"
-                    name="clock" 
-                    size="large" 
-                    vertical-align="middle" 
-                    style="color:white" />
-                <sui-list-content>
-                    <a>Business Hours</a>
-                </sui-list-content>
-            </sui-list-item>
-            <sui-list-item @click="messageHistory()">
-                <sui-list-icon 
-                    class="hover-gray"
-                    name="cog" 
-                    size="large" 
-                    vertical-align="middle" 
-                    style="color:white" />
-                <sui-list-content>
-                    <a>Message History</a>
-                </sui-list-content>
-            </sui-list-item>
-            <sui-list-item @click="settings()">
-                <sui-list-icon 
-                    class="hover-gray"  
-                    name="archive" 
-                    size="large" 
-                    vertical-align="middle" 
-                    style="color:white" />
-                <sui-list-content>
-                    <a>Settings</a>
-                </sui-list-content>
-            </sui-list-item>
-            <sui-list-item @click="logout()">
-                <sui-list-content>
-                    <a>&nbsp;&nbsp;Sign Out</a>
-                </sui-list-content>
-            </sui-list-item>
-        </sui-list>
-    </sui-sidebar>
+                <div class="ui simple dropdown item" style="margin-top:7px">
+                    <i class="large user icon"></i>
+                    <i class="dropdown icon"></i>
+                    <div class="menu left">
+                        <div class="item" @click="questions">
+                            <i class="comment alternate outline icon tiny"></i> Questions 
+                        </div>
+                        <div class="item" @click="businessHours">
+                            <i class="clock icon tiny"></i> Business Hours 
+                        </div>
+                        <div class="item" @click="messageHistory">
+                            <i class="archive icon tiny"></i> Message History 
+                        </div>
+                        <div class="item" @click="settings">
+                            Settings
+                        </div>
+                        <div class="item" @click="showingSignOutModal = true">
+                            Sign Out
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+        <div>
+            <sui-modal v-model="showingSignOutModal">
+                <sui-modal-header>Sign Out</sui-modal-header>
+                <sui-modal-content>
+                    <sui-modal-description>
+                        <sui-header>Are you sure you want to sign out?</sui-header>
+                        <p>Any unsaved changes may be lost.</p>
+                    </sui-modal-description>
+                </sui-modal-content>
+                <sui-modal-actions style="padding:10px">
+                    <sui-button 
+                        class="yellow" 
+                        floated="left"
+                        @click="showingSignOutModal = false"
+                        content="Cancel" />
+                    <sui-button 
+                        floated="right" 
+                        class="green" 
+                        @click="logout()"
+                        content="Sign Out" />
+                </sui-modal-actions>
+            </sui-modal>
+        </div>
+    </div>
 </template>
 
 <script>
@@ -103,7 +96,8 @@ shared = require('../globalState');
 module.exports = {
     data: () => ({ 
         global: shared.state,
-        loggedIn: false
+        loggedIn: false,
+        showingSignOutModal: false
     }),
     methods: {
         logout: function () {

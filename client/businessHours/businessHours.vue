@@ -10,72 +10,61 @@ div [class*="pull right"] {
 </style>
 
 <template lang="html">
-    <div class="ui container center aligned">
+    <div class="ui container left aligned">
 
-        <div class="ui basic segment huge">
-            <h1 class="ui header">
-                <i class="clock icon"></i>
-                Live Chat Business Hours
-            </h1>
+        <div class="ui basic segment" style="padding-top:5%">
+            <h2 class="ui header">
+                Business Hours
+            </h2>
         </div>
 
-        <sui-table
-            class="ui left aligned table"
-            color="grey">
-            <sui-table-header>
-                <sui-table-row>
-                    <sui-table-headerCell>
-                        <span>Business Hours</span>
-                    </sui-table-headerCell>
-                </sui-table-row>
-            </sui-table-header>
+        <sui-divider style="margin-top:5px"/>
 
-
-            <sui-table-body>
-                <sui-table-row> 
-                    <sui-table-cell>
-                        <div class="ui labeled input">
-                            <div style="background-color:#555;color:#fff;" class="ui label">Open:</div>
-                            <input format="HH:MM:AM"
-                                v-model="businessHoursData.open"
-                                type="time"
-                                @input="checkForChanges()"/>
-                        </div>
-                        <div class="ui labeled input">
-                            <div style="background-color:#555;color:#fff;" class="ui label">Close:</div>
-                            <input format="HH:MM:AM"
-                                v-model="businessHoursData.close"
-                                type="time"
-                                @input="checkForChanges()"/>
-                        </div>
-                    </sui-table-cell>
-                </sui-table-row>
-                <sui-table-row>
-                    <sui-table-cell>
-                        <div class="ui form field">
-                            <label>Out of Office Message</label>
-                            <textarea 
-                            rows="2"
-                            v-model="businessHoursData.message"
-                            @input="checkForChanges()"></textarea>
-                        </div>
-                    </sui-table-cell>
-                </sui-table-row>
-            </sui-table-body>
-
-            <sui-table-footer v-if="changesMade">
-                <sui-table-row>
-                    <sui-table-headerCell>
-                        <sui-button 
-                            class="ui button pull right" 
-                            primary
-                            @click="saveData()">
-                            Save Changes
-                        </sui-button>
-                    </sui-table-headerCell>
-                </sui-table-row>
-            </sui-table-footer>
-        </sui-table>
+        <sui-grid divided="vertically">
+            <sui-grid-row>
+                <sui-grid-column :width="16">
+                    <sui-label 
+                        color="teal"
+                        pointing="right">Open:</sui-label>
+                    <sui-input 
+                        format="HH:MM:AM"
+                        v-model="businessHoursData.open"
+                        type="time"
+                        @input="checkForChanges()"/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <sui-label
+                        color="teal"
+                        pointing="right">Close:</sui-label>
+                    <sui-input 
+                        format="HH:MM:AM"
+                        v-model="businessHoursData.close"
+                        type="time"
+                        @input="checkForChanges()"/>
+                </sui-grid-column>                
+            </sui-grid-row>
+            <sui-grid-row>
+                <sui-grid-column>
+                    <div class="ui form field">
+                        <label>Out of Office Message</label>
+                        <textarea 
+                        rows="2"
+                        v-model="businessHoursData.message"
+                        @input="checkForChanges()"></textarea>
+                    </div>
+                </sui-grid-column>
+            </sui-grid-row>
+            <sui-grid-row>
+                <sui-grid-column>
+                    <sui-button 
+                        class="ui button pull right" 
+                        primary
+                        v-if="changesMade"
+                        @click="saveData()">
+                        Save Changes
+                    </sui-button>
+                </sui-grid-column>
+            </sui-grid-row>
+        </sui-grid>
 
         <div>
             <sui-modal v-model="showingSaveChangesModal">
@@ -127,6 +116,10 @@ module.exports = {
                 this.businessHoursData = res.theJson;
                 this.businessHoursDataOriginal = JSON.stringify(res.theJson);
             });
+        },
+        saveAndContinue: function() {
+            this.saveData();
+            this.nextRoute();
         },
         saveData: function() {
             util.fetch('/api/business-hours/', 

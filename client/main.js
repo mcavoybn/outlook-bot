@@ -3,8 +3,15 @@ function main() {
     const Vue = require('vue');
     const VueRouter = require('vue-router');
     const SuiVue = require('semantic-ui-vue');
+    const VueMq = require('vue-mq');
     Vue.use(VueRouter);
     Vue.use(SuiVue.default);
+    Vue.use(VueMq, {
+        breakpoints: {
+          smallScreen: 1390,
+          bigScreen: Infinity
+        }
+    });
 
     const Root = require('./root.vue');
     const routes = [
