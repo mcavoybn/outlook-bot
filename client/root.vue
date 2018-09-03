@@ -1,15 +1,15 @@
 <template>
     <div>
-        <top-menu v-if="$mq=='smallScreen'" />
+        <top-menu v-if="$mq=='smallScreen'&&global.apiToken" />
         <sui-grid v-if="global.apiToken" >
             <sui-grid-row :columns="2">
-                <sui-grid-column :width="3" v-if="$mq=='bigScreen'" >
+                <sui-grid-column :width="2" v-if="$mq=='bigScreen'" >
                     <side-menu  />
                 </sui-grid-column>
                 <sui-grid-column 
                     :width="$mq | mq({
                         smallScreen: 16,
-                        bigScreen: 13})">
+                        bigScreen: 14})">
                     <router-view />
                 </sui-grid-column>
             </sui-grid-row>

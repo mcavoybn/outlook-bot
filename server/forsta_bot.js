@@ -57,7 +57,7 @@ class ForstaBot {
         let msg = this.parseEv(ev);
         if(!msg) console.error("Received unsupported message!");
 
-        if(!this.threadStatus[msg.threadId]){ //initialize
+        if(!this.threadStatus[msg.threadId] && !msg.data.action){ //initialize
             let businessHours = await relay.storage.get('live-chat-bot', 'business-hours');
             if(businessHours && this.outOfOffice(businessHours)){
                 this.sendMessage(dist, msg.threadId, businessHours.message);
@@ -67,8 +67,20 @@ class ForstaBot {
                 questions,
                 currentQuestion: questions[0],
                 waitingForDistTakeover: null,
-                waitingForResponse: null
+                waitingForResponse: null,
+                listening: false
             };
+            await this.addThreadToMessageHistory(msg);
+        }
+
+        if(this.threadStatus[msg.threadId] && this.threadStatus[msg.threadId].listening){
+            this.saveToMessageHistory({
+                senderId: msg.sender.userId,
+                text: msg.data.body[0].value,
+                action: null,
+                threadId: msg.threadId
+            });
+            return;
         }
 
         const dist = await this.resolveTags(msg.distribution.expression);
@@ -77,7 +89,8 @@ class ForstaBot {
         && this.threadStatus[msg.data.action].waitingForDistTakeover){
             this.handleDistTakeover(msg, dist);
             return;
-        }else if(this.threadStatus[msg.threadId].waitingForResponse){
+        }
+        else if(this.threadStatus[msg.threadId].waitingForResponse){
             let validResponse = await this.handleResponse(msg, dist);
             if(!validResponse) return;
         }
@@ -112,7 +125,8 @@ class ForstaBot {
         let threadId = msg.data.action;
         let chatUserTagId = this.threadStatus[threadId].waitingForDistTakeover.userTagId;
         let distMemberUser = await this.atlas.fetch(`/v1/user/${msg.sender.userId}/`);
-        let newDist = await this.resolveTags(`(<${chatUserTagId}>+<${distMemberUser.tag.id}>)`);
+        let chatBotUser = await this.atlas.fetch(`/v1/user/${this.ourId}/`);
+        let newDist = await this.resolveTags(`(<${chatUserTagId}>+<${distMemberUser.tag.id}>+<${chatBotUser.tag.id}>)`);
         this.sendMessage(
             newDist, 
             msg.data.action, 
@@ -126,7 +140,7 @@ class ForstaBot {
             this.threadStatus[threadId].waitingForDistTakeover.msgId, 
             `Taken by ${this.fqName(distMemberUser)}`
         );
-        this.threadStatus[threadId] = null;
+        this.threadStatus[threadId].listening = true;
     }
 
     async handleResponse(msg, dist){
@@ -138,7 +152,12 @@ class ForstaBot {
         }
 
         const users = await this.getUsers(dist.userids);
-        this.saveToMessageHistory(response, msg);
+        this.saveToMessageHistory({
+            text: response.text,
+            action: response.action,
+            senderId: msg.sender.userId,
+            threadId: msg.threadId
+        });
         this.threadStatus[msg.threadId].waitingForResponse = false;
         if(response.action == "Forward to Tag")
         {
@@ -200,34 +219,43 @@ class ForstaBot {
         }
     }
 
-    async saveToMessageHistory(response, msg) {
+    async saveToMessageHistory(msg) {
         const dateNow = moment().format('MM/DD/YYYY');
         const timeNow = moment().format('hh:mm:ss');
-        let userSlug = (await this.atlas.fetch(`/v1/user/${msg.sender.userId}/`)).tag.slug;
+        let userData = await this.atlas.fetch(`/v1/user/${msg.senderId}/`);
         let messageData = {
             user: {
-                id: msg.sender.userId,
-                slug: userSlug
+                id: msg.senderId,
+                slug: userData.tag.slug,
+                email: userData.email
             },
-            prompt: this.threadStatus[msg.threadId].currentQuestion.prompt,
-            response: response.text,
-            action: response.action,
+            message: msg.text,
+            action: msg.action,
             date: dateNow,
             time: timeNow
         };
         let messageHistory = (await relay.storage.get('live-chat-bot', 'message-history')) || {};
+        messageHistory[msg.threadId].messages.push(messageData);
+        relay.storage.set('live-chat-bot', 'message-history', messageHistory);
+    }
+
+    async addThreadToMessageHistory(msg){
+        const dateNow = moment().format('MM/DD/YYYY');
+        const timeNow = moment().format('hh:mm:ss');
+        let userData = await this.atlas.fetch(`/v1/user/${msg.sender.userId}/`);
+        let messageHistory = (await relay.storage.get('live-chat-bot', 'message-history')) || {};
         if(!messageHistory[msg.threadId]){
             messageHistory[msg.threadId] = {
-                date: dateNow,
-                time: timeNow,
+                threadDate: dateNow,
+                threadTime: timeNow,
                 user: {
                     id: msg.sender.userId,
-                    slug: userSlug
+                    slug: userData.tag.slug,
+                    email: userData.email
                 },
                 messages: []
             };
         }
-        messageHistory[msg.threadId].messages.push(messageData);
         relay.storage.set('live-chat-bot', 'message-history', messageHistory);
     }
 
@@ -267,22 +295,17 @@ class ForstaBot {
     }
 
     async sendMessage(dist, threadId, text){
+        this.saveToMessageHistory({
+            senderId: this.ourId,
+            text,
+            action: null,
+            threadId
+        });
         return this.msgSender.send({
             distribution: dist,
             threadId: threadId,
             html: `${ text }`,
             text: text
-        });
-    }
-
-    sendArchiveThreadMessage(dist, threadId){
-        this.msgSender.send({
-            messageType: 'control',
-            distribution: dist,
-            threadId: threadId,
-            data: {
-                control: 'threadArchive'
-            }
         });
     }
 
@@ -297,6 +320,14 @@ class ForstaBot {
     }
 
     sendActionMessage(dist, threadId, text, actions, threadTitle){
+        if(threadId != this.outgoingThreadId){
+            this.saveToMessageHistory({
+                senderId: this.ourId,
+                text,
+                action: null,
+                threadId
+            });
+        }
         let title = threadTitle || '';
         return this.msgSender.send({
             distribution: dist,

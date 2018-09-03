@@ -8,8 +8,8 @@ function main() {
     Vue.use(SuiVue.default);
     Vue.use(VueMq, {
         breakpoints: {
-          smallScreen: 1390,
-          bigScreen: Infinity
+            smallScreen: 1350,
+            bigScreen: Infinity
         }
     });
 
