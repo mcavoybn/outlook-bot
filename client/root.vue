@@ -1,7 +1,7 @@
 <template>
     <div>
-        <top-menu v-if="$mq=='smallScreen'&&global.apiToken" />
-        <sui-grid v-if="global.apiToken" >
+        <top-menu v-if="$mq=='smallScreen' && global.apiToken && global.onboardStatus" />
+        <sui-grid v-if="global.apiToken && global.onboardStatus" >
             <sui-grid-row :columns="2">
                 <sui-grid-column :width="2" v-if="$mq=='bigScreen'" >
                     <side-menu  />

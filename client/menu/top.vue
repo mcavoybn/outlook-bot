@@ -102,6 +102,7 @@ module.exports = {
     methods: {
         logout: function () {
             this.global.apiToken = null;
+            this.$router.push({ name: 'loginTag' })
         },
         questions: function () {
             this.$router.push({ name: 'questions' });

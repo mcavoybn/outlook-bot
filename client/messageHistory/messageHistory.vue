@@ -13,12 +13,12 @@
             </h2>
         </div>
 
-        <sui-dropdown text="Sort By">
+        <sui-dropdown color="blue" text="Sort By">
             <sui-dropdown-menu>
             <sui-dropdown-item @click="sortByUser(messageHistory, false)">User (A-Z)</sui-dropdown-item>
             <sui-dropdown-item @click="sortByUser(messageHistory, true)">User (Z-A)</sui-dropdown-item>
-            <sui-dropdown-item @click="sortByDate(messageHistory, false)">Date (Most Recent)</sui-dropdown-item>
-            <sui-dropdown-item @click="sortByDate(messageHistory, true)">Date (Oldest)</sui-dropdown-item>
+            <sui-dropdown-item @click="sortByDate(messageHistory, false)">Date (Oldest First)</sui-dropdown-item>
+            <sui-dropdown-item @click="sortByDate(messageHistory, true)">Date (Newest First)</sui-dropdown-item>
             </sui-dropdown-menu>
         </sui-dropdown>
 
@@ -96,8 +96,12 @@
         </sui-table>
         <!--  /QUESTION EDIT TABLE -->
 
-        <sui-button @click="saveAllThreadsToCSV()">Save All Threads</sui-button>
-        <sui-button @click="saveCurrentThreadToCSV()">Save Current Thread</sui-button>
+        <sui-button 
+            color="blue"
+            @click="saveAllThreadsToCSV()">Save All Threads</sui-button>
+        <sui-button 
+            color="blue"
+            @click="saveCurrentThreadToCSV()">Save Current Thread</sui-button>
     </div>
 </template>
 
@@ -108,7 +112,7 @@ const csvStringify = require('csv-stringify');
 const moment = require('moment');
 module.exports = {
     mounted: function() {
-        //this.loadData();
+        this.loadData();
     },
     methods: {
         loadData: function() {
@@ -189,129 +193,7 @@ module.exports = {
         }
     },
     data: () => ({ 
-        messageHistory: {
-            'thread1': {
-                threadDate: '12/12/2014',
-                threadTime: '05:34:20',
-                user: {
-                    slug: 'ben.mcavoy',
-                    email: 'mcavoybn@gmail.com',
-                    id: 'asdfasdf'
-                },
-                messages: []
-            },
-            '12351235': {
-                threadDate: '12/12/2015',
-                threadTime: '05:34:20',
-                user: {
-                    slug: 'ben.mcavoy',
-                    email: 'mcavoybn@gmail.com',
-                    id: 'asdfasdf'
-                },
-                messages: []
-            },
-            '4343': {
-                threadDate: '12/13/2015',
-                threadTime: '05:34:20',
-                user: {
-                    slug: 'ben.mcavoy',
-                    email: 'mcavoybn@gmail.com',
-                    id: 'asdfasdf'
-                },
-                messages: []
-            },
-            'gdasdgasdgasdgasdgasdgarerer498549': {
-                threadDate: '11/11/2015',
-                threadTime: '05:34:20',
-                user: {
-                    slug: 'ben.mcavoy',
-                    email: 'mcavoybn@gmail.com',
-                    id: 'asdfasdf'
-                },
-                messages: []
-            },
-            '5634563': {
-                threadDate: '12/12/2014',
-                threadTime: '05:34:20',
-                user: {
-                    slug: 'john.mcavoy',
-                    email: 'mcavoybn@gmail.com',
-                    id: 'asdfasdf'
-                },
-                messages: []
-            },
-            'dfddasdfasdf': {
-                threadDate: '12/12/2015',
-                threadTime: '05:34:20',
-                user: {
-                    slug: 'john.mcavoy',
-                    email: 'mcavoybn@gmail.com',
-                    id: 'asdfasdf'
-                },
-                messages: []
-            },
-            '3333': {
-                threadDate: '12/13/2015',
-                threadTime: '05:34:20',
-                user: {
-                    slug: 'april.mcavoy',
-                    email: 'mcavoybn@gmail.com',
-                    id: 'asdfasdf'
-                },
-                messages: []
-            },
-            '5634563456': {
-                threadDate: '11/11/2015',
-                threadTime: '05:34:20',
-                user: {
-                    slug: 'april.mcavoy',
-                    email: 'mcavoybn@gmail.com',
-                    id: 'asdfasdf'
-                },
-                messages: []
-            },
-            '7117171': {
-                threadDate: '12/13/2015',
-                threadTime: '05:34:20',
-                user: {
-                    slug: 'april.mcavoy',
-                    email: 'mcavoybn@gmail.com',
-                    id: 'asdfasdf'
-                },
-                messages: []
-            },
-            'asdf3333': {
-                threadDate: '11/11/2015',
-                threadTime: '05:34:20',
-                user: {
-                    slug: 'april.mcavoy',
-                    email: 'mcavoybn@gmail.com',
-                    id: 'asdfasdf'
-                },
-                messages: []
-            },
-            '4523462346264': {
-                threadDate: '12/13/2004',
-                threadTime: '05:34:20',
-                user: {
-                    slug: 'april.mcavoy',
-                    email: 'mcavoybn@gmail.com',
-                    id: 'asdfasdf'
-                },
-                messages: []
-            },
-            'sdfgsdfgs': {
-                threadDate: '11/11/2010',
-                threadTime: '05:34:20',
-                user: {
-                    slug: 'april.mcavoy',
-                    email: 'mcavoybn@gmail.com',
-                    id: 'asdfasdf'
-                },
-                messages: []
-            },
-            
-        },
+        messageHistory: [],
         selectedThread: null
     })
 }       
