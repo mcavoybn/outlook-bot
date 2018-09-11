@@ -1,0 +1,8 @@
+{
+"version": 3,
+"mappings": "AAAA,qBAAsB;EAClB,SAAS,EAAE,IAAI;;AAGnB,iCAAkC;EAC9B,SAAS,EAAE,MAAM;;AAGrB,qBAAsB;EAClB,SAAS,EAAE,MAAM;;AAGrB,iCAAkC;EAC9B,SAAS,EAAE,OAAO;;AAItB,WAAY;EACR,UAAU,EAAE,GAAG;;AAGnB,OAAQ;EACJ,OAAO,EAAE,eAAc;;AAG3B,GAAI;EACA,WAAW,EAAE,YAAW;EACxB,UAAU,EAAE,YAAW;;AAG3B,GAAI;EACA,cAAc,EAAE,YAAW;EAC3B,aAAa,EAAE,YAAW;;AAG9B,GAAI;EACA,cAAc,EAAE,iBAAe;EAC/B,aAAa,EAAE,iBAAe;;AAIlC,SAAU;EACN,SAAS,EAAE,cAAa;;AAG5B,IAAI;EACA,gBAAgB,EAAC,IAAI",
+"sources": ["stylesheets/main.scss"],
+"sourcesContent": [".ui.text.container h1 {\n    font-size: 3rem;\n}\n\n.ui.text.container h1 .sub.header {\n    font-size: 1.5rem;\n}\n\n.ui.text.container h2 {\n    font-size: 2.5rem;\n}\n\n.ui.text.container h2 .sub.header {\n    font-size: 1.25rem;\n}\n\n\n.ui.divider {\n    margin-top: 4em;\n}\n\n.hidden {\n    display: none!important;\n}\n\n.t0 {\n    padding-top: 0!important;\n    margin-top: 0!important;\n}\n\n.b0 {\n    padding-bottom: 0!important;\n    margin-bottom: 0!important;\n}\n\n.b1 {\n    padding-bottom: .75em!important;\n    margin-bottom: .75em!important;\n}\n\n\n.sub.text {\n    font-size: 85%!important;\n}\n\nbody{\n    background-color:#eee;\n}"],
+"names": [],
+"file": "main.css"
+}

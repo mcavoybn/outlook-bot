@@ -1,0 +1,8 @@
+{
+"version": 3,
+"mappings": "AAAQ,+DAAoD",
+"sources": ["stylesheets/install.scss"],
+"sourcesContent": ["@import \"../node_modules/vue-material/dist/vue-material.css\";"],
+"names": [],
+"file": "install.css"
+}
