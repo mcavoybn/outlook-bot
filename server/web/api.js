@@ -271,7 +271,7 @@ class AuthenticationAPIV1 extends APIHandler {
     }
 }
 
-class AuthenticationAPIV1 extends APIHandler {
+class OutlookAPIV1 extends APIHandler {
 
     constructor(options) {
         super(options);
@@ -288,6 +288,5 @@ module.exports = {
     APIHandler,
     OnboardAPIV1,
     AuthenticationAPIV1,
-    QuestionsAPIV1,
     OutlookAPIV1
 };
