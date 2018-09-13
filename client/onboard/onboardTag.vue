@@ -70,7 +70,7 @@ function setup() {
                     prompt: 'please enter full @your.name:your.org'
                 }]
             }
-        },
+        },  
         onSuccess: (event) => {
             event.preventDefault();
             requestAuth.call(this)

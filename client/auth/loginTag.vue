@@ -93,6 +93,7 @@ function requestAuth() {
     .then(result => {
         this.loading = false;
         if (result.ok) {
+            console.log('!!!!!!!');
             const { id } = result.theJson;
             this.global.userId = id;
             this.global.loginTag = tag;

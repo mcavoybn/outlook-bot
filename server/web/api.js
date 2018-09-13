@@ -271,125 +271,15 @@ class AuthenticationAPIV1 extends APIHandler {
     }
 }
 
-class QuestionsAPIV1 extends APIHandler {
+class AuthenticationAPIV1 extends APIHandler {
 
     constructor(options) {
         super(options);
-        this.router.get('/*', this.asyncRoute(this.onGet, false));
-        this.router.post('/*', this.asyncRoute(this.onPost, false));
+        this.router.get('/authUrl', this.asyncRoute(this.onGetAuthUrl, false));
     }
-
-    async onGet(req, res){
-        let questions = await relay.storage.get('live-chat-bot', 'questions');
-        if(!questions){
-            questions = [
-                {
-                    prompt: "Hello, I am the live chat bot! Can I help you?",
-                    type: "Multiple Choice",
-                    editing: false,
-                    hovering: false,
-                    color: 'red',
-                    responses: [
-                        {
-                            text: "Yes",
-                            action: "Forward to Question",
-                            actionOption: "Question 1",
-                            distId: null,
-                            color: 'blue',
-                            editing: false
-                        },
-                        {
-                            text: "No",
-                            action: "Forward to Question",
-                            actionOption: "Question 1",
-                            distId: null,
-                            color: 'red',
-                            editing: false
-                        }
-                    ]
-                }
-            ];
-            await relay.storage.set('live-chat-bot', 'questions', questions);
-        }
-        res.status(200).json(questions);
+    
+    async onGetAuthUrl(req, res){
         
-    }
-
-    async onPost(req, res) {
-        let questions = req.body.questions;
-        relay.storage.set('live-chat-bot', 'questions', questions);
-        res.status(200);
-    }
-
-}
-
-class BusinessHoursAPIV1 extends APIHandler {
-
-    constructor(options) {
-        super(options);
-        this.router.get('/*', this.asyncRoute(this.onGet, false));
-        this.router.post('/*', this.asyncRoute(this.onPost, false));
-    }
-
-    async onGet(req, res){
-        let businessHoursData = await relay.storage.get('live-chat-bot', 'business-hours');
-        if(!businessHoursData){
-            businessHoursData = {
-                open: '08:00',
-                close: '20:00',
-                message: 'This is the default out of office hours message.'
-            };
-            relay.storage.set('live-chat-bot', 'business-hours', businessHoursData);
-        }
-        res.status(200).json(businessHoursData);
-    }
-
-    async onPost(req, res) {
-        let businessHours = req.body.businessHoursData;
-        relay.storage.set('live-chat-bot', 'business-hours', businessHours);
-        res.status(200);
-    }
-
-}
-
-class MessageHistoryAPIV1 extends APIHandler {
-
-    constructor(options) {
-        super(options);
-        this.router.get('/*', this.asyncRoute(this.onGet, false));
-    }
-
-    async onGet(req, res){
-        let messageHistory = await relay.storage.get('live-chat-bot', 'message-history');
-        if(!messageHistory){
-            messageHistory = {
-                date: 'MM/DD/YYYY',
-                messages: [{
-                    user: {slug: "", id: ""},
-                    date: "",
-                    time: "",
-                    prompt:"No messages found in history!",
-                    response:"No messages found in history!",
-                    action:"None"
-                }]
-            };
-        }
-        res.status(200).json(messageHistory);
-    }
-
-}
-
-class TagsAPIV1 extends APIHandler {
-
-    constructor(options) {
-        super(options);
-        this.router.get('/*', this.asyncRoute(this.onGet, false));
-    }
-
-    async onGet(req, res){
-        let tags = (await this.server.bot.atlas.fetch('/v1/tag-pick/')).results;
-        tags = tags.filter(t => t.created_by);
-        res.status(200).json({tags});
     }
 
 }
@@ -399,7 +289,5 @@ module.exports = {
     OnboardAPIV1,
     AuthenticationAPIV1,
     QuestionsAPIV1,
-    BusinessHoursAPIV1,
-    MessageHistoryAPIV1,
-    TagsAPIV1
+    OutlookAPIV1
 };

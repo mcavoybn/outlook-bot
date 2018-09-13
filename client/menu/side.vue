@@ -46,15 +46,15 @@ a:hover{
                 src="/static/images/forsta-logo-invert.svg" 
                 height="50px"
                 width="50px"
-                @click="questions()">
-            <h3 class="header" @click="questions()">&nbsp;&nbsp;Forsta Live Chat</h3>
+                @click="dashboard()">
+            <h3 class="header" @click="dashboard()">&nbsp;&nbsp;Forsta Live Chat</h3>
         </span>
         
         <sui-list 
             divided 
             relaxed 
             size="huge" style="padding:7px; margin-top:50px">
-            <sui-list-item @click="questions()">
+            <sui-list-item @click="dashboard()">
                 <sui-list-icon 
                     class="hover-white"
                     name="comments" 
@@ -62,40 +62,7 @@ a:hover{
                     vertical-align="middle" 
                     style="color:white" />
                 <sui-list-content>
-                    <a>Questions</a>
-                </sui-list-content>
-            </sui-list-item>
-            <sui-list-item @click="businessHours()">
-                <sui-list-icon 
-                    class="hover-white"
-                    name="clock" 
-                    size="large" 
-                    vertical-align="middle" 
-                    style="color:white" />
-                <sui-list-content>
-                    <a>Business Hours</a>
-                </sui-list-content>
-            </sui-list-item>
-            <sui-list-item @click="messageHistory()">
-                <sui-list-icon 
-                    class="hover-white"
-                    name="archive" 
-                    size="large" 
-                    vertical-align="middle" 
-                    style="color:white" />
-                <sui-list-content>
-                    <a>Message History</a>
-                </sui-list-content>
-            </sui-list-item>
-            <sui-list-item @click="settings()">
-                <sui-list-icon 
-                    class="hover-white"  
-                    name="cog" 
-                    size="large" 
-                    vertical-align="middle" 
-                    style="color:white" />
-                <sui-list-content>
-                    <a>Settings</a>
+                    <a>Dashboard</a>
                 </sui-list-content>
             </sui-list-item>
             <sui-list-item @click="showingSignOutModal = true">
@@ -145,17 +112,8 @@ module.exports = {
         logout: function () {
             this.global.apiToken = null;
         },
-        questions: function () {
-            this.$router.push({ name: 'questions' });
-        },
-        settings: function () {
-            this.$router.push({ name: 'settings' });
-        },
-        businessHours: function () {
-            this.$router.push({ name: 'businessHours' });
-        },
-        messageHistory: function () {
-            this.$router.push({ name: 'messageHistory' });
+        dashboard: function () {
+            this.$router.push({ name: 'dashboard' });
         }
     }
 }

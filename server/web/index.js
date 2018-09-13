@@ -29,10 +29,7 @@ class WebServer {
         this.app.use(bodyParser.json());
         this.app.use('/api/onboard/', (new api.OnboardAPIV1({server: this})).router);
         this.app.use('/api/auth/', (new api.AuthenticationAPIV1({server: this})).router);
-        this.app.use('/api/questions/', (new api.QuestionsAPIV1({server: this})).router);
-        this.app.use('/api/business-hours/', (new api.BusinessHoursAPIV1({server: this})).router);
-        this.app.use('/api/message-history/', (new api.MessageHistoryAPIV1({server: this})).router);
-        this.app.use('/api/tags/', (new api.TagsAPIV1({server: this})).router);
+        this.app.use('/api/outlook/', (new api.OutlookAPIV1({server: this}).router));
         this.app.use('/static/', express.static(path.join(root, 'static'), {strict: true}));
         
         this.app.get('/env.js', (req, res) => {

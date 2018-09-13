@@ -31,7 +31,7 @@ a:hover{
     <div>
      <div class="ui inverted menu" style="z-index: 1;">
         <div class="ui container">
-            <router-link :to="{name: 'questions'}" class="header item">
+            <router-link :to="{name: 'dashboard'}" class="header item">
                 <img class="logo" src="/static/images/forsta-logo-invert.svg"/>
                 &nbsp;&nbsp;Forsta Live Chat
             </router-link>
@@ -44,20 +44,8 @@ a:hover{
                     <i class="large user icon"></i>
                     <i class="dropdown icon"></i>
                     <div class="menu left">
-                        <div class="item" @click="questions">
-                            <i class="comment alternate outline icon tiny"></i> Questions 
-                        </div>
-                        <div class="item" @click="businessHours">
-                            <i class="clock icon tiny"></i> Business Hours 
-                        </div>
-                        <div class="item" @click="messageHistory">
-                            <i class="archive icon tiny"></i> Message History 
-                        </div>
-                        <div class="item" @click="settings">
-                            Settings
-                        </div>
-                        <div class="item" @click="showingSignOutModal = true">
-                            Sign Out
+                        <div class="item" @click="dashboard">
+                            <i class="comment alternate outline icon tiny"></i> Dashboard 
                         </div>
                     </div>
                 </div>
@@ -104,18 +92,9 @@ module.exports = {
             this.global.apiToken = null;
             this.$router.push({ name: 'loginTag' })
         },
-        questions: function () {
-            this.$router.push({ name: 'questions' });
+        dashboard: function () {
+            this.$router.push({ name: 'dashboard' });
         },
-        settings: function () {
-            this.$router.push({ name: 'settings' });
-        },
-        businessHours: function () {
-            this.$router.push({ name: 'businessHours' });
-        },
-        messageHistory: function () {
-            this.$router.push({ name: 'messageHistory' });
-        }
     }
 }
 </script>
