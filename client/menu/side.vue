@@ -47,7 +47,7 @@ a:hover{
                 height="50px"
                 width="50px"
                 @click="dashboard()">
-            <h3 class="header" @click="dashboard()">&nbsp;&nbsp;Forsta Live Chat</h3>
+            <h3 class="header" @click="dashboard()">&nbsp;&nbsp;Forsta Outlook Bot</h3>
         </span>
         
         <sui-list 

@@ -3,7 +3,6 @@ const WebServer = require('./web');
 const process = require('process');
 const relay = require('librelay');
 
-
 let _rejectCount = 0;
 process.on('unhandledRejection', ev => {
     console.error(ev);

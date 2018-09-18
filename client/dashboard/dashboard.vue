@@ -24,10 +24,13 @@ div [class*="pull right"] {
         <sui-grid-row 
             :columns="1">
             <sui-grid-column class="ui big">
-                <sui-button
-                    class="green button pull left"
-                    content="Connect to Outlook"
-                    @click="outlookConnect()" />
+                <a :href="authUrl">
+                    <sui-button
+                        class="green button pull left"
+                        content="Connect to Outlook"
+                        @click="outlookConnect()" />
+                </a>
+                <p v-text="authUrl"></p>
             </sui-grid-column>
         </sui-grid-row>
 
@@ -42,7 +45,21 @@ div [class*="pull right"] {
 'use strict'
 module.exports = {
     mounted: function() {
+        console.log('dashboard mounted ! does this log twice?');
         this.loadData();
+
+        // let parms = { title: 'Home', active: { home: true } };
+
+        // const accessToken = await graphUtil.getAccessToken(req.cookies, res);
+        // const userName = req.cookies.graph_user_name;
+
+        // if (accessToken && userName) {
+        //     parms.user = userName;
+        //     parms.debug = `User: ${userName}\nAccess Token: ${accessToken}`;
+        // } else {
+        //     parms.signInUrl = graphUtil.getAuthUrl();
+        //     parms.debug = parms.signInUrl;
+        // }
     },
     methods: {
         checkForChanges(){
@@ -52,10 +69,12 @@ module.exports = {
             // }
         },
         loadData: function(){
-
+            util.fetch.call(this, 'api/outlook/authUrl').then(res => {
+                this.authUrl = res.theJson;
+            });
         },
         outlookConnect: function() {
-            util.fetch('api/outlook/authUrl')
+            
         },
         saveAndContinue: function() {
             this.saveData();
@@ -81,6 +100,7 @@ module.exports = {
             changesMade: false,
             showingSaveChangesModal: false,
             nextRoute: null,
+            authUrl: ''
         }
     }
 }

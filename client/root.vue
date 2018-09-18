@@ -1,22 +1,21 @@
 <template>
     <div>
-        <top-menu v-if="$mq=='smallScreen' && global.apiToken && global.onboardStatus" />
-        <sui-grid v-if="global.apiToken && global.onboardStatus" >
-            <sui-grid-row :columns="2">
-                <sui-grid-column :width="2" v-if="$mq=='bigScreen'" >
-                    <side-menu  />
-                </sui-grid-column>
-                <sui-grid-column 
-                    :width="$mq | mq({
-                        smallScreen: 16,
-                        bigScreen: 14})">
-                    <router-view />
-                </sui-grid-column>
-            </sui-grid-row>
-        </sui-grid>
-        <router-view v-else />
-
-        
+        <div v-if="$mq=='smallScreen'">
+            <top-menu v-if="global.apiToken && global.onboardStatus" />
+            <router-view />
+        </div>
+        <div v-else>
+            <sui-grid>
+                <sui-grid-row :columns="2">
+                    <sui-grid-column v-if="global.apiToken && global.onboardStatus" :width="2" >
+                        <side-menu />
+                    </sui-grid-column>
+                    <sui-grid-column :width="$mq | mq({ smallScreen: 16, bigScreen: 14})">
+                        <router-view />
+                    </sui-grid-column>
+                </sui-grid-row>
+            </sui-grid>
+        </div>
     </div>
 </template>
 

@@ -31,7 +31,6 @@ class WebServer {
         this.app.use('/api/auth/', (new api.AuthenticationAPIV1({server: this})).router);
         this.app.use('/api/outlook/', (new api.OutlookAPIV1({server: this}).router));
         this.app.use('/static/', express.static(path.join(root, 'static'), {strict: true}));
-        
         this.app.get('/env.js', (req, res) => {
             res.setHeader('Content-Type', 'application/javascript');
             res.send(`self.F = self.F || {}; F.env = ${JSON.stringify(jsenv)};\n`);

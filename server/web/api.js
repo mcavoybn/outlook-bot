@@ -5,7 +5,6 @@ const relay = require('librelay');
 const jwt = require('jsonwebtoken');
 const uuidv4 = require('uuid/v4');
 
-
 async function genToken(userId) {
     let secret = await relay.storage.get('authentication', 'jwtsecret');
     if (!secret) {
@@ -271,15 +270,48 @@ class AuthenticationAPIV1 extends APIHandler {
     }
 }
 
+require('dotenv').config();
 class OutlookAPIV1 extends APIHandler {
 
     constructor(options) {
         super(options);
         this.router.get('/authUrl', this.asyncRoute(this.onGetAuthUrl, false));
+        this.router.get('/token', this.asyncRoute(this.onGetAuthToken, false));
+        this.oauth = require('simple-oauth2').create({
+            client: {
+                id: process.env.APP_ID,
+                secret: process.env.APP_PASSWORD,
+            },
+            auth: {
+                tokenHost: 'https://login.microsoftonline.com',
+                authorizePath: 'common/oauth2/v2.0/authorize',
+                tokenPath: 'common/oauth2/v2.0/token'
+            }
+        });
     }
     
     async onGetAuthUrl(req, res){
-        
+        const authUrl = this.oauth.authorizationCode.authorizeURL({
+            redirect_uri: process.env.REDIRECT_URI,
+            scope: process.env.APP_SCOPES
+        });
+        console.log(`Generated auth url: ${authUrl}`);
+        res.status(200).json(authUrl);
+    }
+
+    async onGetAuthToken(req, res){
+        let auth_code = req.get("code");
+        console.log('auth_code :');
+        console.log(auth_code);
+        console.log(typeof auth_code);
+        let result = await this.oauth.authorizationCode.getToken({
+            code: auth_code,
+            redirect_uri: process.env.REDIRECT_URI,
+            scope: process.env.APP_SCOPES
+        });
+        const token = this.oauth.accessToken.create(result).token;
+        console.log('Token created: ', token.token);
+        res.status(200).json({token});
     }
 
 }

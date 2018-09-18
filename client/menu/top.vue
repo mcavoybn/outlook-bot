@@ -33,7 +33,7 @@ a:hover{
         <div class="ui container">
             <router-link :to="{name: 'dashboard'}" class="header item">
                 <img class="logo" src="/static/images/forsta-logo-invert.svg"/>
-                &nbsp;&nbsp;Forsta Live Chat
+                &nbsp;&nbsp;Forsta Outlook Bot
             </router-link>
             <div 
                 class="header item float right" 

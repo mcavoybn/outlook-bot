@@ -26,9 +26,6 @@ class ForstaBot {
         this.msgReceiver.addEventListener('error', this.onError.bind(this));
         this.msgSender = await relay.MessageSender.factory();
         await this.msgReceiver.connect();
-
-        this.threadStatus = {};
-        this.outgoingThreadId = uuid4();
     }
 
     stop() {
@@ -56,56 +53,6 @@ class ForstaBot {
     async onMessage(ev) {
         let msg = this.parseEv(ev);
         if(!msg) console.error("Received unsupported message!");
-
-        if(!this.threadStatus[msg.threadId] && !msg.data.action){ //initialize
-            let businessHours = await relay.storage.get('live-chat-bot', 'business-hours');
-            if(businessHours && this.outOfOffice(businessHours)){
-                this.sendMessage(dist, msg.threadId, businessHours.message);
-            }
-            let questions = await relay.storage.get('live-chat-bot', 'questions');
-            this.threadStatus[msg.threadId] = {
-                questions,
-                currentQuestion: questions[0],
-                waitingForDistTakeover: null,
-                waitingForResponse: null,
-                listening: false
-            };
-            await this.addThreadToMessageHistory(msg);
-        }
-
-        if(this.threadStatus[msg.threadId] && this.threadStatus[msg.threadId].listening){
-            this.saveToMessageHistory({
-                senderId: msg.sender.userId,
-                text: msg.data.body[0].value,
-                action: null,
-                threadId: msg.threadId
-            });
-            return;
-        }
-
-        const dist = await this.resolveTags(msg.distribution.expression);
-        if(msg.data.action 
-        && this.threadStatus[msg.data.action] 
-        && this.threadStatus[msg.data.action].waitingForDistTakeover){
-            this.handleDistTakeover(msg, dist);
-            return;
-        }
-        else if(this.threadStatus[msg.threadId].waitingForResponse){
-            let validResponse = await this.handleResponse(msg, dist);
-            if(!validResponse) return;
-        }
-
-        if(this.threadStatus[msg.threadId].currentQuestion.type == 'Free Response') return;
-        this.threadStatus[msg.threadId].waitingForResponse = true;
-        let actions = this.threadStatus[msg.threadId].currentQuestion.responses.map( (response, index) => {
-            return {title: response.text, color: this.lowercaseFirst(response.color), action: index};
-        });
-        this.sendActionMessage(
-            dist, 
-            msg.threadId,
-            this.threadStatus[msg.threadId].currentQuestion.prompt, 
-            actions
-        );
     }
 
     parseEv(ev){
@@ -119,166 +66,6 @@ class ForstaBot {
             }
         }
         return msg;
-    }
-
-    async handleDistTakeover(msg, forwardingDist){
-        let threadId = msg.data.action;
-        let chatUserTagId = this.threadStatus[threadId].waitingForDistTakeover.userTagId;
-        let distMemberUser = await this.atlas.fetch(`/v1/user/${msg.sender.userId}/`);
-        let chatBotUser = await this.atlas.fetch(`/v1/user/${this.ourId}/`);
-        let newDist = await this.resolveTags(`(<${chatUserTagId}>+<${distMemberUser.tag.id}>+<${chatBotUser.tag.id}>)`);
-        this.sendMessage(
-            newDist, 
-            msg.data.action, 
-            `You are now connected with ${this.fqName(distMemberUser)}`,
-        );
-        this.threadStatus[threadId].waitingForDistTakeover = false;
-        forwardingDist.userids = forwardingDist.userids.filter(id => id != distMemberUser.id);
-        this.sendResponse(
-            forwardingDist, 
-            this.outgoingThreadId, 
-            this.threadStatus[threadId].waitingForDistTakeover.msgId, 
-            `Taken by ${this.fqName(distMemberUser)}`
-        );
-        this.threadStatus[threadId].listening = true;
-    }
-
-    async handleResponse(msg, dist){
-        let response = this.parseResponse(msg, this.threadStatus[msg.threadId]);  
-        if(!response.action){
-            this.sendMessage(dist, msg.threadId, `ERROR: response action not configured !`);
-            this.questions = undefined;
-            return;
-        }
-
-        const users = await this.getUsers(dist.userids);
-        this.saveToMessageHistory({
-            text: response.text,
-            action: response.action,
-            senderId: msg.sender.userId,
-            threadId: msg.threadId
-        });
-        this.threadStatus[msg.threadId].waitingForResponse = false;
-        if(response.action == "Forward to Tag")
-        {
-            this.sendMessage(
-                dist, 
-                msg.threadId, 
-                `A member of our team will be with you shortly.`
-            );
-            let botTagId = users.filter(u => u.id === this.ourId)[0].tag.id;
-            let forwardingDist = await this.resolveTags(`(<${response.tagId}>+<${botTagId}>)`);
-            if(!forwardingDist){
-                this.sendMessage(dist, msg.threadId, `Whoops! There was an error.`);
-                console.log('ERROR: response tagId configured to a non-existent tag');
-                return;
-            }
-            let forwardingToDistMsg = await this.sendActionMessage(
-                forwardingDist, 
-                this.outgoingThreadId, 
-                `A live chat user is trying to get in touch with you. Respond to take over the chat.`,
-                [{title:'Connect', action: msg.threadId, color:'blue'}],
-                'Incoming Live Chat Calls'
-            );
-            this.threadStatus[msg.threadId].waitingForDistTakeover = {
-                userTagId: users.filter(u => u.id !== this.ourId)[0].tag.id,
-                msgId: JSON.parse(forwardingToDistMsg.message.dataMessage.body)[0].messageId
-            };
-            return;
-        }
-        else if(response.action == "Forward to Question")
-        {
-            let questionNumber = Number(response.actionOption.split(' ')[1]);
-            this.threadStatus[msg.threadId].currentQuestion = this.threadStatus[msg.threadId].questions[questionNumber-1];
-        }
-        else if(response.action == "End of Question Set")
-        {
-            this.sendMessage(dist, msg.threadId, `End of question set!`);
-            this.threadStatus[msg.threadId] = undefined;
-        }
-        return true;
-    }
-
-    parseResponse(msg){
-        if(this.threadStatus[msg.threadId].currentQuestion.type == 'Free Response'){
-            let response = {};
-            let currentQuestionIndex = this.threadStatus[msg.threadId].questions.indexOf(this.threadStatus[msg.threadId].currentQuestion);
-            if(currentQuestionIndex == this.questions.length - 1){
-                response.action = 'End of Question Set';   
-            }else{
-                response.action = 'Forward to Question';
-                response.actionOption = 'Question ' + (currentQuestionIndex + 2); 
-            }
-            return response;
-        }else{
-            let responseNumber = Number(msg.data.action);
-            if(responseNumber > this.threadStatus[msg.threadId].currentQuestion.responses.length - 1 || responseNumber < 0){
-                return undefined;
-            }
-            return this.threadStatus[msg.threadId].currentQuestion.responses[responseNumber];
-        }
-    }
-
-    async saveToMessageHistory(msg) {
-        const dateNow = moment().format('MM/DD/YYYY');
-        const timeNow = moment().format('hh:mm:ss');
-        let userData = await this.atlas.fetch(`/v1/user/${msg.senderId}/`);
-        let messageData = {
-            user: {
-                id: msg.senderId,
-                slug: userData.tag.slug,
-                email: userData.email
-            },
-            message: msg.text,
-            action: msg.action,
-            date: dateNow,
-            time: timeNow
-        };
-        let messageHistory = (await relay.storage.get('live-chat-bot', 'message-history')) || {};
-        messageHistory[msg.threadId].messages.push(messageData);
-        relay.storage.set('live-chat-bot', 'message-history', messageHistory);
-    }
-
-    async addThreadToMessageHistory(msg){
-        const dateNow = moment().format('MM/DD/YYYY');
-        const timeNow = moment().format('hh:mm:ss');
-        let userData = await this.atlas.fetch(`/v1/user/${msg.sender.userId}/`);
-        let messageHistory = (await relay.storage.get('live-chat-bot', 'message-history')) || {};
-        if(!messageHistory[msg.threadId]){
-            messageHistory[msg.threadId] = {
-                threadDate: dateNow,
-                threadTime: timeNow,
-                user: {
-                    id: msg.sender.userId,
-                    slug: userData.tag.slug,
-                    email: userData.email
-                },
-                messages: []
-            };
-        }
-        relay.storage.set('live-chat-bot', 'message-history', messageHistory);
-    }
-
-    lowercaseFirst(str){
-        return str.charAt(0).toLowerCase() + str.slice(1, str.length);
-    }
-
-    outOfOffice(businessHours){
-        let hoursNow = moment().hours();
-        let minsNow = moment().minutes();
-        let openHours = Number(businessHours.open.split(':')[0]);
-        let openMins = Number(businessHours.open.split(':')[1]);
-        let closeHours = Number(businessHours.close.split(':')[0]);
-        let closeMins = Number(businessHours.close.split(':')[1]);
-
-        if(openHours > closeHours) closeHours += 24;
-        if( (hoursNow < openHours) || (hoursNow == openHours && minsNow < openMins) ){
-            return true;
-        }
-        if( (hoursNow > closeHours) || (hoursNow == closeHours && minsNow > closeMins) ){
-            return true;
-        }
-        return false;
     }
 
     fqTag(user) { 
@@ -320,14 +107,6 @@ class ForstaBot {
     }
 
     sendActionMessage(dist, threadId, text, actions, threadTitle){
-        if(threadId != this.outgoingThreadId){
-            this.saveToMessageHistory({
-                senderId: this.ourId,
-                text,
-                action: null,
-                threadId
-            });
-        }
         let title = threadTitle || '';
         return this.msgSender.send({
             distribution: dist,
