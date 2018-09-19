@@ -54,5 +54,5 @@ module.exports = {
     addFormErrors,
     mergeErrors,
     RequestError,
-    fetch: _fetch
+    fetch: _fetch,
 };

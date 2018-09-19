@@ -1,11 +1,11 @@
 {
-  "name": "forsta-messaging-bot",
+  "name": "forsta-oulook-bot",
   "version": "0.4.0",
-  "description": "Forsta Messaging Bot",
+  "description": "Forsta Oulook Bot",
   "engines": {
     "node": "8"
   },
-  "repository": "ForstaLabs/messaging-bot",
+  "repository": "ForstaLabs/oulook-bot",
   "keywords": [
     "forsta",
     "e-discovery",
@@ -13,9 +13,9 @@
   ],
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/ForstaLabs/messaging-bot/issues"
+    "url": "https://github.com/ForstaLabs/oulook-bot/issues"
   },
-  "homepage": "https://github.com/ForstaLabs/messaging-bot#readme",
+  "homepage": "https://github.com/ForstaLabs/oulook-bot#readme",
   "scripts": {
     "postinstall": "SKIP_PACKAGES=1 make",
     "start": "node server"
@@ -52,6 +52,7 @@
     "simple-oauth2": "^2.2.1",
     "uuid": "^3.1.0",
     "vue": "^2.5.9",
+    "vue-cookies": "^1.5.7",
     "vue-focus": "^2.1.0",
     "vue-mq": "^0.2.1",
     "vue-router": "^3.0.1",

@@ -277,6 +277,7 @@ class OutlookAPIV1 extends APIHandler {
         super(options);
         this.router.get('/authUrl', this.asyncRoute(this.onGetAuthUrl, false));
         this.router.get('/token', this.asyncRoute(this.onGetAuthToken, false));
+        this.router.get('/refresh', this.asyncRoute(this.onRefreshAuthToken, false));
         this.oauth = require('simple-oauth2').create({
             client: {
                 id: process.env.APP_ID,
@@ -295,23 +296,31 @@ class OutlookAPIV1 extends APIHandler {
             redirect_uri: process.env.REDIRECT_URI,
             scope: process.env.APP_SCOPES
         });
-        console.log(`Generated auth url: ${authUrl}`);
         res.status(200).json(authUrl);
     }
 
     async onGetAuthToken(req, res){
         let auth_code = req.get("code");
-        console.log('auth_code :');
-        console.log(auth_code);
-        console.log(typeof auth_code);
         let result = await this.oauth.authorizationCode.getToken({
             code: auth_code,
             redirect_uri: process.env.REDIRECT_URI,
             scope: process.env.APP_SCOPES
         });
         const token = this.oauth.accessToken.create(result).token;
-        console.log('Token created: ', token.token);
-        res.status(200).json({token});
+        const user = jwt.decode(token.id_token);
+        let responseJson = {
+            access_token: token.access_token,
+            user_name: user.name,
+            refresh_token: token.refresh_token,
+            token_expires: token.expires_at.getTime()
+        };
+        res.status(200).json(responseJson);
+    }
+
+    async onRefreshAuthToken(req, res){
+        let refresh_token = req.get("refresh_token");
+        const newToken = await this.oauth.accessToken.create({refresh_token: refresh_token}).refresh();
+        res.status(200).json(newToken.token.access_token);
     }
 
 }

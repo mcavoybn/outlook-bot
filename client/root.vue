@@ -6,12 +6,17 @@
         </div>
         <div v-else>
             <sui-grid>
-                <sui-grid-row :columns="2">
-                    <sui-grid-column v-if="global.apiToken && global.onboardStatus" :width="2" >
+                <sui-grid-row v-if="global.apiToken && global.onboardStatus" :columns="2">
+                    <sui-grid-column :width="2">
                         <side-menu />
                     </sui-grid-column>
-                    <sui-grid-column :width="$mq | mq({ smallScreen: 16, bigScreen: 14})">
-                        <router-view />
+                    <sui-grid-column :width="16">
+                        <router-view v-if="global.apiToken && global.onboardStatus" />
+                    </sui-grid-column>
+                </sui-grid-row>
+                <sui-grid-row v-else :columns="1">
+                    <sui-grid-column>
+                        <router-view v-if="!(global.apiToken && global.onboardStatus)"/>
                     </sui-grid-column>
                 </sui-grid-row>
             </sui-grid>

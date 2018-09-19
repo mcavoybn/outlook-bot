@@ -23,18 +23,23 @@ div [class*="pull right"] {
 
         <sui-grid-row 
             :columns="1">
-            <sui-grid-column class="ui big">
+            <sui-grid-column class="ui big" v-if="graphAccessToken && graphUserName">
+                You are now logged in as:
+                <p v-text="graphUserName"></p>
+                <sui-button color="green" @click="graphSignOut()" content="Disconnect From Outlook" />
+            </sui-grid-column>
+            <sui-grid-column class="ui big" v-else>
                 <a :href="authUrl">
                     <sui-button
                         class="green button pull left"
-                        content="Connect to Outlook"
-                        @click="outlookConnect()" />
+                        content="Connect to Outlook"/>
                 </a>
-                <p v-text="authUrl"></p>
             </sui-grid-column>
         </sui-grid-row>
 
         </sui-grid>
+
+        <div v-html="calendarView" v-if="calendarView"></div>
 
         </div>
 
@@ -42,65 +47,113 @@ div [class*="pull right"] {
 </template>
  
 <script>
+const util = require('../util');
+const graph = require('@microsoft/microsoft-graph-client');
 'use strict'
 module.exports = {
     mounted: function() {
-        console.log('dashboard mounted ! does this log twice?');
+        console.log('dashboard mounted');
         this.loadData();
-
-        // let parms = { title: 'Home', active: { home: true } };
-
-        // const accessToken = await graphUtil.getAccessToken(req.cookies, res);
-        // const userName = req.cookies.graph_user_name;
-
-        // if (accessToken && userName) {
-        //     parms.user = userName;
-        //     parms.debug = `User: ${userName}\nAccess Token: ${accessToken}`;
-        // } else {
-        //     parms.signInUrl = graphUtil.getAuthUrl();
-        //     parms.debug = parms.signInUrl;
-        // }
     },
     methods: {
-        checkForChanges(){
-            if(this.changesMade) return;
-            // if(JSON.stringify(this.questions) != this.questionsOriginal){
-            //     this.changesMade = true;
-            // }
-        },
         loadData: function(){
-            util.fetch.call(this, 'api/outlook/authUrl').then(res => {
-                this.authUrl = res.theJson;
-            });
+            this.getAuthUrl();
+            //check for authentication 
+            this.graphUserName = this.$cookies.get('graph_user_name');
+            this.graphAccessToken = this.getGraphAccessToken();
+            if(this.graphAccessToken){
+                //we are authenticated, initialize the API client
+                this.graphClient = graph.Client.init({
+                    authProvider: (done) => {
+                        done(null, this.graphAccessToken);
+                    }
+                });
+                this.getCalendarView();
+            }
+            //check for a refresh token and use it if available
+            const refresh_token = this.$cookies.get('graph_refresh_token');
+            if(refresh_token){
+                util.fetch.call(this, 'api/outlook/refresh', {headers: {refresh_token}})
+                .then(res => this.$cookies.set('graph_access_token', res.theJson));
+            }
         },
-        outlookConnect: function() {
-            
+        getAuthUrl: function() {
+            util.fetch.call(this, 'api/outlook/authUrl')
+            .then(res => this.authUrl = res.theJson);
         },
-        saveAndContinue: function() {
-            this.saveData();
-            this.nextRoute();
+        getCalendarView: function() {
+            try {
+                const start = new Date(new Date().setHours(0,0,0));
+                const end = new Date(new Date(start).setDate(start.getDate() + 7));
+                this.graphClient
+                .api(`/me/calendarView?startDateTime=${start.toISOString()}&endDateTime=${end.toISOString()}`)
+                .header('Prefer', 'outlook.body-content-type="html"')
+                .header('Preference-Applied', 'outlook.body-content-type="html"')
+                .get()
+                .then(res => console.log(res));
+            } catch (err) {
+                console.log(err);
+            }
         },
-        saveData: function() {
-            this.changesMade = false;
-            //this.questionsOriginal = JSON.stringify(this.questions);
+        getGraphAccessToken: function(){
+            let token = this.$cookies.get('graph_access_token');
+            const five_minutes = 300000;
+            const expiration = new Date(parseFloat(this.$cookies.get('graph_token_expires') - five_minutes));
+            if(token && expiration > new Date()){
+                return token;
+            }
+            return null;
         },
-    },
-    beforeRouteLeave: function(to, from, next){
-        if(this.changesMade){
-            this.showingSaveChangesModal = true;
-            this.nextRoute = next;
-            next(false);
-        }else{
-            next();
-        }
+        scheduleEvent: function() {
+            try {
+                this.graphClient
+                .api('/me/events')
+                .post({
+                    "Subject": "Discuss the Calendar REST API",
+                    "Body": {
+                        "ContentType": "HTML",
+                        "Content": "I think it will meet our requirements!"
+                    },
+                    "Start": {
+                        "DateTime": "2018-09-20T18:00:00",
+                        "TimeZone": "Pacific Standard Time"
+                    },
+                    "End": {
+                        "DateTime": "2018-09-22T19:00:00",
+                        "TimeZone": "Pacific Standard Time"
+                    },
+                    "Attendees": [
+                        {
+                        "EmailAddress": {
+                            "Address": "janets@a830edad9050849NDA1.onmicrosoft.com",
+                            "Name": "Janet Schorr"
+                        },
+                        "Type": "Required"
+                        }
+                    ]
+                }, (err, res) => console.log(res));
+            } catch (err) {
+                console.log(err);
+            }
+        },
+        graphSignOut: function(){
+            this.$cookies.remove('graph_access_token');
+            this.$cookies.remove('graph_user_name');
+            this.$cookies.remove('graph_refresh_token');
+            this.$cookies.remove('graph_token_expires');
+            this.$router.go();
+        },
     },
     data: function() {
         return {
             global: shared.state,
-            changesMade: false,
             showingSaveChangesModal: false,
             nextRoute: null,
-            authUrl: ''
+            authUrl: '',
+            graphAccessToken: undefined,
+            graphUserName: undefined,
+            calendarView: '',
+            graphClient: undefined
         }
     }
 }
