@@ -325,9 +325,32 @@ class OutlookAPIV1 extends APIHandler {
 
 }
 
+class EventAPIV1 extends APIHandler {
+
+    constructor(options) {
+        super(options);
+        this.router.get('/', this.asyncRoute(this.onGet, false));
+        this.router.post('/', this.asyncRoute(this.onPost, false));
+    }
+
+    async onGet(req, res){
+        let events = (await relay.storage.get('events', 'events')) | [];
+        res.status(200).json(events);
+    }
+    
+    async onPost(req, res){
+        let newEvent = req.body;
+        let events = await relay.storage.get('events', 'events');
+        (events || []).push(newEvent);
+        relay.storage.set('events', 'events', events);
+
+    }
+}
+
 module.exports = {
     APIHandler,
     OnboardAPIV1,
     AuthenticationAPIV1,
-    OutlookAPIV1
+    OutlookAPIV1,
+    EventAPIV1
 };

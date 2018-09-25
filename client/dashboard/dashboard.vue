@@ -21,27 +21,55 @@ div [class*="pull right"] {
             style="padding-top:5%;"
             divided="vertically">
 
-        <sui-grid-row 
-            :columns="1">
-            <sui-grid-column class="ui big" v-if="graphAccessToken && graphUserName">
-                You are now logged in as:
-                <p v-text="graphUserName"></p>
-                <sui-button color="green" @click="graphSignOut()" content="Disconnect From Outlook" />
-            </sui-grid-column>
-            <sui-grid-column class="ui big" v-else>
-                <a :href="authUrl">
-                    <sui-button
-                        class="green button pull left"
-                        content="Connect to Outlook"/>
-                </a>
-            </sui-grid-column>
-        </sui-grid-row>
+            <sui-grid-row 
+                :columns="1">
+                <sui-grid-column class="ui big" v-if="graphAccessToken && graphUserName">
+                    You are now logged in as:
+                    <p v-text="graphUserName"></p>
+                    <sui-button color="green" @click="graphSignOut()" content="Disconnect From Outlook" />
+                </sui-grid-column>
+                <sui-grid-column class="ui big" v-else>
+                    <a :href="authUrl">
+                        <sui-button
+                            class="green button pull left"
+                            content="Connect to Outlook"/>
+                    </a>
+                </sui-grid-column>
+            </sui-grid-row>
 
+            <sui-grid-row v-if="graphAccessToken">
+                <sui-grid-column>
+                    <sui-form>
+                        <sui-form-field>
+                            <label>Subject</label>
+                            <input placeholder="Title" v-model="newEvent.subject" >
+                        </sui-form-field>
+                        <sui-form-field>
+                            <label>Body</label>
+                            <textarea placeholder="Body" v-model="newEvent.body" />
+                        </sui-form-field>
+                        <sui-form-field>
+                            <label>Start</label>
+                            <input type="date" format="MM-DD-YYYY"v-model="newEvent.startDate">
+                            <input type="time" format="HH:MM" v-model="newEvent.startTime">
+                            
+                        </sui-form-field>
+                        <sui-form-field>
+                            <label>End</label>
+                            <input type="date" format="MM-DD-YYYY"v-model="newEvent.endDate">
+                            <input type="time" format="HH:MM" v-model="newEvent.endTime">
+                        </sui-form-field>
+                    </sui-form>
+                </sui-grid-column>
+            </sui-grid-row>
+
+            <sui-grid-row v-if="graphAccessToken">
+                <sui-button 
+                    @click="scheduleNewEvent()"
+                    color="green"
+                    content="Create New Event"/>
+            </sui-grid-row>
         </sui-grid>
-
-        <div v-html="calendarView" v-if="calendarView"></div>
-
-        </div>
 
     </div>
 </template>
@@ -76,6 +104,9 @@ module.exports = {
                 util.fetch.call(this, 'api/outlook/refresh', {headers: {refresh_token}})
                 .then(res => this.$cookies.set('graph_access_token', res.theJson));
             }
+
+            util.fetch.call(this, 'api/events')
+            .then(res => this.events = res.theJson);
         },
         getAuthUrl: function() {
             util.fetch.call(this, 'api/outlook/authUrl')
@@ -104,37 +135,33 @@ module.exports = {
             }
             return null;
         },
-        scheduleEvent: function() {
+        scheduleNewEvent: function() {
+            let start = new Date(this.newEvent.startDate + 'T' + this.newEvent.startTime);
+            let end = new Date(this.newEvent.endDate + 'T' + this.newEvent.endTime);
+            util.fetch.call(this, 'api/events', {body: this.newEvent, method:'post'});
             try {
                 this.graphClient
                 .api('/me/events')
                 .post({
-                    "Subject": "Discuss the Calendar REST API",
+                    "Subject": this.newEvent.subject,
                     "Body": {
                         "ContentType": "HTML",
-                        "Content": "I think it will meet our requirements!"
+                        "Content": this.newEvent.body,
                     },
                     "Start": {
-                        "DateTime": "2018-09-20T18:00:00",
+                        "DateTime": start.toISOString(),
                         "TimeZone": "Pacific Standard Time"
                     },
                     "End": {
-                        "DateTime": "2018-09-22T19:00:00",
+                        "DateTime": end.toISOString(),
                         "TimeZone": "Pacific Standard Time"
                     },
-                    "Attendees": [
-                        {
-                        "EmailAddress": {
-                            "Address": "janets@a830edad9050849NDA1.onmicrosoft.com",
-                            "Name": "Janet Schorr"
-                        },
-                        "Type": "Required"
-                        }
-                    ]
+                    "Attendees": []
                 }, (err, res) => console.log(res));
             } catch (err) {
                 console.log(err);
             }
+            this.clearForm();
         },
         graphSignOut: function(){
             this.$cookies.remove('graph_access_token');
@@ -143,6 +170,16 @@ module.exports = {
             this.$cookies.remove('graph_token_expires');
             this.$router.go();
         },
+        clearForm: function(){
+            this.newEvent = {
+                subject: '',
+                body: '',
+                startDate: '', 
+                startTime: '',
+                endDate: '',
+                endTime: ''
+            };
+        }
     },
     data: function() {
         return {
@@ -153,7 +190,16 @@ module.exports = {
             graphAccessToken: undefined,
             graphUserName: undefined,
             calendarView: '',
-            graphClient: undefined
+            graphClient: undefined,
+            events: {},
+            newEvent: {
+                subject: '',
+                body: '',
+                startDate: '', 
+                startTime: '',
+                endDate: '',
+                endTime: ''
+            }
         }
     }
 }
