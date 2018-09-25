@@ -52,12 +52,20 @@ div [class*="pull right"] {
                             <label>Start</label>
                             <input type="date" format="MM-DD-YYYY"v-model="newEvent.startDate">
                             <input type="time" format="HH:MM" v-model="newEvent.startTime">
-                            
                         </sui-form-field>
                         <sui-form-field>
                             <label>End</label>
                             <input type="date" format="MM-DD-YYYY"v-model="newEvent.endDate">
                             <input type="time" format="HH:MM" v-model="newEvent.endTime">
+                        </sui-form-field>
+                        <sui-form-field>
+                            <label>Timezone</label>
+                            <sui-dropdown
+                                placeholder="Timezone"
+                                selection
+                                :options="timezonesForDropdown"
+                                v-model="newEvent.timezone"
+                            />
                         </sui-form-field>
                     </sui-form>
                 </sui-grid-column>
@@ -80,7 +88,6 @@ const graph = require('@microsoft/microsoft-graph-client');
 'use strict'
 module.exports = {
     mounted: function() {
-        console.log('dashboard mounted');
         this.loadData();
     },
     methods: {
@@ -96,7 +103,7 @@ module.exports = {
                         done(null, this.graphAccessToken);
                     }
                 });
-                this.getCalendarView();
+                this.loadTimezones();
             }
             //check for a refresh token and use it if available
             const refresh_token = this.$cookies.get('graph_refresh_token');
@@ -135,10 +142,24 @@ module.exports = {
             }
             return null;
         },
+        loadTimezones: function(){
+            this.graphClient
+            .api('/me/outlook/supportedTimezones')
+            .get()
+            .then(res => {
+                res.value.forEach(timezone => {
+                    this.timezonesForDropdown.push({
+                        value: timezone.alias,
+                        text: timezone.displayName
+                    });
+                });
+                console.log(timezonesForDropdown);
+            });
+        },
         scheduleNewEvent: function() {
+            util.fetch.call(this, 'api/events', {body: this.newEvent, method:'post'});
             let start = new Date(this.newEvent.startDate + 'T' + this.newEvent.startTime);
             let end = new Date(this.newEvent.endDate + 'T' + this.newEvent.endTime);
-            util.fetch.call(this, 'api/events', {body: this.newEvent, method:'post'});
             try {
                 this.graphClient
                 .api('/me/events')
@@ -150,11 +171,11 @@ module.exports = {
                     },
                     "Start": {
                         "DateTime": start.toISOString(),
-                        "TimeZone": "Pacific Standard Time"
+                        "TimeZone": this.newEvent.timezone
                     },
                     "End": {
                         "DateTime": end.toISOString(),
-                        "TimeZone": "Pacific Standard Time"
+                        "TimeZone": this.newEvent.timezone
                     },
                     "Attendees": []
                 }, (err, res) => console.log(res));
@@ -192,13 +213,15 @@ module.exports = {
             calendarView: '',
             graphClient: undefined,
             events: {},
+            timezonesForDropdown: [],
             newEvent: {
                 subject: '',
                 body: '',
                 startDate: '', 
                 startTime: '',
                 endDate: '',
-                endTime: ''
+                endTime: '',
+                timezone: ''
             }
         }
     }
