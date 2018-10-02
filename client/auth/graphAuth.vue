@@ -2,8 +2,7 @@
 </style>
 
 <template>
-    <div class="ui main text container" style="margin-top: 80px;">
-        You are now connected as {{username}}
+    <div class="ui main text container" style="margin-top: 80px;">D
     </div>
 </template>
 

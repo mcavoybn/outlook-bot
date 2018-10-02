@@ -42,5 +42,6 @@ function autoexpire(token) {
 }
 
 module.exports = { 
-    state
+    state,
+    graphClient: undefined
 };

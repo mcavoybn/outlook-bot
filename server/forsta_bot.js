@@ -53,6 +53,8 @@ class ForstaBot {
     async onMessage(ev) {
         let msg = this.parseEv(ev);
         if(!msg) console.error("Received unsupported message!");
+
+        //bot message logic goes here
     }
 
     parseEv(ev){
@@ -82,12 +84,6 @@ class ForstaBot {
     }
 
     async sendMessage(dist, threadId, text){
-        this.saveToMessageHistory({
-            senderId: this.ourId,
-            text,
-            action: null,
-            threadId
-        });
         return this.msgSender.send({
             distribution: dist,
             threadId: threadId,
