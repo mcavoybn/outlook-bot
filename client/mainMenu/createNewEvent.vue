@@ -28,12 +28,12 @@ div [class*="pull right"] {
                 </sui-form-field>
                 <sui-form-field>
                     <label>Start</label>
-                    <input type="date" format="MM-DD-YYYY"v-model="newEvent.startDate">
+                    <input type="date" format="MM-DD-YYYY" v-model="newEvent.startDate">
                     <input type="time" format="HH:MM" v-model="newEvent.startTime">
                 </sui-form-field>
                 <sui-form-field>
-                    <label>End</label>
-                    <input type="date" format="MM-DD-YYYY"v-model="newEvent.endDate">
+                    <label>End</label> 
+                    <input type="date" format="MM-DD-YYYY" v-model="newEvent.endDate">
                     <input type="time" format="HH:MM" v-model="newEvent.endTime">
                 </sui-form-field>
                 <sui-form-field>
@@ -66,6 +66,7 @@ module.exports = {
     },
     methods: {
         loadData: function(){
+            this.loadTimezones();
         },
         loadTimezones: function(){
             shared.graphClient
@@ -78,7 +79,6 @@ module.exports = {
                         text: timezone.displayName
                     });
                 });
-                console.log(timezonesForDropdown);
             });
         },
         scheduleNewEvent: function() {

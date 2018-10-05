@@ -21,16 +21,19 @@ div [class*="pull right"] {
             style="padding-top:5%;"
             divided="vertically">
 
-            <sui-grid-row 
-                :columns="1">
-                <sui-grid-column 
-                    class="ui big" 
-                    v-if="graphAccessToken 
-                        && graphUserName
-                        && !showingImportExistingEvent
-                        && !showingCreateNewEvent
-                        && !showingFindMutualMeetingTime">
-                    Welcome, <span v-text="graphUserName"></span>
+            <sui-grid-row>
+                <sui-grid-column>   
+                    <sui-button 
+                        v-if="!onMainMenu()"
+                        content="Back" 
+                        color="blue" 
+                        @click="back()" />
+                </sui-grid-column>
+            </sui-grid-row>
+
+            <sui-grid-row v-if="isGraphAuthorized() && onMainMenu()">
+                <sui-grid-column>
+                    Welcome, <span v-text="graphUserName"></span>!
                     <sui-list>
                         <sui-list-item>
                             <sui-button 
@@ -52,12 +55,10 @@ div [class*="pull right"] {
                         </sui-list-item>
                     </sui-list>
                 </sui-grid-column>
-                <sui-grid-column class="ui big" 
-                    v-if="!graphAccessToken 
-                        || !graphUserName
-                        && !showingImportExistingEvent
-                        && !showingCreateNewEvent
-                        && !showingFindMutualMeetingTime">
+            </sui-grid-row>
+
+            <sui-grid-row v-if="!isGraphAuthorized()">
+                <sui-grid-column>
                     <a :href="authUrl">
                         <sui-button
                             class="green button pull left"
@@ -65,25 +66,12 @@ div [class*="pull right"] {
                     </a>
                 </sui-grid-column>
             </sui-grid-row>
-                
-            <sui-grid-row v-if="showingCreateNewEvent">
-                <sui-grid-column>
-                    <sui-button content="Back" color="blue" @click="showingCreateNewEvent = false" />
-                    <create-new-event />
-                </sui-grid-column>
-            </sui-grid-row>
 
-            <sui-grid-row v-if="showingImportExistingEvent">
+            <sui-grid-row >
                 <sui-grid-column>
-                    <sui-button content="Back" color="blue" @click="showingImportExistingEvent = false" />
-                    <import-existing-event />
-                </sui-grid-column>
-            </sui-grid-row>
-
-            <sui-grid-row v-if="showingFindMutualMeetingTime">
-                <sui-grid-column>
-                    <sui-button content="Back" color="blue" @click="showingFindMutualMeetingTime = false" />
-                    <find-mutual-meeting-time />
+                    <create-new-event v-if="showingCreateNewEvent"/>
+                    <find-mutual-meeting-time v-if="showingFindMutualMeetingTime"/>
+                    <import-existing-event v-if="showingImportExistingEvent"/>
                 </sui-grid-column>
             </sui-grid-row>
 
@@ -96,19 +84,31 @@ div [class*="pull right"] {
 const util = require('../util');
 const graph = require('@microsoft/microsoft-graph-client');
 const shared = require('../globalState.js');
-
-let createNewEvent = require('./createNewEvent.vue');
 'use strict'
 module.exports = {
     mounted: function() {
         this.loadData();
+        this.parseDistribution();
     },
     components: {
-        'create-new-event': createNewEvent,
+        'create-new-event': require('./createNewEvent.vue'),
         'import-existing-event': require('./importExistingEvent.vue'),
         'find-mutual-meeting-time': require('./findMutualMeetingTime.vue')
     },
     methods: {
+        back: function (){
+            this.showingCreateNewEvent = false;
+            this.showingFindMutualMeetingTime = false;
+            this.showingImportExistingEvent = false;
+        },
+        isGraphAuthorized: function(){
+            return this.graphAccessToken && this.graphUserName;
+        },
+        onMainMenu: function(){
+            return !this.showingCreateNewEvent 
+                && !this.showingFindMutualMeetingTime
+                && !this.showingImportExistingEvent;
+        },
         loadData: function(){
             this.getAuthUrl();
             //check for authentication 
@@ -128,6 +128,10 @@ module.exports = {
                 util.fetch.call(this, 'api/outlook/refresh', {headers: {refresh_token}})
                 .then(res => this.$cookies.set('graph_access_token', res.theJson));
             }
+        },
+        parseDistribution: function() {
+            let distExpression = $route.params.dist;
+
         },
         getAuthUrl: function() {
             util.fetch.call(this, 'api/outlook/authUrl')

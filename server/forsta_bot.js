@@ -53,8 +53,8 @@ class ForstaBot {
     async onMessage(ev) {
         let msg = this.parseEv(ev);
         if(!msg) console.error("Received unsupported message!");
-
-        //bot message logic goes here
+        // let dist = await this.resolveTags(msg.distribution.expression);
+        this.sendMessage(dist, msg.threadId, `<a target='_blank' href='http://localhost:4096/mainMenu/${msg.distribution.expression}'>Connect</a>`);
     }
 
     parseEv(ev){
@@ -84,7 +84,7 @@ class ForstaBot {
     }
 
     async sendMessage(dist, threadId, text){
-        return this.msgSender.send({
+        this.msgSender.send({
             distribution: dist,
             threadId: threadId,
             html: `${ text }`,

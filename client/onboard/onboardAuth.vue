@@ -29,7 +29,7 @@
                         <div class="field" v-if="type === 'totp'">
                             <label>Authentication Code</label>
                             <div class="ui left icon input">
-                                <input 
+                               <input 
                                     type="number" 
                                     name="otp" 
                                     placeholder="authentication code" 
