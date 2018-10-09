@@ -2,7 +2,7 @@
 </style>
 
 <template>
-    <div class="ui main text container" style="margin-top: 80px;">D
+    <div class="ui main text container">
     </div>
 </template>
 

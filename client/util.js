@@ -34,7 +34,7 @@ async function _fetch(url, { method='get', headers={}, body={} }={}, noBodyAwait
         headers: _headers,
     }, method.toLowerCase() === 'get' ? {} : { body: _body });
 
-    // console.log('about to do a fetch with url', url, 'and parms', parms);
+    //console.log('about to do a fetch with url', url, 'and parms', parms);
     const resp = await fetch(url, parms);
     if (noBodyAwaits) return resp;
 

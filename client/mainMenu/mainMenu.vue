@@ -33,23 +33,24 @@ div [class*="pull right"] {
 
             <sui-grid-row v-if="isGraphAuthorized() && onMainMenu()">
                 <sui-grid-column>
-                    Welcome, <span v-text="graphUserName"></span>!
+                    Welcome, <span v-text="graphUserName"></span>!<br />
+                    You are now connected to your outlook account.
                     <sui-list>
                         <sui-list-item>
                             <sui-button 
-                                color="green" 
+                                color="blue" 
                                 @click="showingImportExistingEvent = true" 
                                 content="Import existing event" />
                         </sui-list-item>
                         <sui-list-item>
                             <sui-button 
-                                color="green" 
+                                color="blue" 
                                 @click="showingCreateNewEvent = true" 
                                 content="Create new event" />
                         </sui-list-item>
                         <sui-list-item>
                             <sui-button 
-                                color="green" 
+                                color="blue" 
                                 @click="showingFindMutualMeetingTime = true" 
                                 content="Find mutual event time" />
                         </sui-list-item>
@@ -69,9 +70,9 @@ div [class*="pull right"] {
 
             <sui-grid-row >
                 <sui-grid-column>
-                    <create-new-event v-if="showingCreateNewEvent"/>
-                    <find-mutual-meeting-time v-if="showingFindMutualMeetingTime"/>
-                    <import-existing-event v-if="showingImportExistingEvent"/>
+                    <create-new-event v-if="showingCreateNewEvent" :distExpr="distExpr" :threadId="threadId"/>
+                    <find-mutual-meeting-time v-if="showingFindMutualMeetingTime" :distExpr="distExpr" :threadId="threadId"/>
+                    <import-existing-event v-if="showingImportExistingEvent" :distExpr="distExpr" :threadId="threadId"/>
                 </sui-grid-column>
             </sui-grid-row>
 
@@ -88,7 +89,10 @@ const shared = require('../globalState.js');
 module.exports = {
     mounted: function() {
         this.loadData();
-        this.parseDistribution();
+        // this.parseDistribution();
+
+        this.threadId = this.$route.query.threadId;
+        this.distExpr = this.$route.query.distExpr;
     },
     components: {
         'create-new-event': require('./createNewEvent.vue'),
@@ -125,17 +129,17 @@ module.exports = {
             //check for a refresh token and use it if available
             const refresh_token = this.$cookies.get('graph_refresh_token');
             if(refresh_token){
-                util.fetch.call(this, 'api/outlook/refresh', {headers: {refresh_token}})
+                util.fetch('api/outlook/refresh', {headers: {refresh_token}})
                 .then(res => this.$cookies.set('graph_access_token', res.theJson));
             }
         },
         parseDistribution: function() {
-            let distExpression = $route.params.dist;
-
+            // let distExpression = this.$route.params.dist;
+            // let ids = this.$route.params.dist.split(',');
         },
         getAuthUrl: function() {
-            util.fetch.call(this, 'api/outlook/authUrl')
-            .then(res => this.authUrl = res.theJson);
+            util.fetch('api/outlook/authUrl')
+            .then(res => {this.authUrl = res.theJson; console.log(res)});
         },
         getGraphAccessToken: function(){
             let token = this.$cookies.get('graph_access_token');
@@ -163,7 +167,9 @@ module.exports = {
             graphClient: undefined,
             showingCreateNewEvent: false,
             showingFindMutualMeetingTime: false,
-            showingImportExistingEvent: false
+            showingImportExistingEvent: false,
+            threadId: '',
+            distExpr: ''
         }
     }
 }

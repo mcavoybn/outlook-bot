@@ -11,9 +11,11 @@ function main() {
     const routes = [
         { path: '/welcome', name: 'welcome', component: require('./welcome/welcome.vue') },
         { path: '/graphAuth', name: 'graphAuth', component: require('./auth/graphAuth.vue') },
+        { path: '/auth/tag', name: 'loginTag', component: require('./auth/loginTag.vue') },
+        { path: '/auth/code', name: 'loginCode', component: require('./auth/loginCode.vue') },
         { path: '/onboard/tag', name: 'onboardTag', component: require('./onboard/onboardTag.vue') },
         { path: '/onboard/auth/:type/:tag', name: 'onboardAuth', component: require('./onboard/onboardAuth.vue') },
-        { path: '/main/:dist', name: 'main', component: require('./mainMenu/mainMenu.vue') },
+        { path: '/mainMenu', name: 'mainMenu', component: require('./mainMenu/mainMenu.vue') },
         { path: '/schedule/:eventId', name: 'schedule', component: require('./scheduleEvent/scheduleEvent.vue') },
         { path: '*', redirect: 'welcome' }
     ];

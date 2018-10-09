@@ -17,41 +17,67 @@ div [class*="pull right"] {
 <template lang="html">
     <div class="ui container left aligned">
 
-            <sui-form>
-                <sui-form-field>
-                    <label>Subject</label>
-                    <input placeholder="Title" v-model="newEvent.subject" >
-                </sui-form-field>
-                <sui-form-field>
-                    <label>Body</label>
-                    <textarea placeholder="Body" v-model="newEvent.body" />
-                </sui-form-field>
-                <sui-form-field>
-                    <label>Start</label>
-                    <input type="date" format="MM-DD-YYYY" v-model="newEvent.startDate">
-                    <input type="time" format="HH:MM" v-model="newEvent.startTime">
-                </sui-form-field>
-                <sui-form-field>
-                    <label>End</label> 
-                    <input type="date" format="MM-DD-YYYY" v-model="newEvent.endDate">
-                    <input type="time" format="HH:MM" v-model="newEvent.endTime">
-                </sui-form-field>
-                <sui-form-field>
-                    <label>Timezone</label>
+            <sui-grid>
+
+                <sui-grid-row>
+                    <sui-grid-column>
+                        Create a new calendar event and send invites to the current distribution.
+                    </sui-grid-column>
+                </sui-grid-row>
+
+                <sui-grid-row>
+                    <sui-grid-column>
+                        <sui-label>Subject</sui-label>
+                        <sui-input placeholder="Title" v-model="newEvent.subject" />
+                    </sui-grid-column>
+                </sui-grid-row>
+
+                <sui-grid-row>
+                    <sui-grid-column>
+                        <sui-label>Body</sui-label>
+                        <div class="ui form field">
+                            <textarea placeholder="Body" v-model="newEvent.body" rows="5" cols="40"/>
+                        </div>
+                    </sui-grid-column>
+                </sui-grid-row>
+
+                <sui-grid-row>
+                    <sui-grid-column>
+                        <sui-label>Start</sui-label>
+                        <sui-input type="date" format="MM-DD-YYYY" v-model="newEvent.startDate" />
+                        <sui-input type="time" format="HH:MM" v-model="newEvent.startTime" />
+                    </sui-grid-column>
+                </sui-grid-row>
+
+                <sui-grid-row>
+                    <sui-grid-column>
+                        <sui-label>End</sui-label> 
+                        <sui-input type="date" format="MM-DD-YYYY" v-model="newEvent.endDate" />
+                        <sui-input type="time" format="HH:MM" v-model="newEvent.endTime" />
+                    </sui-grid-column>
+                </sui-grid-row>
+
+                <sui-grid-row>
+                    <sui-grid-column>
+                        <sui-label>Timezone</sui-label>
                     <sui-dropdown
                         placeholder="Timezone"
                         selection
                         :options="timezonesForDropdown"
                         v-model="newEvent.timezone"
-                    />
-                </sui-form-field>
-            </sui-form>
+                        />
+                    </sui-grid-column>
+                </sui-grid-row>
 
-            <sui-button 
-                @click="scheduleNewEvent()"
-                color="green"
-                content="Create New Event"/>
-
+                <sui-grid-row>
+                    <sui-grid-column>
+                        <sui-button 
+                            @click="scheduleNewEvent()"
+                            color="green"
+                            content="Create New Event"/>
+                    </sui-grid-column>
+                </sui-grid-row>
+            </sui-grid>
     </div>
 </template>
  
@@ -63,6 +89,10 @@ const shared = require('../globalState');
 module.exports = {
     mounted: function() {
         this.loadData();
+    },
+    props: {
+        threadId: String,
+        distExpr: String
     },
     methods: {
         loadData: function(){
@@ -106,6 +136,8 @@ module.exports = {
             } catch (err) {
                 console.log(err);
             }
+            util.fetch('api/outlook/sendEventInvite', {headers:{threadId: this.$props.threadId, distExpr: this.$props.distExpr}})
+
             this.clearForm();
         },
         clearForm: function(){

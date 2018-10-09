@@ -44,13 +44,13 @@ module.exports = {
         global: shared.state
     }),
     mounted: function() {
-        const authDash = { name: 'loginTag', query: { forwardTo: '/dashboard' }};
+        const authDash = { name: 'loginTag', query: { forwardTo: '/mainMenu' }};
         if (this.global.onboardStatus === 'complete') {
             this.$router.push(authDash);
             return;
         }
         util.fetch.call(this, '/api/onboard/status/v1')
-        .then(result => { 
+        .then(result => {
             this.global.onboardStatus = result.theJson.status;
             if (this.global.onboardStatus === 'complete') {
                 this.$router.push(authDash);

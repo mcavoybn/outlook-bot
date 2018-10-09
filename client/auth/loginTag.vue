@@ -4,32 +4,25 @@
 <template>
     <div class="ui main text container" style="margin-top: 80px;">
         <div class="ui container center aligned">
-            <div v-if="monitor" class="ui basic segment huge">
-                <h1>
-                    <i class="circular icon add user"></i>
-                    Create Catch-All User
+            <div class="ui basic segment huge">
+                <h1 class="ui header">
+                    <i class="circular icon user"></i>
+                    Messaging Bot Login
                 </h1>
-                This bot will send and receive messages autonomously <br />
-                as a <b>new</b> Forsta user configured to be a "monitor" <br />
-                so it will receive copies of <b>all</b> organization traffic.<br />
-                <br />
-                Please authenticate as an <b>org administrator</b> to create this new user.
-            </div>
-            <div v-if="!monitor" class="ui basic segment huge">
-                <h1>
-                    <i class="large circular icon user"></i>
-                    Connect User
-                </h1>
-                This bot will send and receive messages autonomously <br />
-                as a particular Forsta user. Please authenticate as that user.
             </div>
             <div class="ui centered grid">
-                <div class="ui nine wide column basic segment left aligned b1">
+                <div class="ui nine wide column basic segment left aligned t0 b1">
                     <form class="ui huge form enter-tag" :class="{loading: loading}">
                         <div class="field">
-                            <label>Forsta {{monitor ? 'Organization Admin' : ''}} Login</label>
+                            <label>Authorized User</label>
                             <div class="ui left icon input">
-                                <input v-focus.lazy="true" type="text" v-model='tag' name="tag" placeholder="user:org" autocomplete="off">
+                                <input 
+                                    name="tag" 
+                                    placeholder="user:org" 
+                                    autocomplete="off" 
+                                    type="text" 
+                                    v-focus.lazy="true"  
+                                    v-model='tag' >
                                 <i class="at icon"></i>
                             </div>
                         </div>
@@ -38,9 +31,8 @@
                     </form>
                 </div>
             </div>
-            <div v-if="monitor" class="ui basic segment">
-                <p>Your administrator credentials will be immediately discarded<br />
-                and all further actions taken by this bot will be as the new user.</p>
+            <div class="ui basic segment">
+                <p>Please enter your Forsta address tag to receive login codewords for this site.</p>
             </div>
         </div>
     </div>
@@ -50,44 +42,55 @@
 util = require('../util');
 focus = require('vue-focus');
 shared = require('../globalState');
-
+jwtDecode = require('jwt-decode');
 function setup() {
+    const apiToken = this.global.apiToken;
+    const forwardTo = this.$route.query.forwardTo;
+    if (apiToken) {
+        const decoded = jwtDecode(apiToken);
+        const expires = new Date(decoded.exp * 1000);
+        const now = new Date();
+        if (now < expires) {
+            this.$router.replace(forwardTo ? forwardTo : { name: 'welcome' });
+            return;
+        }
+    }
     util.fetch.call(this, '/api/onboard/status/v1')
     .then(result => { 
         this.global.onboardStatus = result.theJson.status;
-        if (this.global.onboardStatus === 'complete') {
-            console.log('going to main');
-            this.$router.push(authDash);
+        if (this.global.onboardStatus !== 'complete') {
+            this.$router.push({ name: 'welcome' });
         }
     });
-
+    this.tag = this.global.loginTag;
     $('form.ui.form.enter-tag').form({
         fields: {
             tag: {
                 identifier: 'tag',
                 rules: [{
                     type: 'regExp',
-                    value: /^([\da-z_]([.][\da-z_]|[\da-z_])*):([\da-z_]([.]+[\da-z_]|[\da-z_])*)$/,
+                    value: /^([\da-z_]([.][\da-z_]|[\da-z_])*)(:([\da-z_]([.]+[\da-z_]|[\da-z_])*))?$/,
                     prompt: 'please enter full @your.name:your.org'
                 }]
             }
-        },  
+        },
         onSuccess: (event) => {
             event.preventDefault();
             requestAuth.call(this)
         }
     });
 }
-
 function requestAuth() {
     var tag = this.tag;
     this.loading = true;
-    util.fetch.call(this, '/api/onboard/atlasauth/request/v1/' + tag)
+    util.fetch.call(this, '/api/auth/login/v1/' + tag)
     .then(result => {
         this.loading = false;
         if (result.ok) {
-            console.log('going to onboard auth');
-            this.$router.push({ name: 'onboardAuth', params: { tag: this.tag, type: result.theJson.type }});
+            const { id } = result.theJson;
+            this.global.userId = id;
+            this.global.loginTag = tag;
+            this.$router.push({ name: 'loginCode', query: this.$route.query });
             return false;
         } else {
             util.addFormErrors('enter-tag', { tag: util.mergeErrors(result.theJson) });
@@ -100,7 +103,6 @@ function requestAuth() {
     });
     return false;
 }
-
 module.exports = {
     data: () => ({
         global: shared.state,
@@ -108,16 +110,11 @@ module.exports = {
         loading: false
     }),
     computed: {
-        monitor: function () { return this.global.onboardStatus === 'authenticate-admin'; },
-        gotoSetPassword: function () {
-            return {
-                name: 'setPassword',
-                query: { forwardTo: this.$route.query.forwardTo }
-            };
-        }
     },
     mounted: function () {
         setup.call(this)
+    },
+    methods: {
     },
     directives: {
         focus: focus.focus

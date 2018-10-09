@@ -20,7 +20,7 @@ div [class*="pull right"] {
         <sui-grid>
             <sui-grid-row>
                 <sui-grid-column>
-                    <sui-label>Get existing events from outlook</sui-label>
+                    Get existing events from outlook based on a given date range.
                 </sui-grid-column>
             </sui-grid-row>
 
@@ -41,7 +41,7 @@ div [class*="pull right"] {
             <sui-grid-row>
                 <sui-grid-column>
                     <sui-button
-                        class="blue button pull left"
+                        color="blue"
                         content="Get Events"
                         @click="getEventList()"/>
                 </sui-grid-column>
@@ -68,6 +68,15 @@ div [class*="pull right"] {
                     </sui-table>
                 </sui-grid-column>
             </sui-grid-row>
+
+            <sui-grid-row v-if="events.length > 0">
+                <sui-grid-column>
+                    <sui-button
+                        color="green"
+                        content="Send to Distribution"
+                        @click="getEventList()"/>
+                </sui-grid-column>
+            </sui-grid-row>
             
         </sui-grid>
 
@@ -78,30 +87,18 @@ div [class*="pull right"] {
  
 <script>
 const util = require('../util');
+const moment = require('moment');
 const graph = require('@microsoft/microsoft-graph-client');
 'use strict'
 module.exports = {
     mounted: function() {
         this.loadData();
-        let query = this.$route.query;
-        console.log(query);
+    },
+    props: {
+        threadId: String,
+        distExpr: String
     },
     methods: {
-        loadData: function(){
-        },
-        loadTimezones: function(){
-            this.graphClient
-            .api('/me/outlook/supportedTimezones')
-            .get()
-            .then(res => {
-                res.value.forEach(timezone => {
-                    this.timezonesForDropdown.push({
-                        value: timezone.alias,
-                        text: timezone.displayName
-                    });
-                });
-            });
-        },
         getEventList: function() {
             try {
                 const start = new Date(this.loadEventsRangeStart + 'T' + '00:00');
@@ -110,7 +107,6 @@ module.exports = {
                 .api(`/me/calendarView?startDateTime=${start.toISOString()}&endDateTime=${end.toISOString()}`)
                 .get()
                 .then(res => {
-                    console.log(res);
                     res.value.forEach(event => {
                         this.events.push({
                             start: moment(event.start.dateTime),
@@ -119,7 +115,6 @@ module.exports = {
                             body: event.body.bodyPreview
                         });
                     });
-                    console.log(this.events);
                 });
             } catch (err) {
                 console.log(err);

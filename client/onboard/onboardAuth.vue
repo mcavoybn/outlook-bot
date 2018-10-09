@@ -98,7 +98,7 @@ module.exports = {
                     const { token } = result.theJson;
                     this.global.apiToken = token;
                     this.global.onboardStatus = 'complete';
-                    this.$router.push({ name: 'welcome' });
+                    this.$router.push({name: 'welcome'});
                     return false;
                 } else {
                     this.error = util.mergeErrors(result.theJson) || 'Internal error, please try again.';

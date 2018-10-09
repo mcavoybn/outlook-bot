@@ -17,14 +17,73 @@ div [class*="pull right"] {
 <template lang="html">
     <div class="ui container left aligned">
 
-        <sui-form>
+        <sui-grid>
+            <sui-grid-row>
+                <sui-grid-column>
+                    Find a mutual meeting time based on the current distribution,a given date range and event duration.
+                </sui-grid-column>
+            </sui-grid-row>
+
             <sui-form-field>
-                <label>Find a meeting time that works for everyone based on their outlook calendar.</label>
+                <sui-label>Subject</sui-label>
+                <sui-input placeholder="Title" v-model="event.subject" />
             </sui-form-field>
-        </sui-form>
-        <sui-button
-            class="blue button pull left"
-            content="Start"/>
+            <sui-form-field>
+                <sui-label>Body</sui-label>
+                <div class="ui form field">
+                    <textarea placeholder="Body" v-model="event.body" />
+                </div>
+            </sui-form-field>
+            
+            <sui-grid-row>
+                <sui-grid-column>
+                    <sui-label v-text="'Range Start'" />
+                    <sui-input type="date" format="YYYY-MM-DD" v-model="event.dateRangeStart" />
+                </sui-grid-column>
+            </sui-grid-row>
+
+            <sui-grid-row>
+                <sui-grid-column>
+                    <sui-label v-text="'Range End'"/>
+                    <sui-input type="date" format="YYYY-MM-DD" v-model="event.dateRangeEnd" />
+                </sui-grid-column>
+            </sui-grid-row>
+
+            <sui-grid-row>
+                <sui-grid-column>
+                    <sui-label v-text="'Event Duration'"/>
+                    <sui-input type="number" step="0.25" min="0.25" v-model="event.duration" />
+                </sui-grid-column>
+            </sui-grid-row>
+
+            <sui-grid-row>
+                <sui-grid-column>
+                    <sui-button
+                        color="green"
+                        content="Start search"
+                        @click="startSearch()"/>
+                </sui-grid-column>
+            </sui-grid-row>
+
+            <sui-grid-row>
+                <sui-grid-column>
+                    <sui-table>
+                        <sui-table-header>
+                            <sui-table-header-cell v-text="'Start'" />
+                            <sui-table-header-cell v-text="'End'" />
+                        </sui-table-header>
+
+                        <sui-table-body>
+                            <sui-table-row v-for="possibleEvent in possibleEvents">
+                                <sui-table-cell v-text="event.start.format('MM/DD/YYYY HH:MM')" />
+                                <sui-table-cell v-text="event.end.format('MM/DD/YYYY HH:MM')" />
+                            </sui-table-row>
+                        </sui-table-body>
+                    </sui-table>
+                </sui-grid-column>
+            </sui-grid-row>
+            
+        </sui-grid>
 
     </div>
 </template>
@@ -38,28 +97,27 @@ module.exports = {
     mounted: function() {
         this.loadData();
     },
+    props: {
+        threadId: String,
+        distExpr: String
+    },
     methods: {
         loadData: function(){
         },
-        getEventList: function() {
-            try {
-                const start = new Date(this.loadEventsRangeStart + 'T' + '12:00:00AM');
-                const end = new Date(this.loadEventsRangeEnd + 'T' + '11:59:00PM');
-                shared.graphClient
-                .api(`/me/calendarView?startDateTime=${start.toISOString()}&endDateTime=${end.toISOString()}`)
-                .get()
-                .then(res => {
-                    console.log(res);
-                    //convert events to proper format and store in the database
-                });
-            } catch (err) {
-                console.log(err);
-            }
-        },
+        startSearch: function() {
+        }
     },
     data: function() {
         return {
             global: shared.state,
+            event: {
+                body: '',
+                subject: '',
+                dateRangeEnd: '',
+                dateRangeStart: '',
+                duration: 1
+            },
+            possibleEvents: []
         }
     }
 }

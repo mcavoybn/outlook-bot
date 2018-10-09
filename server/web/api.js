@@ -278,6 +278,9 @@ class OutlookAPIV1 extends APIHandler {
         this.router.get('/authUrl', this.asyncRoute(this.onGetAuthUrl, false));
         this.router.get('/token', this.asyncRoute(this.onGetAuthToken, false));
         this.router.get('/refresh', this.asyncRoute(this.onRefreshAuthToken, false));
+        this.router.get('/sendEventInvite', this.asyncRoute(this.onSendEventInvite, false));
+        this.router.get('/getEvent', this.asyncRoute(this.onGetEvent, false));
+        this.router.get('/sendEventInvite', this.asyncRoute(this.onSendEventInvite, false));
         this.oauth = require('simple-oauth2').create({
             client: {
                 id: process.env.APP_ID,
@@ -292,6 +295,8 @@ class OutlookAPIV1 extends APIHandler {
     }
     
     async onGetAuthUrl(req, res){
+
+        console.log('made it into get authurl....');
         const authUrl = this.oauth.authorizationCode.authorizeURL({
             redirect_uri: process.env.REDIRECT_URI,
             scope: process.env.APP_SCOPES
@@ -321,6 +326,24 @@ class OutlookAPIV1 extends APIHandler {
         let refresh_token = req.get("refresh_token");
         const newToken = await this.oauth.accessToken.create({refresh_token: refresh_token}).refresh();
         res.status(200).json(newToken.token.access_token);
+    }
+
+    async onPostEvent(req, res){
+        let event = req.body.event;
+        relay.storage.set('events', event.id, event);
+    }
+
+    async onSendEventInvite(req, res){
+        let eventId = req.get("eventId");
+        let distExpr = req.get("distExpr");
+        let threadId = req.get("threadId");
+        let dist = await this.server.bot.resolveTags(distExpr);
+        this.server.bot.sendMessage(
+            dist,
+            threadId,
+            `<a target="_blank" href="http://localhost:4096/scheduleEvent?eventId=${eventId}">Schedule Event</a>`
+        );
+        res.status(200);
     }
 
 }
