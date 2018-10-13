@@ -280,6 +280,7 @@ class OutlookAPIV1 extends APIHandler {
         this.router.get('/refresh', this.asyncRoute(this.onRefreshAuthToken, false));
         this.router.get('/sendEventInvite', this.asyncRoute(this.onSendEventInvite, false));
         this.router.get('/getEvent', this.asyncRoute(this.onGetEvent, false));
+        this.router.post('/postEvent', this.asyncRoute(this.onPostEvent, false));
         this.router.get('/sendEventInvite', this.asyncRoute(this.onSendEventInvite, false));
         this.oauth = require('simple-oauth2').create({
             client: {
@@ -295,8 +296,6 @@ class OutlookAPIV1 extends APIHandler {
     }
     
     async onGetAuthUrl(req, res){
-
-        console.log('made it into get authurl....');
         const authUrl = this.oauth.authorizationCode.authorizeURL({
             redirect_uri: process.env.REDIRECT_URI,
             scope: process.env.APP_SCOPES
@@ -329,8 +328,14 @@ class OutlookAPIV1 extends APIHandler {
     }
 
     async onPostEvent(req, res){
-        let event = req.body.event;
-        relay.storage.set('events', event.id, event);
+        let event = req.body;
+        relay.storage.set('events', event.eventId, event)
+        .then(res.status(200));
+    }
+
+    async onGetEvent(req, res){
+        let event = await relay.storage.set('events', req.get('eventId'));
+        res.status(200).json(event);
     }
 
     async onSendEventInvite(req, res){

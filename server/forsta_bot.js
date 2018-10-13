@@ -53,14 +53,17 @@ class ForstaBot {
     async onMessage(ev) {
         let msg = this.parseEv(ev);
         if(!msg) console.error("Received unsupported message!");
+        console.log('message recieved msg.data.body : ');
+        console.log(msg.data.body);
+        //[ { type: 'text/plain', value: '/add outlook.bot' } ] when the bot is added
         let dist = await this.resolveTags(msg.distribution.expression);
         const sender = await this.atlas.fetch(`/v1/user/${msg.sender.userId}/`);
         const bot = await this.atlas.fetch(`/v1/user/${this.ourId}/`);
-        dist.userids = dist.userids.filter(id => (id != sender.id && id != bot.id));
+        let userids = dist.includedTagids.filter(id => (id != sender.tag.id && id != bot.tag.id));
         let idsParam = '(';
-        dist.userids.forEach(id => idsParam += `<${id}>+`);
+        userids.forEach(id => idsParam += `<${id}>+`);
         idsParam += ')';
-        this.sendMessage(dist, msg.threadId, `<a target='_blank' href='http://localhost:4096/mainMenu?distExpr=${idsParam}?threadId=${msg.threadId}'>Connect</a>`);
+        this.sendMessage(dist, msg.threadId, `<a target='_blank' href='http://localhost:4096/mainMenu?distExpr=${idsParam}&threadId=${msg.threadId}'>Connect</a>`);
     }
 
     parseEv(ev){

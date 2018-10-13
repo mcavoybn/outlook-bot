@@ -22,16 +22,25 @@ div [class*="pull right"] {
             divided="vertically">
 
             <sui-grid-row>
-                <sui-grid-column>   
-                    <!-- event details here -->
-                </sui-grid-column>
+                <sui-grid-column v-text="event.subject" />   
+            </sui-grid-row>
+            <sui-grid-row>
+                <sui-grid-column v-text="event.body" />   
+            </sui-grid-row>
+            <sui-grid-row>
+                <sui-grid-column v-text="event.start" />   
+            </sui-grid-row>
+            <sui-grid-row>
+                <sui-grid-column v-text="event.end" />   
+            </sui-grid-row>
+            <sui-grid-row>
+                <sui-grid-column v-text="event.timezone" />   
             </sui-grid-row>
 
             <sui-grid-row v-if="isGraphAuthorized()">
                 <sui-grid-column>
                     <sui-button 
                         color="green" 
-                        @click="showingImportExistingEvent = true" 
                         content="Schedule this event" />
                 </sui-grid-column>
             </sui-grid-row>
@@ -59,6 +68,7 @@ const shared = require('../globalState.js');
 module.exports = {
     mounted: function() {
         this.loadData();
+        this.$cookies.set('eventId', this.$query.eventId);
     },
     methods: {
         isGraphAuthorized: function(){
@@ -83,6 +93,13 @@ module.exports = {
                 util.fetch.call(this, 'api/outlook/refresh', {headers: {refresh_token}})
                 .then(res => this.$cookies.set('graph_access_token', res.theJson));
             }
+            let options = {
+                headers: { 
+                    eventId: this.$cookies.get('eventId') 
+                }
+            };
+            util.fetch.call(this, 'api/outlook/getEvent', options)
+            .then(res => this.event = res.theJson);
         },
         getAuthUrl: function() {
             util.fetch.call(this, 'api/outlook/authUrl')
@@ -111,7 +128,17 @@ module.exports = {
             authUrl: '',
             graphAccessToken: undefined,
             graphUserName: undefined,
-            graphClient: undefined
+            graphClient: undefined,
+            eventId: '',
+            event: {
+                subject: '',
+                body: '',
+                startDate: '', 
+                startTime: '',
+                endDate: '',
+                endTime: '',
+                timezone: ''
+            }
         }
     }
 }

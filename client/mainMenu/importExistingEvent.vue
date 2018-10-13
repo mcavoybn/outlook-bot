@@ -94,10 +94,6 @@ module.exports = {
     mounted: function() {
         this.loadData();
     },
-    props: {
-        threadId: String,
-        distExpr: String
-    },
     methods: {
         getEventList: function() {
             try {

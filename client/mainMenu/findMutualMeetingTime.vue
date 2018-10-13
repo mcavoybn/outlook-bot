@@ -97,10 +97,6 @@ module.exports = {
     mounted: function() {
         this.loadData();
     },
-    props: {
-        threadId: String,
-        distExpr: String
-    },
     methods: {
         loadData: function(){
         },

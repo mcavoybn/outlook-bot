@@ -85,14 +85,11 @@ div [class*="pull right"] {
 const util = require('../util');
 const graph = require('@microsoft/microsoft-graph-client');
 const shared = require('../globalState');
+const uuid4 = require('uuid/v4');
 'use strict'
 module.exports = {
     mounted: function() {
         this.loadData();
-    },
-    props: {
-        threadId: String,
-        distExpr: String
     },
     methods: {
         loadData: function(){
@@ -109,6 +106,7 @@ module.exports = {
                         text: timezone.displayName
                     });
                 });
+                this.newEvent.timezone = this.timezonesForDropdown[0].value;
             });
         },
         scheduleNewEvent: function() {
@@ -136,9 +134,31 @@ module.exports = {
             } catch (err) {
                 console.log(err);
             }
-            util.fetch('api/outlook/sendEventInvite', {headers:{threadId: this.$props.threadId, distExpr: this.$props.distExpr}})
-
-            this.clearForm();
+            let eventId = uuid4();
+            let options = {
+                body: {
+                    eventId,
+                    subject: this.newEvent.subject,
+                    body: this.newEvent.body,
+                    start: start.toISOString(),
+                    end: end.toISOString(),
+                    timezone: this.newEvent.timezone
+                },
+                method: 'post'
+            }
+            util.fetch('api/outlook/postEvent', options)
+            .then(this.sendInvite(eventId));
+            // this.clearForm();
+        },
+        sendInvite: function(eventId) {
+            let options = {
+                headers: {
+                    eventId,
+                    threadId: this.$cookies.get('threadId'),
+                    distExpr: this.$cookies.get('distExpr')
+                }
+            }
+            util.fetch('api/outlook/sendEventInvite', options);
         },
         clearForm: function(){
             this.newEvent = {
@@ -156,14 +176,14 @@ module.exports = {
             global: shared.state,
             timezonesForDropdown: [],
             newEvent: {
-                subject: '',
-                body: '',
-                startDate: '', 
-                startTime: '',
-                endDate: '',
-                endTime: '',
+                subject: 'Dummy subject',
+                body: 'Dummy body',
+                startDate: '2018-10-08', 
+                startTime: '04:00',
+                endDate: '2018-10-09',
+                endTime: '05:00',
                 timezone: ''
-            },
+            }
         }
     }
 }

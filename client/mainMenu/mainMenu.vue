@@ -70,9 +70,9 @@ div [class*="pull right"] {
 
             <sui-grid-row >
                 <sui-grid-column>
-                    <create-new-event v-if="showingCreateNewEvent" :distExpr="distExpr" :threadId="threadId"/>
-                    <find-mutual-meeting-time v-if="showingFindMutualMeetingTime" :distExpr="distExpr" :threadId="threadId"/>
-                    <import-existing-event v-if="showingImportExistingEvent" :distExpr="distExpr" :threadId="threadId"/>
+                    <create-new-event v-if="showingCreateNewEvent"/>
+                    <find-mutual-meeting-time v-if="showingFindMutualMeetingTime"/>
+                    <import-existing-event v-if="showingImportExistingEvent"/>
                 </sui-grid-column>
             </sui-grid-row>
 
@@ -89,10 +89,8 @@ const shared = require('../globalState.js');
 module.exports = {
     mounted: function() {
         this.loadData();
-        // this.parseDistribution();
-
-        this.threadId = this.$route.query.threadId;
-        this.distExpr = this.$route.query.distExpr;
+        this.$cookies.set('threadId', this.$route.query.threadId);
+        this.$cookies.set('distExpr', this.$route.query.distExpr);
     },
     components: {
         'create-new-event': require('./createNewEvent.vue'),
@@ -133,13 +131,9 @@ module.exports = {
                 .then(res => this.$cookies.set('graph_access_token', res.theJson));
             }
         },
-        parseDistribution: function() {
-            // let distExpression = this.$route.params.dist;
-            // let ids = this.$route.params.dist.split(',');
-        },
         getAuthUrl: function() {
             util.fetch('api/outlook/authUrl')
-            .then(res => {this.authUrl = res.theJson; console.log(res)});
+            .then(res => this.authUrl = res.theJson);
         },
         getGraphAccessToken: function(){
             let token = this.$cookies.get('graph_access_token');
