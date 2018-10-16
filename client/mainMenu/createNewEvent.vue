@@ -158,7 +158,8 @@ module.exports = {
                     distExpr: this.$cookies.get('distExpr')
                 }
             }
-            util.fetch('api/outlook/sendEventInvite', options);
+            util.fetch('api/outlook/sendEventInvite', options)
+            .then(res => console.log(res));
         },
         clearForm: function(){
             this.newEvent = {

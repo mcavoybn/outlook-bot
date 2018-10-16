@@ -28,6 +28,7 @@ div [class*="pull right"] {
                 <sui-label>Subject</sui-label>
                 <sui-input placeholder="Title" v-model="event.subject" />
             </sui-form-field>
+            
             <sui-form-field>
                 <sui-label>Body</sui-label>
                 <div class="ui form field">

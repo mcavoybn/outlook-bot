@@ -17,44 +17,87 @@ div [class*="pull right"] {
 <template lang="html">
     <div class="ui container left aligned">
 
-        <sui-grid 
-            style="padding-top:5%;"
-            divided="vertically">
-
-            <sui-grid-row>
-                <sui-grid-column v-text="event.subject" />   
-            </sui-grid-row>
-            <sui-grid-row>
-                <sui-grid-column v-text="event.body" />   
-            </sui-grid-row>
-            <sui-grid-row>
-                <sui-grid-column v-text="event.start" />   
-            </sui-grid-row>
-            <sui-grid-row>
-                <sui-grid-column v-text="event.end" />   
-            </sui-grid-row>
-            <sui-grid-row>
-                <sui-grid-column v-text="event.timezone" />   
-            </sui-grid-row>
-
-            <sui-grid-row v-if="isGraphAuthorized()">
-                <sui-grid-column>
-                    <sui-button 
-                        color="green" 
-                        content="Schedule this event" />
-                </sui-grid-column>
-            </sui-grid-row>
-
+        <sui-grid divided="vertically">
             <sui-grid-row v-if="!isGraphAuthorized()">
                 <sui-grid-column>
                     <a :href="authUrl">
                         <sui-button
-                            class="green button pull left"
+                            color="green"
                             content="Connect to Outlook"/>
                     </a>
                 </sui-grid-column>
             </sui-grid-row>
+        </sui-grid>
 
+        <sui-grid 
+            style="padding-top:5%;"
+            divided="vertically"
+            v-if="isGraphAuthorized()">
+
+            <sui-grid-row>
+                <sui-grid-column>
+                    Schedule an event which you have been sent
+                </sui-grid-column>
+            </sui-grid-row>
+
+            <sui-grid-row>
+                <sui-grid-column>
+                    <sui-label>Subject</sui-label>
+                    <span v-text="event.subject" />
+                </sui-grid-column>
+            </sui-grid-row>
+
+            <sui-grid-row>
+                <sui-grid-column>
+                    <sui-label>Body</sui-label>
+                    <span v-text="event.body" />
+                </sui-grid-column>
+            </sui-grid-row>
+
+            <sui-grid-row>
+                <sui-grid-column>
+                    <sui-label>Start Date</sui-label>
+                    <span v-text="event.startDate" />
+                </sui-grid-column>
+            </sui-grid-row>
+
+            <sui-grid-row>
+                <sui-grid-column>
+                    <sui-label>Start Time</sui-label>
+                    <span v-text="event.startTime" />
+                </sui-grid-column>
+            </sui-grid-row>
+
+            <sui-grid-row>
+                <sui-grid-column>
+                    <sui-label>End Date</sui-label> 
+                    <span v-text="event.endDate" />
+                </sui-grid-column>
+            </sui-grid-row>
+
+
+            <sui-grid-row>
+                <sui-grid-column>
+                    <sui-label>End Time</sui-label> 
+                    <span v-text="event.endTime" />
+                </sui-grid-column>
+            </sui-grid-row>
+
+            <sui-grid-row>
+                <sui-grid-column>
+                    <sui-label>Timezone</sui-label> 
+                    <span v-text="event.timezone" />
+                </sui-grid-column>
+            </sui-grid-row>
+
+            <sui-grid-row>
+                <sui-grid-column>
+                    <sui-button 
+                        @click="scheduleNewEvent()"
+                        color="green" 
+                        content="Schedule this event" />
+                </sui-grid-column>
+            </sui-grid-row>
         </sui-grid>
 
     </div>
@@ -64,11 +107,13 @@ div [class*="pull right"] {
 const util = require('../util');
 const graph = require('@microsoft/microsoft-graph-client');
 const shared = require('../globalState.js');
+const moment = require('moment');
 'use strict'
 module.exports = {
     mounted: function() {
+        if(this.$route.query.eventId)
+            this.$cookies.set('eventId', this.$route.query.eventId);
         this.loadData();
-        this.$cookies.set('eventId', this.$query.eventId);
     },
     methods: {
         isGraphAuthorized: function(){
@@ -95,11 +140,44 @@ module.exports = {
             }
             let options = {
                 headers: { 
-                    eventId: this.$cookies.get('eventId') 
+                    eventId: this.$cookies.get('eventId')
                 }
             };
             util.fetch.call(this, 'api/outlook/getEvent', options)
-            .then(res => this.event = res.theJson);
+            .then(res => {
+                this.event = res.theJson;
+                let startMoment = moment(this.event.start);
+                let endMoment = moment(this.event.end);
+                this.event.startDate = startMoment.format('MM-DD-YYYY');
+                this.event.startTime = startMoment.format('HH:MM');
+                this.event.endDate = endMoment.format('MM-DD-YYYY');
+                this.event.endTime = endMoment.format('HH:MM');
+            });
+        },
+        scheduleNewEvent: function() {
+            this.$cookies.remove('eventId');
+            try {
+                shared.graphClient
+                .api('/me/events')
+                .post({
+                    "Subject": this.event.subject,
+                    "Body": {
+                        "ContentType": "HTML",
+                        "Content": this.event.body,
+                    },
+                    "Start": {
+                        "DateTime": this.event.start,
+                        "TimeZone": this.event.timezone
+                    },
+                    "End": {
+                        "DateTime": this.event.end,
+                        "TimeZone": this.event.timezone
+                    },
+                    "Attendees": []
+                }, (err, res) => console.log(res));
+            } catch (err) {
+                console.log(err);
+            }
         },
         getAuthUrl: function() {
             util.fetch.call(this, 'api/outlook/authUrl')
@@ -114,13 +192,6 @@ module.exports = {
             }
             return null;
         },
-        graphSignOut: function(){
-            this.$cookies.remove('graph_access_token');
-            this.$cookies.remove('graph_user_name');
-            this.$cookies.remove('graph_refresh_token');
-            this.$cookies.remove('graph_token_expires');
-            this.$router.go();
-        },
     },
     data: function() {
         return {
@@ -131,10 +202,13 @@ module.exports = {
             graphClient: undefined,
             eventId: '',
             event: {
+                eventId: '',
                 subject: '',
                 body: '',
-                startDate: '', 
+                start: '',
+                startDate: '',
                 startTime: '',
+                end: '',
                 endDate: '',
                 endTime: '',
                 timezone: ''

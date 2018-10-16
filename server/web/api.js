@@ -1,4 +1,4 @@
-const BotAtlasClient = require('../atlas_client');
+ const BotAtlasClient = require('../atlas_client');
 const csvStringify = require('csv-stringify');
 const express = require('express');
 const relay = require('librelay');
@@ -281,6 +281,7 @@ class OutlookAPIV1 extends APIHandler {
         this.router.get('/sendEventInvite', this.asyncRoute(this.onSendEventInvite, false));
         this.router.get('/getEvent', this.asyncRoute(this.onGetEvent, false));
         this.router.post('/postEvent', this.asyncRoute(this.onPostEvent, false));
+        this.router.post('/removeEvent', this.asyncRoute(this.onRemoveEvent, false));
         this.router.get('/sendEventInvite', this.asyncRoute(this.onSendEventInvite, false));
         this.oauth = require('simple-oauth2').create({
             client: {
@@ -330,11 +331,16 @@ class OutlookAPIV1 extends APIHandler {
     async onPostEvent(req, res){
         let event = req.body;
         relay.storage.set('events', event.eventId, event)
-        .then(res.status(200));
+        .then(res.status(200).send('OK'));
     }
 
     async onGetEvent(req, res){
-        let event = await relay.storage.set('events', req.get('eventId'));
+        let event = await relay.storage.get('events', req.get('eventId'));
+        res.status(200).json(event);
+    }
+
+    async onRemoveEvent(req, res){
+        let event = await relay.storage.remove('events', req.body.eventId);
         res.status(200).json(event);
     }
 
@@ -348,7 +354,7 @@ class OutlookAPIV1 extends APIHandler {
             threadId,
             `<a target="_blank" href="http://localhost:4096/scheduleEvent?eventId=${eventId}">Schedule Event</a>`
         );
-        res.status(200);
+        res.status(200).send('OK');
     }
 
 }
