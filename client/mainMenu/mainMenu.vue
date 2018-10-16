@@ -76,6 +76,15 @@ div [class*="pull right"] {
                 </sui-grid-column>
             </sui-grid-row>
 
+            <sui-grid-row >
+                <sui-grid-column>
+                    <sui-button
+                        @click="signOut()"
+                        color="green"
+                        content="Sign Out of Forsta" />
+                </sui-grid-column>
+            </sui-grid-row>
+
         </sui-grid>
 
     </div>
@@ -89,8 +98,6 @@ const shared = require('../globalState.js');
 module.exports = {
     mounted: function() {
         this.loadData();
-        this.$cookies.set('threadId', this.$route.query.threadId);
-        this.$cookies.set('distExpr', this.$route.query.distExpr);
     },
     components: {
         'create-new-event': require('./createNewEvent.vue'),
@@ -98,6 +105,9 @@ module.exports = {
         'find-mutual-meeting-time': require('./findMutualMeetingTime.vue')
     },
     methods: {
+        signOut: function (){
+            shared.state.apiToken = undefined;
+        },
         back: function (){
             this.showingCreateNewEvent = false;
             this.showingFindMutualMeetingTime = false;

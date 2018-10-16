@@ -111,8 +111,6 @@ const moment = require('moment');
 'use strict'
 module.exports = {
     mounted: function() {
-        if(this.$route.query.eventId)
-            this.$cookies.set('eventId', this.$route.query.eventId);
         this.loadData();
     },
     methods: {
@@ -143,8 +141,12 @@ module.exports = {
                     eventId: this.$cookies.get('eventId')
                 }
             };
+            console.log('eventId');
+            console.log(this.$cookies.get('eventId'));
             util.fetch.call(this, 'api/outlook/getEvent', options)
             .then(res => {
+                console.log('FETCHING EVENT !');
+                console.log(res);
                 this.event = res.theJson;
                 let startMoment = moment(this.event.start);
                 let endMoment = moment(this.event.end);

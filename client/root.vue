@@ -11,8 +11,12 @@ module.exports = {
     data: () => ({ 
         global: shared.state
     }),
-    methods:{
+    methods:{ 
         authenticateUser: function() {
+            if(this.$route.query.distExpr) this.$cookies.set('distExpr', this.$route.query.distExpr);
+            if(this.$route.query.threadId) this.$cookies.set('threadId', this.$route.query.threadId);
+            if(this.$route.query.eventId) this.$cookies.set('eventId', this.$route.query.eventId);
+
             util.fetch.call(this, '/api/auth/status/v1')
             .then(result => { this.global.passwordSet = result.ok; });
             
