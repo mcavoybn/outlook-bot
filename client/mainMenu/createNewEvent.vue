@@ -18,9 +18,9 @@ div [class*="pull right"] {
     <div class="ui container left aligned">
 
             <sui-grid>
-
                 <sui-grid-row>
                     <sui-grid-column>
+                        <h3>Create New Event</h3>
                         Create a new calendar event and send invites to the current distribution.
                     </sui-grid-column>
                 </sui-grid-row>

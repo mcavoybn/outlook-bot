@@ -20,26 +20,21 @@ div [class*="pull right"] {
         <sui-grid>
             <sui-grid-row>
                 <sui-grid-column>
+                    <h3>Import Existing Event</h3>
                     Get existing events from outlook based on a given date range.
                 </sui-grid-column>
             </sui-grid-row>
 
-            <sui-grid-row>
-                <sui-grid-column>
+            <sui-grid-row columns="3">
+                <sui-grid-column width="5">
                     <sui-label v-text="'Start'" />
                     <sui-input type="date" format="YYYY-MM-DD" v-model="loadEventsRangeStart" />
                 </sui-grid-column>
-            </sui-grid-row>
-
-            <sui-grid-row>
-                <sui-grid-column>
+                <sui-grid-column width="5">
                     <sui-label v-text="'End'"/>
                     <sui-input type="date" format="YYYY-MM-DD" v-model="loadEventsRangeEnd" />
                 </sui-grid-column>
-            </sui-grid-row>
-
-            <sui-grid-row>
-                <sui-grid-column>
+                <sui-grid-column width="6">
                     <sui-button
                         color="blue"
                         content="Get Events"
@@ -119,7 +114,7 @@ div [class*="pull right"] {
                     <sui-button 
                         @click="scheduleSelectedEvent()"
                         color="green"
-                        content="Send Invite to Distribution"/>
+                        content="Send Invite to Selected Event"/>
                 </sui-grid-column>
             </sui-grid-row>
         </sui-grid>

@@ -6,7 +6,7 @@
                     <img class="ui small floated right image" src="/static/images/forsta-logo.svg"/>
                 </div>
                 <div class="thirteen wide column">
-                    <h1 class="ui header">Forsta Live Chat Bot
+                    <h1 class="ui header">Forsta Outlook Bot
                         <div class="sub header"></div>
                     </h1>
                 </div>

@@ -20,21 +20,22 @@ div [class*="pull right"] {
         <sui-grid>
             <sui-grid-row>
                 <sui-grid-column>
+                    <h3>Find Mutual Meeting Time</h3>
                     Find a mutual meeting time based on the current distribution,a given date range and event duration.
                 </sui-grid-column>
             </sui-grid-row>
 
-            <sui-form-field>
+            <sui-grid-row>
                 <sui-label>Subject</sui-label>
                 <sui-input placeholder="Title" v-model="event.subject" />
-            </sui-form-field>
+            </sui-grid-row>
             
-            <sui-form-field>
+            <sui-grid-row>
                 <sui-label>Body</sui-label>
                 <div class="ui form field">
-                    <textarea placeholder="Body" v-model="event.body" />
+                    <textarea placeholder="Body" v-model="event.body" style="padding-right:35px"/>
                 </div>
-            </sui-form-field>
+            </sui-grid-row>
             
             <sui-grid-row>
                 <sui-grid-column>

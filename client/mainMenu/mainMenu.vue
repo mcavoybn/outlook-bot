@@ -15,38 +15,39 @@ div [class*="pull right"] {
 </style>
  
 <template lang="html">
-    <div class="ui container left aligned">
+    <div class="ui container center aligned">
 
         <sui-grid 
-            style="padding-top:5%;"
+            style="padding:5% 10% 1% 10%"
             divided="vertically">
 
             <sui-grid-row>
-                <sui-grid-column>   
-                    <sui-button 
-                        v-if="!onMainMenu()"
-                        content="Back" 
-                        color="blue" 
-                        @click="back()" />
+                <sui-grid-column :width="4" />
+                <sui-grid-column :width="8">
+                    <img width="50px" height="50px" src="/static/images/forsta-logo.svg"/>
+                    <h1 class="ui header">Forsta Outlook Bot
+                        <div class="sub header"></div>
+                    </h1>
                 </sui-grid-column>
+                <sui-grid-column :width="4" />
             </sui-grid-row>
 
             <sui-grid-row v-if="isGraphAuthorized() && onMainMenu()">
                 <sui-grid-column>
-                    Welcome, <span v-text="graphUserName"></span>!<br />
+                    <h3>Welcome, <span v-text="graphUserName"></span>!<br /></h3>
                     You are now connected to your outlook account.
                     <sui-list>
                         <sui-list-item>
                             <sui-button 
                                 color="blue" 
-                                @click="showingImportExistingEvent = true" 
-                                content="Import existing event" />
+                                @click="showingCreateNewEvent = true" 
+                                content="Create new event" />
                         </sui-list-item>
                         <sui-list-item>
                             <sui-button 
                                 color="blue" 
-                                @click="showingCreateNewEvent = true" 
-                                content="Create new event" />
+                                @click="showingImportExistingEvent = true" 
+                                content="Import existing event" />
                         </sui-list-item>
                         <sui-list-item>
                             <sui-button 
@@ -68,7 +69,7 @@ div [class*="pull right"] {
                 </sui-grid-column>
             </sui-grid-row>
 
-            <sui-grid-row >
+            <sui-grid-row v-if="showingCreateNewEvent||showingFindMutualMeetingTime||showingImportExistingEvent">
                 <sui-grid-column>
                     <create-new-event v-if="showingCreateNewEvent"/>
                     <find-mutual-meeting-time v-if="showingFindMutualMeetingTime"/>
@@ -79,6 +80,13 @@ div [class*="pull right"] {
             <sui-grid-row >
                 <sui-grid-column>
                     <sui-button
+                        v-if="!onMainMenu()"
+                        class="left aligned"
+                        content="Back" 
+                        color="blue" 
+                        @click="back()" />
+                    <sui-button
+                        class="right aligned"
                         @click="signOut()"
                         color="green"
                         content="Sign Out of Forsta" />
