@@ -23,8 +23,10 @@ div [class*="pull right"] {
 
             <sui-grid-row>
                 <sui-grid-column :width="4" />
-                <sui-grid-column :width="8">
+                <sui-grid-column :width="4">
                     <img width="50px" height="50px" src="/static/images/forsta-logo.svg"/>
+                </sui-grid-column>
+                <sui-grid-column :width="4">
                     <h1 class="ui header">Forsta Outlook Bot
                         <div class="sub header"></div>
                     </h1>
@@ -63,7 +65,8 @@ div [class*="pull right"] {
                 <sui-grid-column>
                     <a :href="authUrl">
                         <sui-button
-                            class="green button pull left"
+                            size="large"
+                            color="green"
                             content="Connect to Outlook"/>
                     </a>
                 </sui-grid-column>

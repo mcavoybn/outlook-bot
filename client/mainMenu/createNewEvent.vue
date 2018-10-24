@@ -36,8 +36,8 @@ div [class*="pull right"] {
                     <sui-grid-column>
                         <sui-label>Body</sui-label>
                         <div class="ui form field">
-                            <textarea placeholder="Body" v-model="newEvent.body" rows="5" cols="40"/>
-                        </div>
+                    <textarea placeholder="Body" v-model="newEvent.body" style="padding-right:35px"/>
+                </div>
                     </sui-grid-column>
                 </sui-grid-row>
 
@@ -60,12 +60,12 @@ div [class*="pull right"] {
                 <sui-grid-row>
                     <sui-grid-column>
                         <sui-label>Timezone</sui-label>
-                    <sui-dropdown
-                        placeholder="Timezone"
-                        selection
-                        :options="timezonesForDropdown"
-                        v-model="newEvent.timezone"
-                        />
+                        <sui-dropdown
+                            placeholder="Timezone"
+                            selection
+                            :options="timezonesForDropdown"
+                            v-model="newEvent.timezone"
+                            />
                     </sui-grid-column>
                 </sui-grid-row>
 

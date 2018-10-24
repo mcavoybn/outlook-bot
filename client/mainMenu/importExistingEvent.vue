@@ -25,16 +25,16 @@ div [class*="pull right"] {
                 </sui-grid-column>
             </sui-grid-row>
 
-            <sui-grid-row columns="3">
-                <sui-grid-column width="5">
+            <sui-grid-row :columns="3">
+                <sui-grid-column :width="5">
                     <sui-label v-text="'Start'" />
                     <sui-input type="date" format="YYYY-MM-DD" v-model="loadEventsRangeStart" />
                 </sui-grid-column>
-                <sui-grid-column width="5">
+                <sui-grid-column :width="5">
                     <sui-label v-text="'End'"/>
                     <sui-input type="date" format="YYYY-MM-DD" v-model="loadEventsRangeEnd" />
                 </sui-grid-column>
-                <sui-grid-column width="6">
+                <sui-grid-column :width="6">
                     <sui-button
                         color="blue"
                         content="Get Events"
