@@ -36,66 +36,49 @@ div [class*="pull right"] {
 
             <sui-grid-row>
                 <sui-grid-column>
-                    Schedule an event which you have been sent
+                    Send in your schedule to find an appropriate meeting time.
                 </sui-grid-column>
             </sui-grid-row>
 
             <sui-grid-row>
                 <sui-grid-column>
-                    <sui-label>Subject</sui-label>
-                    <span v-text="event.subject" />
-                </sui-grid-column>
-            </sui-grid-row>
+                    <sui-table>
+                        <sui-table-header>
+                            <sui-table-header-cell v-text="'StartDate'" />
+                            <sui-table-header-cell v-text="'StartTime'" />
+                            <sui-table-header-cell v-text="'EndDate'" />
+                            <sui-table-header-cell v-text="'EndTime'" />
+                            <sui-table-header-cell v-text="'Subject'" />
+                            <sui-table-header-cell v-text="'Body'" />
+                            <sui-table-header-cell v-text="'Select'" />
+                        </sui-table-header>
 
-            <sui-grid-row>
-                <sui-grid-column>
-                    <sui-label>Body</sui-label>
-                    <span v-text="event.body" />
-                </sui-grid-column>
-            </sui-grid-row>
-
-            <sui-grid-row>
-                <sui-grid-column>
-                    <sui-label>Start Date</sui-label>
-                    <span v-text="event.startDate" />
-                </sui-grid-column>
-            </sui-grid-row>
-
-            <sui-grid-row>
-                <sui-grid-column>
-                    <sui-label>Start Time</sui-label>
-                    <span v-text="event.startTime" />
-                </sui-grid-column>
-            </sui-grid-row>
-
-            <sui-grid-row>
-                <sui-grid-column>
-                    <sui-label>End Date</sui-label> 
-                    <span v-text="event.endDate" />
-                </sui-grid-column>
-            </sui-grid-row>
-
-
-            <sui-grid-row>
-                <sui-grid-column>
-                    <sui-label>End Time</sui-label> 
-                    <span v-text="event.endTime" />
-                </sui-grid-column>
-            </sui-grid-row>
-
-            <sui-grid-row>
-                <sui-grid-column>
-                    <sui-label>Timezone</sui-label> 
-                    <span v-text="event.timezone" />
+                        <sui-table-body>
+                            <sui-table-row v-for="event in schedule">
+                                <sui-table-cell v-text="event.startDate" />
+                                <sui-table-cell v-text="event.startTime" />
+                                <sui-table-cell v-text="event.endDate" />
+                                <sui-table-cell v-text="event.endTime" />
+                                <sui-table-cell v-text="event.subject" />
+                                <sui-table-cell v-text="event.body" />
+                                <sui-table-cell>
+                                    <sui-button
+                                        content="select"
+                                        color="blue"
+                                        @click="selectedEvent = event" /> 
+                                </sui-table-cell>
+                            </sui-table-row>
+                        </sui-table-body>
+                    </sui-table>
                 </sui-grid-column>
             </sui-grid-row>
 
             <sui-grid-row>
                 <sui-grid-column>
                     <sui-button 
-                        @click="scheduleNewEvent()"
+                        @click="sendSchedule()"
                         color="green" 
-                        content="Schedule this event" />
+                        content="Send Schedule" />
                 </sui-grid-column>
             </sui-grid-row>
         </sui-grid>
@@ -151,27 +134,43 @@ module.exports = {
                 this.event.endTime = endMoment.format('HH:MM');
             });
         },
-        scheduleNewEvent: function() {
-            this.$cookies.remove('eventId');
+        sendSchedule: async function() {
             try {
+                let options = {
+                    headers: {
+                        meetingTimeSearchId: this.$cookies.get('meetingTimeSearchId')
+                    }
+                }
+                let eventData = await util.fetch('api/outlook/getEventData', options);
+                const start = new Date(eventData.dateRangeStart + 'T' + '00:00');
+                const end = new Date(eventData.dateRangeEnd + 'T' + '12:00');
                 shared.graphClient
-                .api('/me/events')
-                .post({
-                    "Subject": this.event.subject,
-                    "Body": {
-                        "ContentType": "HTML",
-                        "Content": this.event.body,
-                    },
-                    "Start": {
-                        "DateTime": this.event.start,
-                        "TimeZone": this.event.timezone
-                    },
-                    "End": {
-                        "DateTime": this.event.end,
-                        "TimeZone": this.event.timezone
-                    },
-                    "Attendees": []
-                }, (err, res) => console.log(res));
+                .api(`/me/calendarView?startDateTime=${start.toISOString()}&endDateTime=${end.toISOString()}`)
+                .get()
+                .then(res => {
+                    res.value.forEach(event => {
+                        let start = moment(event.start.dateTime);
+                        let end = moment(event.end.dateTime);
+                        this.schedule.push({
+                            startDate: start.format('YYYY-MM-DD'),
+                            startTime: start.format('HH:MM'),
+                            endDate: end.format('YYYY-MM-DD'),
+                            endTime: end.format('HH:MM'),
+                            subject: event.subject,
+                            body: event.bodyPreview
+                        });
+                    });
+                    let options = {
+                        header: {
+                            meetingTimeSearchId: this.$cookies.get('meetingTimeSearchId')
+                        },
+                        body: {
+                            schedule: this.schedule
+                        },
+                        method: 'post'
+                    };
+                    // util.fetch('api/outlook/postSchedule', options);
+                });
             } catch (err) {
                 console.log(err);
             }
@@ -198,18 +197,7 @@ module.exports = {
             graphUserName: undefined,
             graphClient: undefined,
             eventId: '',
-            event: {
-                eventId: '',
-                subject: '',
-                body: '',
-                start: '',
-                startDate: '',
-                startTime: '',
-                end: '',
-                endDate: '',
-                endTime: '',
-                timezone: ''
-            }
+            schedule: []
         }
     }
 }

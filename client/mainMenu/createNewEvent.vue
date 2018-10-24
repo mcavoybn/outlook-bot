@@ -77,13 +77,24 @@ div [class*="pull right"] {
                             content="Create New Event"/>
                     </sui-grid-column>
                 </sui-grid-row>
+
+                <sui-grid-row v-if="scheduleNewEventClicked">
+                    <sui-grid-column>
+                        <sui-message color="green">
+                            <sui-message-header>Event Scheduled!</sui-message-header>
+                            <p>
+                                This even has been scheduled to your calendar.
+                                An invite for this event has been sent to the selected users.
+                            </p>
+                        </sui-message>
+                    </sui-grid-column>
+                </sui-grid-row>
             </sui-grid>
     </div>
 </template>
  
 <script>
 const util = require('../util');
-const graph = require('@microsoft/microsoft-graph-client');
 const shared = require('../globalState');
 const uuid4 = require('uuid/v4');
 'use strict'
@@ -149,6 +160,8 @@ module.exports = {
             util.fetch('api/outlook/postEvent', options)
             .then(this.sendInvite(eventId));
             // this.clearForm();
+
+            this.scheduleNewEventClicked = true;
         },
         sendInvite: function(eventId) {
             let options = {
@@ -184,7 +197,8 @@ module.exports = {
                 endDate: '2018-10-09',
                 endTime: '05:00',
                 timezone: ''
-            }
+            },
+            scheduleNewEventClicked: false
         }
     }
 }

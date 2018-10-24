@@ -117,6 +117,19 @@ div [class*="pull right"] {
                         content="Send Invite to Selected Event"/>
                 </sui-grid-column>
             </sui-grid-row>
+
+            <sui-grid-row v-if="scheduleSelectedEventClicked">
+                <sui-grid-column>
+                    <sui-message color="green">
+                        <sui-message-header>Event Scheduled!</sui-message-header>
+                        <p>
+                            This event has been scheduled to your calendar with the selected time.
+                            An invite for this event has been sent to the selected users.
+                        </p>
+                    </sui-message>
+                </sui-grid-column>
+            </sui-grid-row>
+
         </sui-grid>
 
         
@@ -176,6 +189,7 @@ module.exports = {
             util.fetch('api/outlook/postEvent', options)
             .then(this.sendInvite(eventId));
             // this.clearForm();
+            this.scheduleSelectedEventClicked = true;
         },
         sendInvite: function(eventId) {
             let options = {
@@ -194,12 +208,12 @@ module.exports = {
     },
     data: function() {
         return {
-            global: shared.state,
             events: [],
             loadEventsRangeEnd: '',
             loadEventsRangeStart: '',
             timezonesForDropdown: [],
-            selectedEvent: undefined
+            selectedEvent: undefined,
+            scheduleSelectedEventClicked: false
         }
     }
 }

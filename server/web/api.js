@@ -283,6 +283,10 @@ class OutlookAPIV1 extends APIHandler {
         this.router.post('/postEvent', this.asyncRoute(this.onPostEvent, false));
         this.router.post('/removeEvent', this.asyncRoute(this.onRemoveEvent, false));
         this.router.get('/sendEventInvite', this.asyncRoute(this.onSendEventInvite, false));
+        this.router.get('/sendFindMutualMeetingTimeInvite', this.asyncRoute(this.onSendFindMutualMeetingTimeInvite, false));
+        this.router.post('/postMutualMeetingTimeSearchData', this.asyncRoute(this.onPostMutualMeetingTimeSearchData, false));
+        this.router.get('/getMutualMeetingTimeSearchData', this.asyncRoute(this.onGetMutualMeetingTimeSearchData, false));
+        this.router.post('/postSchedule', this.asyncRoute(this.onPostSchedule, false));
         this.oauth = require('simple-oauth2').create({
             client: {
                 id: process.env.APP_ID,
@@ -355,6 +359,35 @@ class OutlookAPIV1 extends APIHandler {
             `<a target="_blank" href="http://localhost:4096/scheduleEvent?eventId=${eventId}">Schedule Event</a>`
         );
         res.status(200).send('OK');
+    }
+
+    async onPostMutualMeetingTimeSearchData(req, res){
+        let eventData = req.body.eventData;
+        relay.storage.set('eventDatas', eventData.id, eventData)
+        .then(res.status(200).send('OK'));
+    }
+
+    async onGetMutualMeetingTimeSearchData(req, res){
+        let eventData = await relay.storage.get('eventDatas', req.get('meetingTimeSearchId'));
+        res.status(200).json(eventData);
+    }
+
+    async onSendFindMutualMeetingTimeInvite(req, res){
+        let meetingTimeSearchId = req.get("meetingTimeSearchId");
+        let distExpr = req.get("distExpr");
+        let threadId = req.get("threadId");
+        let dist = await this.server.bot.resolveTags(distExpr);
+        this.server.bot.sendMessage(
+            dist,
+            threadId,
+            `<a target="_blank" href="http://localhost:4096/sendSchedule?meetingTimeSearchId=${meetingTimeSearchId}">Schedule Event</a>`
+        );
+        res.status(200).send('OK');
+    }
+
+    async onPostSchedule(req, res){
+        let eventData = await relay.storage.get('eventDatas', req.get("meetingTimeSearchId"));
+        eventData.schedules.push(req.body.schedule);
     }
 
 }

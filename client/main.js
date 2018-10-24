@@ -17,6 +17,7 @@ function main() {
         { path: '/onboard/auth/:type/:tag', name: 'onboardAuth', component: require('./onboard/onboardAuth.vue') },
         { path: '/mainMenu', name: 'mainMenu', component: require('./mainMenu/mainMenu.vue') },
         { path: '/scheduleEvent', name: 'scheduleEvent', component: require('./scheduleEvent/scheduleEvent.vue') },
+        { path: '/sendSchedule', name: 'sendSchedule', component: require('./sendSchedule/sendSchedule.vue') },
         { path: '*', redirect: 'welcome' }
     ];
 

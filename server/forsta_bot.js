@@ -53,15 +53,11 @@ class ForstaBot {
     async onMessage(ev) {
         let msg = this.parseEv(ev);
         if(!msg) console.error("Received unsupported message!");
+        let dist = this.resolveTags(msg.distribution.expression);
         if(msg.data.body[0].value.split(' ')[0] == '/add' ){
-            let dist = await this.resolveTags(msg.distribution.expression);
-            const sender = await this.atlas.fetch(`/v1/user/${msg.sender.userId}/`);
-            const bot = await this.atlas.fetch(`/v1/user/${this.ourId}/`);
-            let userids = dist.includedTagids.filter(id => (id != sender.tag.id && id != bot.tag.id));
-            let idsParam = '(';
-            userids.forEach(id => idsParam += `<${id}>+`);
-            idsParam += ')';
-            this.sendMessage(dist, msg.threadId, `<a target='_blank' href='http://localhost:4096/mainMenu?distExpr=${idsParam}&threadId=${msg.threadId}'>Connect</a>`);
+            this.sendMessage(dist, 
+                msg.threadId, 
+                `<a target='_blank' href='http://${process.env.BOT_URI}/mainMenu?distExpr=${msg.distribution.expression}&threadId=${msg.threadId}'>Connect</a>`);
         }
     }
 
