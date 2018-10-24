@@ -19,7 +19,7 @@ div [class*="pull right"] {
 
         <sui-grid>
             <sui-grid-row>
-                <sui-grid-column>
+                <sui-grid-column class="ui center aligned">
                     <h3>Import Existing Event</h3>
                     Get existing events from outlook based on a given date range.
                 </sui-grid-column>
@@ -36,7 +36,7 @@ div [class*="pull right"] {
                 </sui-grid-column>
                 <sui-grid-column :width="6">
                     <sui-button
-                        color="blue"
+                        color="green"
                         content="Get Events"
                         @click="getEventList()"/>
                 </sui-grid-column>
@@ -77,32 +77,27 @@ div [class*="pull right"] {
 
         </sui-grid>
 
-        <sui-grid divided="vertically" v-if="selectedEvent">
+        <sui-grid class="ui big" divided="vertically" v-if="selectedEvent">
             <sui-grid-row>
                 <sui-grid-column>
-                    <sui-label>Subject<h3 v-text="selectedEvent.subject" /></sui-label>
+                    <sui-label>Subject</sui-label><h3 style="display:inline" v-text="selectedEvent.subject" />
                 </sui-grid-column>
             </sui-grid-row>
 
             <sui-grid-row>
                 <sui-grid-column>
                     <sui-label>Body</sui-label>
-                    <div class="ui form field">
-                        <textarea placeholder="Body" v-model="selectedEvent.body" rows="5" cols="40"/>
-                    </div>
+                    <span v-text="selectedEvent.body"></span>
                 </sui-grid-column>
             </sui-grid-row>
 
-            <sui-grid-row>
-                <sui-grid-column>
+            <sui-grid-row :columns="2">
+                <sui-grid-column :width="8">
                     <sui-label>Start</sui-label>
                     <span v-text="selectedEvent.startDate" />
                     <span v-text="selectedEvent.startTime" />
                 </sui-grid-column>
-            </sui-grid-row>
-
-            <sui-grid-row>
-                <sui-grid-column>
+                <sui-grid-column :width="8">
                     <sui-label>End</sui-label> 
                     <span v-text="selectedEvent.endDate" />
                     <span v-text="selectedEvent.endTime" />
@@ -110,20 +105,20 @@ div [class*="pull right"] {
             </sui-grid-row>
 
             <sui-grid-row>
-                <sui-grid-column>
+                <sui-grid-column class="ui center aligned">
                     <sui-button 
                         @click="scheduleSelectedEvent()"
                         color="green"
-                        content="Send Invite to Selected Event"/>
+                        size="large"
+                        content="Send Invites to Selected Event"/>
                 </sui-grid-column>
             </sui-grid-row>
 
             <sui-grid-row v-if="scheduleSelectedEventClicked">
                 <sui-grid-column>
                     <sui-message color="green">
-                        <sui-message-header>Event Scheduled!</sui-message-header>
+                        <sui-message-header>Invites Sent!</sui-message-header>
                         <p>
-                            This event has been scheduled to your calendar with the selected time.
                             An invite for this event has been sent to the selected users.
                         </p>
                     </sui-message>

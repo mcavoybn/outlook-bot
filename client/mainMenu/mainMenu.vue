@@ -22,38 +22,39 @@ div [class*="pull right"] {
             divided="vertically">
 
             <sui-grid-row>
-                <sui-grid-column :width="4" />
-                <sui-grid-column :width="4">
-                    <img width="50px" height="50px" src="/static/images/forsta-logo.svg"/>
+                <sui-grid-column>
+                    <img class="pull left" width="50px" height="50px" src="/static/images/forsta-logo.svg"/>
+                    <h1 class="pull left">Forsta Outlook Bot</h1>
                 </sui-grid-column>
-                <sui-grid-column :width="4">
-                    <h1 class="ui header">Forsta Outlook Bot
-                        <div class="sub header"></div>
-                    </h1>
-                </sui-grid-column>
-                <sui-grid-column :width="4" />
             </sui-grid-row>
 
             <sui-grid-row v-if="isGraphAuthorized() && onMainMenu()">
                 <sui-grid-column>
-                    <h3>Welcome, <span v-text="graphUserName"></span>!<br /></h3>
-                    You are now connected to your outlook account.
+                    <sui-message color="green">
+                        <sui-message-header>Welcome, <span v-text="graphUserName"></span>!</sui-message-header>
+                        <p>
+                            You are now connected to your outlook account!
+                        </p>
+                    </sui-message>
                     <sui-list>
                         <sui-list-item>
                             <sui-button 
                                 color="blue" 
+                                size="large"
                                 @click="showingCreateNewEvent = true" 
                                 content="Create new event" />
                         </sui-list-item>
                         <sui-list-item>
                             <sui-button 
                                 color="blue" 
+                                size="large"
                                 @click="showingImportExistingEvent = true" 
                                 content="Import existing event" />
                         </sui-list-item>
                         <sui-list-item>
                             <sui-button 
-                                color="blue" 
+                                color="blue"
+                                size="large"
                                 @click="showingFindMutualMeetingTime = true" 
                                 content="Find mutual event time" />
                         </sui-list-item>
@@ -81,17 +82,25 @@ div [class*="pull right"] {
             </sui-grid-row>
 
             <sui-grid-row >
-                <sui-grid-column>
+                <sui-grid-column >
                     <sui-button
+                        class="pull left"
                         v-if="!onMainMenu()"
-                        class="left aligned"
                         content="Back" 
-                        color="blue" 
+                        color="blue"
+                        size="small"
                         @click="back()" />
                     <sui-button
-                        class="right aligned"
-                        @click="signOut()"
-                        color="green"
+                        class="pull right"
+                        @click="signOutOutlook()"
+                        color="grey"
+                        size="small"
+                        content="Sign Out of Outlook" />
+                    <sui-button
+                        class="pull right"
+                        @click="signOutForsta()"
+                        color="grey"
+                        size="small"
                         content="Sign Out of Forsta" />
                 </sui-grid-column>
             </sui-grid-row>
@@ -116,7 +125,7 @@ module.exports = {
         'find-mutual-meeting-time': require('./findMutualMeetingTime.vue')
     },
     methods: {
-        signOut: function (){
+        signOutForsta: function (){
             shared.state.apiToken = undefined;
         },
         back: function (){
@@ -165,7 +174,7 @@ module.exports = {
             }
             return null;
         },
-        graphSignOut: function(){
+        signOutOutlook: function(){
             this.$cookies.remove('graph_access_token');
             this.$cookies.remove('graph_user_name');
             this.$cookies.remove('graph_refresh_token');

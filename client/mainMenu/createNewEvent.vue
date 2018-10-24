@@ -19,7 +19,7 @@ div [class*="pull right"] {
 
             <sui-grid>
                 <sui-grid-row>
-                    <sui-grid-column>
+                    <sui-grid-column class="ui center aligned">
                         <h3>Create New Event</h3>
                         Create a new calendar event and send invites to the current distribution.
                     </sui-grid-column>
@@ -27,16 +27,20 @@ div [class*="pull right"] {
 
                 <sui-grid-row>
                     <sui-grid-column>
-                        <sui-label>Subject</sui-label>
-                        <sui-input placeholder="Title" v-model="newEvent.subject" />
+                        <sui-input
+                            class="ui large"
+                            style="width:100%" 
+                            placeholder="Event Subject - the title of the event" 
+                            v-model="newEvent.subject" />
                     </sui-grid-column>
                 </sui-grid-row>
 
                 <sui-grid-row>
                     <sui-grid-column>
-                        <sui-label>Body</sui-label>
                         <div class="ui form field">
-                    <textarea placeholder="Body" v-model="newEvent.body" style="padding-right:35px"/>
+                    <textarea 
+                        placeholder="Event Body - provide information about the event here" 
+                        v-model="newEvent.body"/>
                 </div>
                     </sui-grid-column>
                 </sui-grid-row>
@@ -70,10 +74,11 @@ div [class*="pull right"] {
                 </sui-grid-row>
 
                 <sui-grid-row>
-                    <sui-grid-column>
+                    <sui-grid-column class="ui center aligned">
                         <sui-button 
                             @click="scheduleNewEvent()"
                             color="green"
+                            size="large"
                             content="Create New Event"/>
                     </sui-grid-column>
                 </sui-grid-row>
@@ -81,9 +86,9 @@ div [class*="pull right"] {
                 <sui-grid-row v-if="scheduleNewEventClicked">
                     <sui-grid-column>
                         <sui-message color="green">
-                            <sui-message-header>Event Scheduled!</sui-message-header>
+                            <sui-message-header>Event Scheduled and Invites Sent!</sui-message-header>
                             <p>
-                                This even has been scheduled to your calendar.
+                                This event has been scheduled to your calendar.<br/>
                                 An invite for this event has been sent to the selected users.
                             </p>
                         </sui-message>

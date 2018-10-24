@@ -19,33 +19,38 @@ div [class*="pull right"] {
 
         <sui-grid>
             <sui-grid-row>
-                <sui-grid-column>
+                <sui-grid-column class="ui center aligned">
                     <h3>Find Mutual Meeting Time</h3>
                     Find a mutual meeting time based on the current distribution,a given date range and event duration.
                 </sui-grid-column>
             </sui-grid-row>
 
             <sui-grid-row>
-                <sui-label>Subject</sui-label>
-                <sui-input placeholder="Title" v-model="eventData.subject" />
-            </sui-grid-row>
-            
-            <sui-grid-row>
-                <sui-label>Body</sui-label>
-                <div class="ui form field">
-                    <textarea placeholder="Body" v-model="eventData.body" style="padding-right:35px"/>
-                </div>
+                <sui-grid-column>
+                    <sui-input 
+                        placeholder="Event Subject - the title of the event" 
+                        v-model="eventData.subject"
+                        class="ui large"
+                        style="width:100%" />
+                </sui-grid-column>
             </sui-grid-row>
             
             <sui-grid-row>
                 <sui-grid-column>
+                    <div class="ui form field">
+                        <textarea 
+                            placeholder="Event Body - provide information about the event here" 
+                            v-model="eventData.body"/>
+                    </div>
+                </sui-grid-column>
+            </sui-grid-row>
+            
+            <sui-grid-row :columns="2">
+                <sui-grid-column :width="8">
                     <sui-label v-text="'Range Start'" />
                     <sui-input type="date" format="YYYY-MM-DD" v-model="eventData.dateRangeStart" />
                 </sui-grid-column>
-            </sui-grid-row>
-
-            <sui-grid-row>
-                <sui-grid-column>
+                <sui-grid-column :width="8">
                     <sui-label v-text="'Range End'"/>
                     <sui-input type="date" format="YYYY-MM-DD" v-model="eventData.dateRangeEnd" />
                 </sui-grid-column>
@@ -59,9 +64,10 @@ div [class*="pull right"] {
             </sui-grid-row>
 
             <sui-grid-row>
-                <sui-grid-column>
+                <sui-grid-column class="ui center aligned">
                     <sui-button
                         color="green"
+                        size="large"
                         content="Start search"
                         @click="startSearch()"/>
                 </sui-grid-column>
@@ -73,7 +79,7 @@ div [class*="pull right"] {
                 </sui-grid-column>
             </sui-grid-row>
 
-            <sui-grid-row>
+            <sui-grid-row v-if="schedulesFilled">
                 <sui-grid-column>
                     <sui-table>
                         <sui-table-header>
@@ -97,10 +103,11 @@ div [class*="pull right"] {
                 </sui-grid-column>
             </sui-grid-row>
 
-            <sui-grid-row>
-                <sui-grid-column>
+            <sui-grid-row v-if="selectedEvent">
+                <sui-grid-column class="ui center aligned">
                     <sui-button 
                         @click="scheduleSelectedEvent()"
+                        size="large"
                         color="green"
                         content="Schedule Selected Event"/>
                 </sui-grid-column>
@@ -111,7 +118,7 @@ div [class*="pull right"] {
                     <sui-message color="green">
                         <sui-message-header>Event Scheduled!</sui-message-header>
                         <p>
-                            This event has been scheduled to your calendar with the selected time.
+                            This event has been scheduled to your calendar with the selected time.<br/>
                             An invite for this event has been sent to the selected users.
                         </p>
                     </sui-message>
@@ -172,6 +179,7 @@ module.exports = {
                 }, 10000);
             }
             //we now have everyones schedules
+            this.schedulesFilled = true;
             console.log('all schedules recieved !');
             console.log(this.eventData);
 
@@ -190,8 +198,9 @@ module.exports = {
                 schedules: []
             },
             possibleEvents: [],
-            selectedEvent: {},
-            scheduleSelectedEventClicked: false
+            selectedEvent: undefined,
+            scheduleSelectedEventClicked: false,
+            schedulesFilled: false
         }
     }
 }
